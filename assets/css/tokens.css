@@ -1,0 +1,47 @@
+/* ENGI 48915 Deep Learning for Engineering: shared design tokens.
+   Colour carries meaning throughout the module, in every diagram and widget:
+     amber  = data / forward signal / activations
+     purple = weights and parameters (Durham purple)
+     teal   = gradients / backward pass / learning
+     red    = error and loss                                              */
+:root {
+  --paper: #F6F7F4;
+  --paper-2: #ECEFEA;
+  --panel: #FFFFFF;
+  --ink: #1D2433;
+  --ink-soft: #4A5468;
+  --ink-faint: #8790A0;
+  --line: #CBD2DA;
+  --grid: rgba(29, 36, 51, 0.05);
+
+  --purple: #68246D;
+  --purple-tint: #F1E8F2;
+  --amber: #E09A12;
+  --amber-text: #9A6200;
+  --amber-tint: #FCF1DC;
+  --teal: #17707F;
+  --teal-tint: #E1F0F2;
+  --red: #B83A2E;
+  --red-tint: #F8E5E2;
+
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+/* Engineering-notebook grid used as the page background */
+.grid-paper {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
