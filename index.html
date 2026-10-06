@@ -3,152 +3,1011 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ENGI 48915 Deep Learning for Engineering</title>
-<meta name="description" content="Lecture slides and interactive demos for ENGI 48915 Deep Learning for Engineering, Durham University.">
+<title>Week 1: From machine learning to a first classifier | ENGI 48915</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2368246D'/%3E%3Ccircle cx='9' cy='10' r='3' fill='%23E09A12'/%3E%3Ccircle cx='9' cy='22' r='3' fill='%23E09A12'/%3E%3Ccircle cx='23' cy='16' r='4' fill='%23fff'/%3E%3Cpath d='M9 10L23 16L9 22' stroke='%23fff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
-<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/vendor/reveal/reset.css">
+<link rel="stylesheet" href="../assets/vendor/reveal/reveal.css">
+<link rel="stylesheet" href="../assets/css/tokens.css">
+<link rel="stylesheet" href="../assets/css/deck.css">
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: var(--font-body);
-    color: var(--ink);
-    font-size: 18px;
-    line-height: 1.55;
-  }
-  a { color: var(--purple); }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+  /* ---- week 1 diagram styles ---- */
+  .cover-net { position: absolute; right: 30px; top: 120px; width: 470px; opacity: 0.95; }
 
-  header { padding: 72px 0 28px; }
-  .code { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; color: var(--purple); margin: 0 0 10px; }
-  h1 {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(2.6rem, 7vw, 5.2rem);
-    line-height: 0.98;
-    letter-spacing: -0.035em;
-    margin: 0 0 22px;
-    max-width: 11ch;
+  .route { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; position: relative; }
+  .route::before { content: ""; position: absolute; left: 22px; right: 22px; top: 22px; height: 2px; background: var(--line); }
+  .route .stop { position: relative; padding-right: 28px; }
+  .route .n {
+    display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+    background: var(--ink); color: var(--paper); font-family: var(--font-display); font-weight: 700; font-size: 0.9em;
+    position: relative; margin-bottom: 12px; box-shadow: 0 0 0 6px var(--paper);
   }
-  .intro { max-width: 34em; color: var(--ink-soft); font-size: 1.1rem; margin: 0; }
+  .route p { font-size: 0.78em; color: var(--ink-soft); }
 
-  /* the week selector: five units in one layer, connected by a rail */
-  .weeks { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin: 64px 0 40px; padding: 0; list-style: none; }
-  .weeks::before { content: ""; position: absolute; left: 34px; right: calc((100% - 72px) / 5 - 34px); top: 34px; height: 3px; background: var(--line); }
-  .weeks::after {
-    content: ""; position: absolute; left: 34px; top: 34px; height: 3px; width: 0; background: var(--amber);
-    animation: signal 1.1s 0.3s cubic-bezier(.6,0,.2,1) forwards;
-  }
-  @keyframes signal { to { width: 0%; } }
-  .week { position: relative; }
-  .week .node {
-    position: relative; z-index: 1;
-    width: 68px; height: 68px; border-radius: 50%;
-    display: grid; place-items: center;
-    font-family: var(--font-display); font-weight: 800; font-size: 1.7rem;
-    background: var(--paper); border: 3px dashed var(--line); color: var(--ink-faint);
-    margin-bottom: 18px;
-  }
-  .week h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; line-height: 1.2; margin: 0 0 8px; }
-  .week p { margin: 0; font-size: 0.95rem; color: var(--ink-soft); }
-  .week .status { display: inline-block; margin-top: 12px; font-size: 0.85rem; color: var(--ink-faint); }
+  .nested text { font-family: var(--font-display); font-weight: 700; }
+  .nested .ring { transition: fill-opacity .5s, stroke-opacity .5s; }
+  .defs .panel { margin-bottom: 14px; }
+  .defs .yr { font-size: 0.7em; color: var(--ink-faint); font-weight: 400; margin-left: 8px; }
 
-  .week.open a { color: inherit; text-decoration: none; display: block; border-radius: 10px; outline: none; }
-  .week.open .node { background: var(--ink); color: var(--paper); border: 3px solid var(--ink); box-shadow: 0 0 0 6px var(--paper), 0 0 0 9px var(--amber); transition: transform .2s; }
-  .week.open .status { color: var(--purple); font-weight: 700; }
-  .week.open a:hover .node, .week.open a:focus-visible .node { transform: scale(1.08); }
-  .week.open a:hover h2, .week.open a:focus-visible h2 { color: var(--purple); text-decoration: underline; text-underline-offset: 4px; }
-  .week.open a:focus-visible { outline: 3px solid var(--amber); outline-offset: 8px; }
+  .timeline { display: grid; grid-template-columns: repeat(3, 1fr); position: relative; margin-top: 10px; }
+  .timeline .rail { grid-column: 1 / -1; height: 2px; background: var(--ink); position: relative; margin: 78px 0 30px; }
+  .timeline .rail::after { content: ""; position: absolute; right: -2px; top: -6px; border: 7px solid transparent; border-left: 11px solid var(--ink); border-right: 0; }
+  .timeline .ms { position: absolute; bottom: -10px; transform: translateX(-50%); text-align: center; font-size: 0.62em; white-space: nowrap; }
+  .timeline .ms b { display: block; font-family: var(--font-display); font-size: 1.35em; }
+  .timeline .ms::after { content: ""; display: block; width: 14px; height: 14px; border-radius: 50%; background: var(--amber); margin: 6px auto 0; border: 3px solid var(--paper); box-shadow: 0 0 0 2px var(--amber); }
+  .timeline .era { padding: 0 18px 0 0; }
+  .timeline .era h3 { margin-bottom: 0.1em; }
+  .timeline .era .when { font-size: 0.7em; color: var(--ink-faint); margin-bottom: 8px; }
+  .timeline .era ul { font-size: 0.8em; }
 
-  .info { display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; padding: 36px 0 56px; border-top: 2px solid var(--ink); }
-  .info h3 { font-family: var(--font-display); font-size: 1.15rem; margin: 0 0 12px; }
-  .keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font-size: 0.95rem; }
-  .keys dt { font-weight: 700; }
-  .keys dd { margin: 0; color: var(--ink-soft); }
-  kbd { font-family: var(--font-body); font-size: 0.85em; border: 1.5px solid var(--ink); border-bottom-width: 3px; border-radius: 5px; padding: 0 6px; background: var(--panel); }
-  .info p, .info li { font-size: 0.95rem; color: var(--ink-soft); }
-  .info ul { padding-left: 1.1em; margin: 0; }
-  footer { padding: 20px 0 40px; font-size: 0.85rem; color: var(--ink-faint); }
+  .paradigm { display: grid; gap: 34px; margin: 26px 0 10px; }
+  .paradigm .row { display: grid; grid-template-columns: 250px 110px 300px 110px 200px; align-items: center; }
+  .paradigm .ins { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  .chip { display: inline-block; padding: 8px 18px; border-radius: 999px; font-weight: 700; font-size: 0.85em; border: 2px solid; background: var(--panel); }
+  .chip.data { border-color: var(--amber); color: var(--amber-text); background: var(--amber-tint); }
+  .chip.rules { border-color: var(--purple); color: var(--purple); background: var(--purple-tint); }
+  .chip.ans { border-color: var(--ink); color: var(--ink); }
+  .paradigm .box { border: 2px solid var(--ink); border-radius: 6px; padding: 18px 10px; text-align: center; font-family: var(--font-display); font-weight: 700; background: var(--panel); }
+  .paradigm .box.ml { background: var(--ink); color: var(--paper); }
+  .flow { width: 110px; height: 24px; }
+  .flow line { stroke: var(--ink-soft); stroke-width: 3; stroke-dasharray: 8 7; animation: dash 0.9s linear infinite; }
+  .flow path { fill: var(--ink-soft); }
+  @keyframes dash { to { stroke-dashoffset: -15; } }
 
-  @media (max-width: 860px) {
-    .weeks { grid-template-columns: 1fr; gap: 26px; margin-top: 44px; }
-    .weeks::before { left: 33px; right: auto; top: 34px; bottom: 34px; width: 3px; height: auto; }
-    .weeks::after { display: none; }
-    .week a, .week > div { display: grid !important; grid-template-columns: 68px 1fr; column-gap: 20px; }
-    .week .node { margin: 0; grid-row: span 3; }
-    .info { grid-template-columns: 1fr; }
-    header { padding-top: 44px; }
-  }
+  .pipeline { display: grid; grid-template-columns: 1fr 70px 1fr 70px 1fr 70px 1fr; align-items: center; margin: 18px 0 8px; }
+  .pipeline .stage { text-align: center; }
+  .pipeline .stage svg { width: 150px; height: 150px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .pipeline .stage h3 { margin: 10px 0 0; font-size: 0.85em; }
+  .pipeline .stage p { font-size: 0.66em; color: var(--ink-soft); margin: 0; }
+  .pipeline .arrow { text-align: center; font-size: 0.55em; color: var(--ink-faint); }
+  .pipeline .arrow svg { width: 70px; height: 24px; }
+
+  .tensor-row { display: flex; gap: 40px; align-items: flex-end; justify-content: space-between; margin: 10px 0 6px; }
+  .tensor { text-align: center; }
+  .tensor .cells { display: inline-grid; gap: 3px; }
+  .tensor .cell { width: 26px; height: 26px; border-radius: 3px; background: var(--amber-tint); border: 1.5px solid var(--amber); }
+  .tensor .tstack { position: relative; width: 176px; height: 176px; }
+  .tensor .tstack .cells { position: absolute; background: var(--paper); padding: 3px; }
+  .tensor h3 { margin: 12px 0 0; font-size: 0.85em; }
+  .tensor code { font-size: 0.7em !important; }
+
+  .pad-wrap { display: grid; grid-template-columns: 340px 1fr; gap: 34px; align-items: start; }
+  .pad-wrap canvas.pad { border: 1.5px solid var(--ink); border-radius: 4px; touch-action: none; cursor: crosshair; background: #000; }
+  .strip-wrap { margin-top: 20px; }
+
+  .bars { display: flex; align-items: flex-end; gap: 8px; height: 220px; border-bottom: 2px solid var(--ink); position: relative; }
+  .bars .grp { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 100%; }
+  .bars .bar { width: 38%; border-radius: 3px 3px 0 0; transition: height .9s cubic-bezier(.6,0,.2,1); position: relative; }
+  .bars .bar span { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.8em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bars-x { display: flex; gap: 8px; } .bars-x div { flex: 1; text-align: center; font-size: 0.85em; color: var(--ink-soft); padding-top: 4px; }
+
+  .legend { display: flex; gap: 18px; font-size: 0.85em; margin: 6px 0; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+
+  .batch-track { position: relative; height: 46px; border: 1.5px solid var(--ink); border-radius: 4px; overflow: hidden; background: var(--panel); }
+  .batch-track canvas { width: 100%; height: 100%; }
+  .counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+  .counters .k { font-family: var(--font-display); font-weight: 800; font-size: 2.6em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .counters .l { font-size: 0.9em; color: var(--ink-soft); }
+
+  .ex-list li { margin-bottom: 0.55em; font-size: 0.82em; }
+  .ex-list .tag { display: inline-block; min-width: 92px; font-weight: 700; color: var(--purple); }
 </style>
 </head>
-<body class="grid-paper">
-<div class="wrap">
-  <header>
-    <p class="code">ENGI 48915</p>
-    <h1>Deep Learning for Engineering</h1>
-    <p class="intro">Slides and interactive demonstrations for the weekly sessions. Department of Engineering, Durham University, Michaelmas Term 2026.</p>
-  </header>
+<body>
+<div class="reveal">
+<div class="slides">
 
-  <main>
-    <ol class="weeks" id="weeks" aria-label="Weeks"></ol>
+<!-- ===================================================== COVER -->
+<section class="cover" data-background-color="#1D2433" data-dark>
+  <h1>From machine learning to a first classifier</h1>
+  <p class="sub">Week 1: what deep learning is, how a neural network learns from its errors, and a handwritten-digit classifier in Keras.</p>
+  <p class="meta"><strong>ENGI 48915 Deep Learning for Engineering</strong><br>Dr Nima Gerami-Seresht, Department of Engineering, Durham University<br>Michaelmas Term 2026</p>
+  <div class="cover-net widget" data-widget="net" data-layers="4,6,6,3" data-theme="dark" aria-hidden="true"></div>
+</section>
 
-    <section class="info">
-      <div>
-        <h3>Using the slides</h3>
-        <dl class="keys">
-          <dt><kbd>→</kbd> <kbd>Space</kbd></dt><dd>Next step or slide (<kbd>←</kbd> to go back)</dd>
-          <dt><kbd>Esc</kbd></dt><dd>Overview of all slides</dd>
-          <dt><kbd>F</kbd></dt><dd>Full screen</dd>
-          <dt><kbd>S</kbd></dt><dd>Speaker view with timer, in a new window</dd>
-          <dt>PDF</dt><dd>Add <code>?print-pdf</code> to a week's address, then print to PDF from Chrome</dd>
-        </dl>
+<section data-part="Overview">
+  <h2 class="title">Today's route</h2>
+  <div class="route">
+    <div class="stop"><span class="n">1</span><h3>What is deep learning?</h3><p>AI, machine learning and deep learning; learning rules from data; layers, weights, loss and the training loop.</p></div>
+    <div class="stop"><span class="n">2</span><h3>A neural network by hand</h3><p>One neuron, two weights, four data points: forward pass, error, gradients and a weight update, calculated step by step.</p></div>
+    <div class="stop"><span class="n">3</span><h3>MNIST in Keras</h3><p>Tensors, a 784&nbsp;→&nbsp;512&nbsp;→&nbsp;10 network, mini-batch training and about 98% test accuracy.</p></div>
+  </div>
+  <div class="panel purple" style="margin-top:24px">
+    <h3>By the end of the session you can</h3>
+    <ul style="font-size:0.9em">
+      <li>distinguish AI, machine learning and deep learning, and explain how learning from data differs from programming rules;</li>
+      <li>describe the training loop: forward pass, loss, backpropagation, weight update;</li>
+      <li>carry out one training iteration of a simple network by hand;</li>
+      <li>build, train and evaluate a dense classifier for MNIST in Keras.</li>
+    </ul>
+  </div>
+  <p class="small" style="margin-top:10px">Colour key used in every diagram today: <span class="c-amber">data and signals</span>, <span class="c-purple">weights</span>, <span class="c-red">error</span>, <span class="c-teal">gradients</span>.</p>
+</section>
+
+<!-- ===================================================== PART 1 -->
+<section class="divider" data-background-color="#1D2433" data-dark data-part="Part 1: What is deep learning?">
+  <div class="part-no">1</div>
+  <h2>What is deep learning?</h2>
+  <p>Where it sits within AI, why learning from data beats writing rules, and the handful of parts every deep learning system shares.</p>
+</section>
+
+<section>
+  <h2 class="title">Why should engineers care?</h2>
+  <div class="cols wide-left">
+    <div class="panel amber">
+      <h3>Deep learning in engineering practice</h3>
+      <ul>
+        <li><strong>Autonomous vehicles:</strong> perception from camera and lidar, control</li>
+        <li><strong>Structural health monitoring:</strong> crack detection in inspection images</li>
+        <li><strong>Energy systems:</strong> load forecasting and optimisation</li>
+        <li><strong>Manufacturing:</strong> visual quality control, predictive maintenance</li>
+        <li><strong>Materials science:</strong> property prediction and design</li>
+      </ul>
+    </div>
+    <div class="panel purple">
+      <h3>Not magic: a systematic tool</h3>
+      <p>Deep learning is a way of fitting very flexible functions to data. It is useful for</p>
+      <ul>
+        <li>extracting patterns from high-dimensional data,</li>
+        <li>automating complex decisions,</li>
+        <li>problems too complex for hand-written rules.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="bottom-line">Today's goal: understand how it works well enough to build one yourself by the end of the session.</p>
+</section>
+
+<section>
+  <h2 class="title">Three nested ideas</h2>
+  <div class="cols wide-right center">
+    <svg class="nested" viewBox="0 0 520 500" role="img" aria-label="Deep learning sits inside machine learning, which sits inside artificial intelligence">
+      <circle class="ring" cx="260" cy="250" r="240" fill="#1D2433" fill-opacity="0.05" stroke="#1D2433" stroke-width="3"/>
+      <text x="260" y="62" text-anchor="middle" font-size="26" fill="#1D2433">Artificial intelligence</text>
+      <g class="fragment" data-fragment-index="1">
+        <circle cx="260" cy="285" r="165" fill="#17707F" fill-opacity="0.1" stroke="#17707F" stroke-width="3"/>
+        <text x="260" y="168" text-anchor="middle" font-size="24" fill="#17707F">Machine learning</text>
+      </g>
+      <g class="fragment" data-fragment-index="2">
+        <circle cx="260" cy="320" r="95" fill="#68246D" fill-opacity="0.12" stroke="#68246D" stroke-width="3"/>
+        <text x="260" y="314" text-anchor="middle" font-size="26" fill="#68246D">Deep</text>
+        <text x="260" y="344" text-anchor="middle" font-size="26" fill="#68246D">learning</text>
+      </g>
+    </svg>
+    <div class="defs">
+      <div class="panel"><h3>Artificial intelligence <span class="yr">1956 onwards</span></h3><p>The effort to automate intellectual tasks normally performed by people. Includes hand-written rules and search.</p></div>
+      <div class="panel teal fragment" data-fragment-index="1"><h3>Machine learning <span class="yr">1990s onwards</span></h3><p>Systems that are <strong>trained</strong> on examples rather than explicitly programmed.</p></div>
+      <div class="panel purple fragment" data-fragment-index="2"><h3>Deep learning <span class="yr">2010s onwards</span></h3><p>Machine learning with <strong>many successive layers</strong> of increasingly useful representations.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">From symbolic AI to deep learning</h2>
+  <div class="timeline">
+    <div class="rail">
+      <div class="ms" style="left:9%"><b>1956</b>Dartmouth workshop</div>
+      <div class="ms" style="left:47%"><b>1997</b>Deep Blue beats Kasparov</div>
+      <div class="ms" style="left:73%"><b>2012</b>AlexNet wins ImageNet</div>
+      <div class="ms" style="left:92%"><b>2022</b>ChatGPT</div>
+    </div>
+    <div class="era">
+      <h3>Symbolic AI</h3><div class="when">1950s to 1980s</div>
+      <ul><li>Hand-crafted rules</li><li>Expert systems</li><li>Search-based chess programs</li></ul>
+    </div>
+    <div class="era fragment">
+      <h3>Classical machine learning</h3><div class="when">1990s to 2000s</div>
+      <ul><li>SVMs, decision trees, random forests</li><li>Features designed by hand</li><li>Limited scalability</li></ul>
+    </div>
+    <div class="era fragment">
+      <h3>Deep learning</h3><div class="when">2010s onwards</div>
+      <ul><li>Artificial neural networks</li><li>Features learned from raw data</li><li>Massive scale: data, compute, parameters</li></ul>
+    </div>
+  </div>
+  <div class="callout fragment">The shift: from <strong>programming explicit rules</strong>, to <strong>learning rules from data</strong>, to <strong>learning hierarchical representations automatically</strong>. (Deep Blue itself was brute-force search, not learning.)</div>
+</section>
+
+<section>
+  <h2 class="title">Why symbolic AI failed at scale</h2>
+  <div class="cols wide-left">
+    <div>
+      <h3>The expert systems approach (1970s and 1980s)</h3>
+      <p>Encode expert knowledge as formal rules, for example in medical diagnosis: <em>if symptom A and symptom B, then disease X</em>.</p>
+      <h3 style="margin-top:0.8em">What went wrong</h3>
+      <ul>
+        <li class="fragment"><strong>Knowledge bottleneck:</strong> far too many rules to write down</li>
+        <li class="fragment"><strong>Brittleness:</strong> edge cases break the rule set</li>
+        <li class="fragment"><strong>No learning:</strong> cannot improve from experience</li>
+        <li class="fragment"><strong>Noise:</strong> real-world data is ambiguous and messy</li>
+      </ul>
+    </div>
+    <div class="stack">
+      <div class="panel red"><h3>Engineering analogy</h3><p>Design a controller by writing a rule for every combination of sensor readings. With ten sensors and a hundred levels each, that is \(10^{20}\) cases.</p></div>
+      <div class="panel teal fragment"><h3>The way out</h3><p>Let the system <strong>discover</strong> the rules from examples. That is machine learning.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">The paradigm shift</h2>
+  <div class="paradigm">
+    <div class="row">
+      <div class="ins"><span class="chip rules">Rules</span><span class="chip data">Data</span></div>
+      <svg class="flow" viewBox="0 0 110 24"><line x1="6" y1="12" x2="94" y2="12"/><path d="M92 4 L108 12 L92 20 Z"/></svg>
+      <div class="box">Classical programming</div>
+      <svg class="flow" viewBox="0 0 110 24"><line x1="6" y1="12" x2="94" y2="12"/><path d="M92 4 L108 12 L92 20 Z"/></svg>
+      <div><span class="chip ans">Answers</span></div>
+    </div>
+    <div class="row fragment">
+      <div class="ins"><span class="chip data">Data</span><span class="chip ans">Answers</span></div>
+      <svg class="flow" viewBox="0 0 110 24"><line x1="6" y1="12" x2="94" y2="12"/><path d="M92 4 L108 12 L92 20 Z"/></svg>
+      <div class="box ml">Machine learning</div>
+      <svg class="flow" viewBox="0 0 110 24"><line x1="6" y1="12" x2="94" y2="12"/><path d="M92 4 L108 12 L92 20 Z"/></svg>
+      <div><span class="chip rules">Rules</span></div>
+    </div>
+  </div>
+  <div class="callout fragment">In machine learning the <strong>rules are the output</strong>, not the input. We supply examples with their answers; training finds the rules, stored as numbers called <span class="c-purple">weights</span>. The trained rules are then applied to new data, just like a classical program.</div>
+</section>
+
+<section>
+  <h2 class="title">Example: is this manufactured part defective?</h2>
+  <div class="cols">
+    <div class="panel red">
+      <h3>Classical programming</h3>
+      <ol>
+        <li>Write rules: <em>if edge roughness &gt; threshold</em>, <em>if colour deviation &gt; limit</em>, <em>if symmetry score &lt; bound</em> &hellip;</li>
+        <li class="fragment">There are thousands of defect types.</li>
+        <li class="fragment">Rules are brittle and hard to maintain.</li>
+        <li class="fragment">A change of lighting or camera angle breaks them.</li>
+      </ol>
+    </div>
+    <div class="panel teal fragment">
+      <h3>Machine learning</h3>
+      <ol>
+        <li>Collect 10,000 labelled images: 5,000 defective, 5,000 acceptable.</li>
+        <li>Train a model on them.</li>
+        <li>The model discovers the relevant visual features and the decision boundary, and copes with variation in lighting and angle when the training images include it.</li>
+      </ol>
+    </div>
+  </div>
+  <p class="bottom-line">Machine learning scales where rule-based systems fail, as long as you have representative data.</p>
+</section>
+
+<section>
+  <h2 class="title">Three ingredients of machine learning</h2>
+  <div class="cols three">
+    <div class="panel amber">
+      <h3>1. Input data</h3>
+      <p>Images, sensor readings, text. Must be representative of the problem; more data usually helps.</p>
+      <p class="small">Self-driving: camera frames.</p>
+    </div>
+    <div class="panel fragment">
+      <h3>2. Expected outputs</h3>
+      <p><strong>Labels</strong> for classification (defective or acceptable), <strong>values</strong> for regression (load, stress, temperature).</p>
+      <p class="small">Self-driving: a box drawn around each pedestrian.</p>
+    </div>
+    <div class="panel red fragment">
+      <h3>3. A measure of error</h3>
+      <p>A <strong>loss function</strong> scoring how far predictions are from the expected outputs. Training adjusts the model to make it small.</p>
+      <p class="small">Regression example: \( \text{MSE} = \frac{1}{n}\sum_i (y_i - \hat y_i)^2 \)</p>
+    </div>
+  </div>
+  <div class="callout teal fragment">Learning = automatically searching for a better <strong>representation</strong> of the input data, guided by the feedback from the loss.</div>
+</section>
+
+<section>
+  <h2 class="title">Representations: the heart of machine learning</h2>
+  <div class="cols wide-right">
+    <div>
+      <p>A <strong>representation</strong> is a different way of looking at the same data that makes something useful explicit.</p>
+      <ul class="small" style="font-size:0.8em">
+        <li><strong>Colour:</strong> RGB (255, 128, 0) suits hardware; HSV (30°, 100%, 100%) makes hue and brightness explicit.</li>
+        <li><strong>Signals:</strong> the FFT moves from time to frequency, making periodic patterns explicit.</li>
+      </ul>
+      <p class="fragment" data-trigger="rep-polar">On the right, no straight line separates the two classes in \((x, y)\). In polar coordinates \((\theta, r)\) one threshold on \(r\) does.</p>
+      <p class="fragment">A deep network <strong>learns</strong> transformations like this one, layer by layer, instead of us choosing them.</p>
+    </div>
+    <div class="widget" data-widget="rep"></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">What does "deep" mean?</h2>
+  <p>"Deep" refers to the number of <strong>successive layers</strong>, not to deep understanding. Each layer applies a simple transformation and passes a refined representation on.</p>
+  <div class="pipeline">
+    <div class="stage">
+      <svg viewBox="0 0 150 150" aria-hidden="true"><g id="pix7"></g></svg>
+      <h3>Raw input</h3><p>pixels</p>
+    </div>
+    <div class="arrow fragment" data-fragment-index="1"><svg viewBox="0 0 70 24"><line x1="4" y1="12" x2="56" y2="12" stroke="#E09A12" stroke-width="3"/><path d="M54 5 L68 12 L54 19 Z" fill="#E09A12"/></svg>layer 1</div>
+    <div class="stage fragment" data-fragment-index="1">
+      <svg viewBox="0 0 150 150" aria-hidden="true" stroke="#68246D" stroke-width="5" stroke-linecap="round">
+        <line x1="22" y1="28" x2="58" y2="28"/><line x1="92" y1="30" x2="124" y2="30"/><line x1="112" y1="52" x2="98" y2="80"/>
+        <line x1="30" y1="70" x2="30" y2="104"/><line x1="64" y1="118" x2="82" y2="88"/><line x1="50" y1="54" x2="76" y2="62"/>
+      </svg>
+      <h3>Low level</h3><p>edges, strokes</p>
+    </div>
+    <div class="arrow fragment" data-fragment-index="2"><svg viewBox="0 0 70 24"><line x1="4" y1="12" x2="56" y2="12" stroke="#E09A12" stroke-width="3"/><path d="M54 5 L68 12 L54 19 Z" fill="#E09A12"/></svg>layer 2</div>
+    <div class="stage fragment" data-fragment-index="2">
+      <svg viewBox="0 0 150 150" aria-hidden="true" stroke="#68246D" stroke-width="9" stroke-linecap="round" fill="none">
+        <line x1="30" y1="36" x2="118" y2="36"/><line x1="112" y1="62" x2="74" y2="128"/>
+      </svg>
+      <h3>Mid level</h3><p>parts: a bar, a diagonal</p>
+    </div>
+    <div class="arrow fragment" data-fragment-index="3"><svg viewBox="0 0 70 24"><line x1="4" y1="12" x2="56" y2="12" stroke="#E09A12" stroke-width="3"/><path d="M54 5 L68 12 L54 19 Z" fill="#E09A12"/></svg>layer 3</div>
+    <div class="stage fragment" data-fragment-index="3">
+      <svg viewBox="0 0 150 150" aria-hidden="true"><text x="75" y="112" text-anchor="middle" font-size="104" font-family="Bricolage Grotesque, sans-serif" font-weight="800" fill="#68246D">7</text></svg>
+      <h3>High level</h3><p>the concept "seven"</p>
+    </div>
+  </div>
+  <div class="cols fragment" style="margin-top:14px">
+    <div class="small">Like a multi-stage filter in signal processing, each stage strips away what is irrelevant and keeps what matters.</div>
+    <div class="small">Shallow learning: 1 or 2 layers. Modern deep networks: tens to hundreds of layers.</div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Weights, loss and the training loop</h2>
+  <div class="cols wide-left center">
+    <div class="widget" data-widget="loop"></div>
+    <div class="stack" style="font-size:0.9em">
+      <div class="panel purple">
+        <h3>Weights</h3>
+        <p>Each layer computes \( y = f(\textcolor{#68246D}{W}x + \textcolor{#68246D}{b}) \). The weights \(\textcolor{#68246D}{W}, \textcolor{#68246D}{b}\) start as small random numbers; training tunes them, like the parameters of a filter, but millions of them.</p>
       </div>
-      <div>
-        <h3>Module</h3>
+      <div class="panel red fragment">
+        <h3>Loss</h3>
+        <p>One number measuring how wrong the predictions are. It must be differentiable.</p>
+      </div>
+      <div class="panel teal fragment">
+        <h3>Update</h3>
+        <p>\( w_{\text{new}} = w_{\text{old}} - \eta \, \textcolor{#17707F}{\nabla_w L} \)</p>
+        <p class="small">\(\eta\) is the learning rate. The loop repeats thousands to millions of times.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Why deep learning took over</h2>
+  <div class="cols three">
+    <div class="panel purple">
+      <h3>Simplicity</h3>
+      <p>Classical ML spent most of its effort on hand-designed features (SIFT, HOG, MFCC). Deep networks learn features from raw pixels or waveforms, optimised end to end for the task.</p>
+    </div>
+    <div class="panel amber fragment">
+      <h3>Scalability</h3>
+      <p>Training is mostly matrix multiplication, which GPUs parallelise across thousands of cores. Performance keeps improving with more data, parameters and compute: <em>scaling laws</em>.</p>
+    </div>
+    <div class="panel teal fragment">
+      <h3>Versatility</h3>
+      <p>Learn once, reuse many times. Pre-train on a large general dataset, then fine-tune on a small one: transfer learning, and at the extreme, foundation models adapted by prompting.</p>
+    </div>
+  </div>
+  <div class="callout fragment">For engineers, transfer learning matters most: a crack detector can start from a network pre-trained on a million everyday photos and be fine-tuned on a few hundred inspection images.</div>
+</section>
+
+<section>
+  <h2 class="title">A measured view: skill is not intelligence</h2>
+  <div class="cols">
+    <div class="panel teal">
+      <h3>What today's systems do well</h3>
+      <ul>
+        <li>Automate tasks well covered by their training data</li>
+        <li>Interpolate within the training distribution</li>
+        <li>Handle well-defined problems at scale</li>
+        <li>Assist human experts</li>
+      </ul>
+    </div>
+    <div class="panel red">
+      <h3>Where they still struggle</h3>
+      <ul>
+        <li>Truly novel situations, far from the training data</li>
+        <li>Reliable explanations of their decisions</li>
+        <li>Learning a new task from very little data</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout fragment"><strong>Chollet's definition:</strong> intelligence is the ability to adapt to novel situations using limited experience. By that yardstick, current deep learning is mostly <em>skill</em>, and an engineer's job is to know where the training data ends.</div>
+</section>
+
+<!-- ===================================================== PART 2 -->
+<section class="divider" data-background-color="#1D2433" data-dark data-part="Part 2: A neural network by hand">
+  <div class="part-no">2</div>
+  <h2>A neural network by hand</h2>
+  <p>The anatomy of a network, the functions inside a neuron, how loss and gradients drive learning, and one full training iteration worked through with numbers.</p>
+</section>
+
+<section>
+  <h2 class="title">Network architecture</h2>
+  <div class="cols wide-left center">
+    <div class="widget" data-widget="net" data-layers="4,3,2,2" data-captions="Input layer,Hidden layer,Hidden layer,Output layer"></div>
+    <div class="stack" style="font-size:0.88em">
+      <p><strong>Input layer:</strong> receives the raw features and passes them in.</p>
+      <p><strong>Hidden layers:</strong> combine their inputs through <span class="c-purple">weighted connections</span>.</p>
+      <p><strong>Output layer:</strong> produces the prediction.</p>
+      <p class="fragment">Information flows one way, input to output, with no feedback connections: a <strong>feedforward</strong> network.</p>
+      <p class="fragment">The number of layers and neurons per layer is the <strong>architecture</strong>. It sets how complex a mapping the network can learn.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Inside a single neuron</h2>
+  <div class="widget" data-widget="neuron"></div>
+  <p class="small" style="margin-top:6px">Each neuron computes a weighted sum \( a = \sum_i \textcolor{#68246D}{w_i} x_i + \textcolor{#68246D}{b} \) and passes it through a transfer function, \( y = f(a) \). Drag the weights and switch the function.</p>
+</section>
+
+<section>
+  <h2 class="title">Common transfer (activation) functions</h2>
+  <div class="widget" data-widget="actplots"></div>
+  <div class="cols three" style="font-size:0.8em; margin-top:6px">
+    <div><strong>Linear</strong> \( f(x) = x \)<br><span class="muted">Output layer for regression, where any real value is allowed.</span></div>
+    <div><strong>Sigmoid</strong> \( f(x) = \dfrac{1}{1 + e^{-x}} \)<br><span class="muted">Squashes to (0, 1), read as a probability in binary classification.</span></div>
+    <div><strong>ReLU</strong> \( f(x) = \max(0, x) \)<br><span class="muted">The default for hidden layers: cheap and less prone to vanishing gradients.</span></div>
+  </div>
+  <div class="callout fragment">Without a nonlinear function, a stack of layers collapses into one linear map, however deep it is. Nonlinearity is what makes depth useful.</div>
+</section>
+
+<section>
+  <h2 class="title">Loss functions: scoring the predictions</h2>
+  <div class="cols wide-left">
+    <div class="stack">
+      <div class="panel red">
+        <h3>Regression</h3>
+        <p>\[ \text{MSE} = \frac{1}{N}\sum_{k=1}^{N} (y_k - \hat y_k)^2 \qquad \text{RMSE} = \sqrt{\text{MSE}} \]</p>
+        <p class="small">MSE is smooth and punishes large errors heavily, so normalising widely spread data helps. RMSE is in the units of the output, handy for reporting.</p>
+      </div>
+      <div class="panel red fragment">
+        <h3>Classification: cross-entropy</h3>
+        <p>\[ E = -\sum_{i=1}^{C} y_i \log \hat y_i \]</p>
+        <p class="small">\(y\) is the one-hot true label, \(\hat y_i\) the predicted probability of class \(i\). Only the true class term survives, so \(E = -\log(\text{probability given to the right answer})\).</p>
+      </div>
+    </div>
+    <div class="fragment">
+      <div class="widget" data-widget="celoss"></div>
+      <p class="small">Confident and wrong is punished hardest. That is why cross-entropy pushes a classifier to be both right and appropriately sure.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Gradient descent: walking downhill</h2>
+  <div class="cols wide-right">
+    <div style="font-size:0.88em">
+      <p>The derivative is the local slope: near \(w\), \( L(w + \epsilon) \approx L(w) + L'(w)\,\epsilon \).</p>
+      <ul>
+        <li>If \(L'(w) &gt; 0\), move \(w\) left.</li>
+        <li>If \(L'(w) &lt; 0\), move \(w\) right.</li>
+      </ul>
+      <p>\[ w \leftarrow w - \eta\,\textcolor{#17707F}{L'(w)} \]</p>
+      <p>With many weights the derivative becomes the <strong>gradient</strong> \(\nabla_w L\), which points uphill most steeply; we step the other way.</p>
+      <p class="small">Try each learning rate: too small crawls, too large oscillates or diverges.</p>
+    </div>
+    <div class="widget" data-widget="gd1d"></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Backpropagation: the chain rule at work</h2>
+  <div class="cols wide-right center">
+    <div style="font-size:0.9em">
+      <p>A network is a composition of functions, so for one neuron with pre-activation \(a\) and output \(y\):</p>
+      <p>\[ \frac{\partial E}{\partial w} = \textcolor{#B83A2E}{\frac{\partial E}{\partial y}} \cdot \frac{\partial y}{\partial a} \cdot \frac{\partial a}{\partial w} \]</p>
+      <ul style="font-size:0.85em">
+        <li class="fragment"><span class="c-red">how the error changes with the output</span>, from the loss,</li>
+        <li class="fragment">how the output changes with the weighted sum: \(f'(a)\),</li>
+        <li class="fragment">how the weighted sum changes with the weight: the input \(x\).</li>
+      </ul>
+      <p class="fragment small">The error is computed at the output and passed <span class="c-teal">backwards</span>, layer by layer, reusing each layer's result. One backward pass gives every gradient, at about the cost of a forward pass. Frameworks such as TensorFlow and PyTorch do this automatically.</p>
+    </div>
+    <div class="widget" data-widget="net" data-layers="4,3,2,2" data-direction="backward" data-captions="Input,Hidden,Hidden,Loss"></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Worked example: the set-up</h2>
+  <div class="cols center">
+    <div>
+      <svg viewBox="0 0 480 300" style="width:100%" role="img" aria-label="Two inputs X1 and X2 connect with weights w11 and w21 to a single neuron PE1 which gives output Y">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#1D2433"/></marker></defs>
+        <line x1="92" y1="78" x2="214" y2="142" stroke="#68246D" stroke-width="4"/>
+        <line x1="92" y1="222" x2="214" y2="158" stroke="#68246D" stroke-width="2"/>
+        <line x1="286" y1="150" x2="364" y2="150" stroke="#1D2433" stroke-width="2.5" marker-end="url(#ah)"/>
+        <circle cx="62" cy="70" r="36" fill="#FCF1DC" stroke="#E09A12" stroke-width="3"/>
+        <text x="62" y="79" text-anchor="middle" font-size="26" font-weight="700" fill="#9A6200">X₁</text>
+        <circle cx="62" cy="230" r="36" fill="#FCF1DC" stroke="#E09A12" stroke-width="3"/>
+        <text x="62" y="239" text-anchor="middle" font-size="26" font-weight="700" fill="#9A6200">X₂</text>
+        <circle cx="250" cy="150" r="40" fill="#1D2433"/>
+        <text x="250" y="158" text-anchor="middle" font-size="22" font-weight="700" fill="#F6F7F4">PE1</text>
+        <circle cx="408" cy="150" r="36" fill="#fff" stroke="#1D2433" stroke-width="3"/>
+        <text x="408" y="159" text-anchor="middle" font-size="26" font-weight="700" fill="#1D2433">ŷ</text>
+        <text x="142" y="88" font-size="20" fill="#68246D" font-weight="700">w₁₁ = 0.5</text>
+        <text x="142" y="232" font-size="20" fill="#68246D" font-weight="700">w₂₁ = 0.1</text>
+        <text x="262" y="216" text-anchor="start" font-size="16" fill="#4A5468">linear: f(a) = a</text>
+      </svg>
+    </div>
+    <div>
+      <table class="data">
+        <thead><tr><th>i</th><th class="col-amber">X₁</th><th class="col-amber">X₂</th><th>Y (target)</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>0.1</td><td>0.01</td><td>0.20</td></tr>
+          <tr><td>2</td><td>0.3</td><td>0.09</td><td>0.25</td></tr>
+          <tr><td>3</td><td>0.6</td><td>0.36</td><td>0.40</td></tr>
+          <tr><td>4</td><td>0.7</td><td>0.49</td><td>0.70</td></tr>
+        </tbody>
+      </table>
+      <ul class="small" style="margin-top:18px">
+        <li><strong>Step 1:</strong> initial weights chosen at random: \(w_{11} = 0.5,\ w_{21} = 0.1\)</li>
+        <li>No bias, linear transfer function, learning rate \(\alpha = 0.3\)</li>
+        <li>Loss: mean squared error over all four samples</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Step 2: forward pass</h2>
+  <div class="cols wide-right center">
+    <div style="font-size:0.9em">
+      <p>With a linear transfer function the output is just the weighted sum:</p>
+      <p>\[ \hat y = \textcolor{#68246D}{w_{11}} X_1 + \textcolor{#68246D}{w_{21}} X_2 \]</p>
+      <p class="fragment">Sample 1:<br>\( \hat y = 0.5 \times 0.1 + 0.1 \times 0.01 = 0.051 \)</p>
+      <p class="fragment small">The target is 0.20, so the untrained network is well short on every sample.</p>
+    </div>
+    <table class="data">
+      <thead><tr><th>i</th><th>X₁</th><th>X₂</th><th class="col-amber">ŷ</th><th>Y</th></tr></thead>
+      <tbody>
+        <tr class="fragment"><td>1</td><td>0.1</td><td>0.01</td><td class="col-amber">0.051</td><td>0.20</td></tr>
+        <tr class="fragment"><td>2</td><td>0.3</td><td>0.09</td><td class="col-amber">0.159</td><td>0.25</td></tr>
+        <tr class="fragment"><td>3</td><td>0.6</td><td>0.36</td><td class="col-amber">0.336</td><td>0.40</td></tr>
+        <tr class="fragment"><td>4</td><td>0.7</td><td>0.49</td><td class="col-amber">0.399</td><td>0.70</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Step 3: error and loss</h2>
+  <div class="cols wide-right center">
+    <div style="font-size:0.9em">
+      <p>Error per sample, prediction minus target:</p>
+      <p>\[ e = \hat y - Y \]</p>
+      <p class="fragment">Mean squared error over the \(N = 4\) samples:</p>
+      <p class="fragment">\[ \text{MSE} = \frac{1}{4}\sum e^2 = \frac{0.1252}{4} = \textcolor{#B83A2E}{0.0313} \]</p>
+      <p class="fragment small">0.1252 is the <em>sum</em> of squared errors. Either can be minimised (they differ by the constant 4), but report MSE when you say MSE.</p>
+    </div>
+    <table class="data">
+      <thead><tr><th>i</th><th>ŷ</th><th>Y</th><th class="col-red">e = ŷ − Y</th><th class="col-red">e²</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>0.051</td><td>0.20</td><td class="col-red">−0.149</td><td class="col-red">0.0222</td></tr>
+        <tr><td>2</td><td>0.159</td><td>0.25</td><td class="col-red">−0.091</td><td class="col-red">0.0083</td></tr>
+        <tr><td>3</td><td>0.336</td><td>0.40</td><td class="col-red">−0.064</td><td class="col-red">0.0041</td></tr>
+        <tr><td>4</td><td>0.399</td><td>0.70</td><td class="col-red">−0.301</td><td class="col-red">0.0906</td></tr>
+        <tr class="mean"><td>Σ</td><td></td><td></td><td></td><td class="col-red">0.1252</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Step 4: gradients by the chain rule</h2>
+  <div class="cols wide-right center">
+    <div style="font-size:0.85em">
+      <p>For one sample, \(E = e^2\) and \(e = \hat y - Y\), so</p>
+      <p>\[ \frac{\partial E}{\partial w_{11}} = \textcolor{#B83A2E}{\frac{\partial E}{\partial \hat y}} \cdot \frac{\partial \hat y}{\partial w_{11}} = \textcolor{#B83A2E}{2e} \cdot X_1 \]</p>
+      <p>and likewise \( \partial E / \partial w_{21} = 2e\,X_2 \).</p>
+      <p class="fragment">Average over the four samples (the MSE is an average):</p>
+      <p class="fragment">\[ \textcolor{#17707F}{\frac{\partial\,\text{MSE}}{\partial w_{11}} = -0.1457} \qquad \textcolor{#17707F}{\frac{\partial\,\text{MSE}}{\partial w_{21}} = -0.0901} \]</p>
+      <p class="fragment small">Both negative: increasing either weight lowers the loss.</p>
+    </div>
+    <table class="data">
+      <thead><tr><th>i</th><th class="col-red">e</th><th>X₁</th><th>X₂</th><th class="col-teal">2eX₁</th><th class="col-teal">2eX₂</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="col-red">−0.149</td><td>0.1</td><td>0.01</td><td class="col-teal">−0.0298</td><td class="col-teal">−0.0030</td></tr>
+        <tr><td>2</td><td class="col-red">−0.091</td><td>0.3</td><td>0.09</td><td class="col-teal">−0.0546</td><td class="col-teal">−0.0164</td></tr>
+        <tr><td>3</td><td class="col-red">−0.064</td><td>0.6</td><td>0.36</td><td class="col-teal">−0.0768</td><td class="col-teal">−0.0461</td></tr>
+        <tr><td>4</td><td class="col-red">−0.301</td><td>0.7</td><td>0.49</td><td class="col-teal">−0.4214</td><td class="col-teal">−0.2950</td></tr>
+        <tr class="mean fragment"><td>mean</td><td></td><td></td><td></td><td class="col-teal">−0.1457</td><td class="col-teal">−0.0901</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Steps 5 and 6: update the weights, then check</h2>
+  <div class="cols center">
+    <div style="font-size:0.88em">
+      <p>\[ w \leftarrow w - \alpha\,\textcolor{#17707F}{\frac{\partial\,\text{MSE}}{\partial w}}, \quad \alpha = 0.3 \]</p>
+      <p>\( w_{11} = 0.5 - 0.3 \times (-0.1457) = \textcolor{#68246D}{0.5437} \)</p>
+      <p>\( w_{21} = 0.1 - 0.3 \times (-0.0901) = \textcolor{#68246D}{0.1270} \)</p>
+      <p class="fragment" data-trigger="fit-iter1">Second forward pass with the new weights: every prediction moves towards its target.</p>
+      <table class="data fragment">
+        <thead><tr><th></th><th>iteration 0</th><th>iteration 1</th></tr></thead>
+        <tbody>
+          <tr><td>SSE</td><td>0.1252</td><td>0.0935</td></tr>
+          <tr><td>MSE</td><td>0.0313</td><td class="col-red"><strong>0.0234</strong></td></tr>
+        </tbody>
+      </table>
+      <p class="fragment small">A 25% drop in loss after a single step. Repeat and it keeps falling.</p>
+    </div>
+    <div class="widget" data-widget="fitbars"></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">The loss landscape of this example</h2>
+  <div class="widget" data-widget="landscape"></div>
+</section>
+
+<section>
+  <h2 class="title">The same example in NumPy</h2>
+  <div class="cols" style="grid-template-columns:1.6fr 1fr">
+    <div>
+      <pre class="dense"><code class="language-python" data-trim data-line-numbers="1-8|10-11|13-14|15-16|17-18|19-20|21">
+import numpy as np
+
+# four samples: columns are X1 and X2
+X = np.array([[0.1, 0.01],
+              [0.3, 0.09],
+              [0.6, 0.36],
+              [0.7, 0.49]])
+Y = np.array([0.20, 0.25, 0.40, 0.70])
+
+w = np.array([0.5, 0.1])    # Step 1: initial weights
+lr = 0.3                     # learning rate (alpha)
+
+for it in range(2):
+    y_hat = X @ w            # Step 2: forward pass, linear neuron
+    e = y_hat - Y            # Step 3: error per sample
+    mse = np.mean(e ** 2)
+    # Step 4: dMSE/dw, averaged over samples
+    grad = np.mean(2 * e[:, None] * X, axis=0)
+    # Step 5: gradient descent update
+    w = w - lr * grad
+    print(f"iteration {it}: MSE={mse:.4f}  w={np.round(w, 4)}")
+      </code></pre>
+    </div>
+    <div class="stack">
+      <pre class="out"><code class="language-plaintext" data-trim>
+iteration 0: MSE=0.0313  w=[0.5437 0.127 ]
+iteration 1: MSE=0.0234  w=[0.5788 0.1487]
+      </code></pre>
+      <div class="panel teal" style="font-size:0.8em">
+        <p><code>X @ w</code> does all four forward passes at once as a matrix product: shape (4, 2) times (2,) gives (4,).</p>
+        <p><code>e[:, None] * X</code> uses <strong>broadcasting</strong>: (4, 1) times (4, 2) gives (4, 2).</p>
+        <p>Vectorised code like this is exactly what GPUs accelerate.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== PART 3 -->
+<section class="divider" data-background-color="#1D2433" data-dark data-part="Part 3: MNIST in Keras">
+  <div class="part-no">3</div>
+  <h2>A first classifier: MNIST</h2>
+  <p>Same loop, bigger numbers: 60,000 images, 407,050 weights, ten classes. Five short Keras calls.</p>
+</section>
+
+<section>
+  <h2 class="title">The problem: read a handwritten digit</h2>
+  <div class="pad-wrap">
+    <div class="widget" data-widget="pad"></div>
+    <div style="font-size:0.85em">
+      <p><strong>Input:</strong> a 28 × 28 greyscale image, values 0 to 255.<br><strong>Output:</strong> one of ten classes, 0 to 9.</p>
+      <p>60,000 training images and 10,000 test images, written by hundreds of people. The "hello world" of deep learning, and the same shape of problem as visual inspection: camera image in, class out.</p>
+      <p class="small"><strong>Terms:</strong> a <em>sample</em> is one image; a <em>class</em> is a category (0 to 9); a <em>label</em> is the class attached to a sample.</p>
+      <div id="strip-host"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Tensors: how the data is stored</h2>
+  <p style="font-size:0.88em">A <strong>tensor</strong> is a multidimensional array. Its <strong>rank</strong> is the number of axes; its <strong>shape</strong> is the length along each axis.</p>
+  <div class="tensor-row widget" data-widget="tensors">
+    <div class="tensor"><div class="cells" data-shape="1"></div><h3>Scalar</h3><div class="small">rank 0, shape <code>()</code></div></div>
+    <div class="tensor fragment"><div class="cells" data-shape="6"></div><h3>Vector</h3><div class="small">rank 1, shape <code>(6,)</code></div></div>
+    <div class="tensor fragment"><div class="cells" data-shape="5,5"></div><h3>Matrix</h3><div class="small">rank 2, shape <code>(5, 5)</code></div></div>
+    <div class="tensor fragment"><div class="tstack" data-shape="3,5,5"></div><h3>Rank-3 tensor</h3><div class="small">rank 3, shape <code>(3, 5, 5)</code></div></div>
+  </div>
+  <div class="callout amber fragment"><code>train_images</code> is a rank-3 tensor of shape <code>(60000, 28, 28)</code> and type <code>uint8</code>: 60,000 matrices of 28 × 28 integers. The first axis is the <strong>samples axis</strong>; later we cut it into batches.</div>
+</section>
+
+<section>
+  <h2 class="title">Load the data</h2>
+  <pre><code class="language-python" data-trim data-line-numbers="1|3-4|6-9|10-11">
+from keras.datasets import mnist
+
+(train_images, train_labels), (test_images, test_labels) = \
+    mnist.load_data()
+
+>>> train_images.shape
+(60000, 28, 28)
+>>> train_images.dtype
+dtype('uint8')
+>>> train_labels[:10]
+array([5, 0, 4, 1, 9, 2, 1, 3, 1, 4], dtype=uint8)
+  </code></pre>
+  <div class="cols" style="margin-top:20px; font-size:0.85em">
+    <div class="panel amber">The images are the <strong>inputs</strong>; the labels, plain integers 0 to 9, are the <strong>expected outputs</strong>.</div>
+    <div class="panel">Keep the <strong>test set</strong> aside: it is only for the final check of how well the model generalises to images it has never seen.</div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Prepare the data</h2>
+  <div class="cols wide-left">
+    <pre><code class="language-python" data-trim data-line-numbers="1-3|5-7">
+# Reshape: flatten each 28x28 image to a 784-vector
+train_images = train_images.reshape((60000, 28 * 28))
+test_images = test_images.reshape((10000, 28 * 28))
+
+# Normalise: integers 0-255 -> floats in [0, 1]
+train_images = train_images.astype("float32") / 255
+test_images = test_images.astype("float32") / 255
+    </code></pre>
+    <div class="stack" style="font-size:0.82em">
+      <div class="panel amber">
+        <h3>Reshape</h3>
+        <p>(60000, 28, 28) → (60000, 784). A dense layer expects a vector per sample; row by row, each image becomes 784 numbers, as on the drawing pad.</p>
+      </div>
+      <div class="panel teal fragment">
+        <h3>Why normalise?</h3>
         <ul>
-          <li>Lecturer: Dr Nima Gerami-Seresht</li>
-          <li>Office hours: Mondays 12:00 to 13:00</li>
-          <li>Main text: F. Chollet, <em>Deep Learning with Python</em>, 2nd edition, Manning, 2021</li>
-          <li><a href="https://github.com/nimageramiseresht/ENGI-48915---Deep-Learning-for-Engineering">Module repository on GitHub</a></li>
+          <li>Networks train best on small inputs</li>
+          <li>Avoids large, unstable gradient updates</li>
+          <li>Converges faster</li>
         </ul>
+        <p class="small">Standard practice: scale inputs to [0, 1] or [−1, 1].</p>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
+</section>
 
-  <footer>Code examples use Python with Keras. They are shown for reading; run them in your own environment.</footer>
+<section>
+  <h2 class="title">The network: 784 → 512 → 10</h2>
+  <div class="cols wide-right center">
+    <div class="stack">
+      <pre><code class="language-python" data-trim data-line-numbers="1-2|4-7">
+import keras
+from keras import layers
+
+model = keras.Sequential([
+    layers.Dense(512, activation="relu"),
+    layers.Dense(10, activation="softmax"),
+])
+      </code></pre>
+      <table class="data fragment" style="font-size:0.7em">
+        <thead><tr><th>layer</th><th>weights</th><th>biases</th><th>parameters</th></tr></thead>
+        <tbody>
+          <tr><td>Dense 512</td><td>784 × 512</td><td>512</td><td>401,920</td></tr>
+          <tr><td>Dense 10</td><td>512 × 10</td><td>10</td><td>5,130</td></tr>
+          <tr class="mean"><td>total</td><td></td><td></td><td class="col-amber">407,050</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Dense means fully connected: every unit sees every unit of the previous layer through its own weight.</p>
+    </div>
+    <div class="widget" data-widget="net" data-layers="7,9,10" data-counts="784,512,10" data-captions="Input: 784 pixels,Dense + ReLU: 512,Dense + softmax: 10"></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">ReLU inside, softmax at the output</h2>
+  <div class="cols wide-right">
+    <div style="font-size:0.85em">
+      <p><strong>ReLU</strong> in the hidden layer, \( \max(0, x) \), supplies the nonlinearity.</p>
+      <p><strong>Softmax</strong> turns the ten raw output scores (logits \(z\)) into a probability distribution:</p>
+      <p>\[ \hat y_i = \frac{e^{z_i}}{\sum_{j=0}^{9} e^{z_j}} \]</p>
+      <p class="small">Every output lies between 0 and 1 and they sum to 1. The prediction is the class with the largest probability.</p>
+      <p class="fragment small" data-trigger="softmax-on">Exponentiating then normalising exaggerates the gap between the top score and the rest.</p>
+    </div>
+    <div class="widget" data-widget="softmax"></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Compile: choose how to learn</h2>
+  <pre><code class="language-python" data-trim data-line-numbers="1-5|2|3|4">
+model.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"],
+)
+  </code></pre>
+  <div class="cols three" style="margin-top:22px; font-size:0.85em">
+    <div class="panel teal"><h3>Optimizer</h3><p>How weights are updated from gradients. Adam: adaptive moment estimation, a robust default.</p></div>
+    <div class="panel red"><h3>Loss</h3><p>Cross-entropy for classification. <em>Sparse</em> means the labels are integers (7), not one-hot vectors.</p></div>
+    <div class="panel"><h3>Metrics</h3><p>What we report to people. Accuracy is readable, but is not differentiable, so it cannot be the loss.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">Fit: epochs and mini-batches</h2>
+  <pre><code class="language-python" data-trim>
+model.fit(train_images, train_labels, epochs=5, batch_size=128)
+  </code></pre>
+  <div class="widget" data-widget="batches" style="margin-top:18px"></div>
+  <p class="small" style="margin-top:10px">Each <strong>batch</strong> of 128 images gives one gradient estimate and one weight update: <em>mini-batch stochastic gradient descent</em>. An <strong>epoch</strong> is one full pass over the 60,000 images: 469 batches (the last holds 96).</p>
+</section>
+
+<section>
+  <h2 class="title">Evaluate and predict</h2>
+  <div class="cols wide-left">
+    <div class="stack">
+      <pre><code class="language-python" data-trim data-line-numbers="1-2|4-5|7-10">
+test_loss, test_acc = model.evaluate(test_images, test_labels)
+print(f"test accuracy: {test_acc:.3f}")
+
+# probabilities for the first 10 test images
+predictions = model.predict(test_images[:10])
+
+>>> predictions[0].round(3)
+array([0., 0., 0., 0.001, 0., 0., 0., 0.998, 0., 0.001])
+>>> predictions[0].argmax(), test_labels[0]
+(7, 7)
+      </code></pre>
+      <p class="code-caption">Printed values are illustrative; yours will differ slightly from run to run.</p>
+    </div>
+    <div class="stack">
+      <div class="counters" style="grid-template-columns:1fr 1fr">
+        <div><div class="k c-amber">98.9%</div><div class="l">training accuracy</div></div>
+        <div><div class="k c-purple">97.8%</div><div class="l">test accuracy</div></div>
+      </div>
+      <div class="panel red fragment" style="font-size:0.82em">
+        <h3>Mind the gap</h3>
+        <p>Better on training data than on unseen data: mild <strong>overfitting</strong>. The model has partly memorised its training set. Measuring and controlling this gap is a central theme of the module.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="title">What <code>fit()</code> does under the hood</h2>
+  <div class="cols" style="grid-template-columns:1.75fr 1fr">
+    <pre class="dense"><code class="language-python" data-trim data-line-numbers="1-6|8|9-10|11|12|13|14">
+import tensorflow as tf
+
+loss_fn = keras.losses.SparseCategoricalCrossentropy()
+optimizer = keras.optimizers.Adam()
+dataset = tf.data.Dataset.from_tensor_slices(
+    (train_images, train_labels)).shuffle(60000).batch(128)
+
+for epoch in range(5):
+    for x_batch, y_batch in dataset:      # 469 batches per epoch
+        with tf.GradientTape() as tape:
+            y_pred = model(x_batch, training=True)
+            loss = loss_fn(y_batch, y_pred)
+        grads = tape.gradient(loss, model.trainable_weights)
+        optimizer.apply_gradients(zip(grads, model.trainable_weights))
+    </code></pre>
+    <ol style="font-size:0.78em">
+      <li><span class="c-amber">Batch:</span> draw 128 samples and their targets</li>
+      <li><span class="c-amber">Forward pass:</span> \(\hat y = \text{model}(x)\)</li>
+      <li><span class="c-red">Loss:</span> \(L = \text{loss}(y, \hat y)\)</li>
+      <li><span class="c-teal">Backpropagation:</span> \(\nabla_W L\), recorded by the tape</li>
+      <li><span class="c-purple">Update:</span> \(W \leftarrow W - \eta \nabla_W L\) (Adam refines this)</li>
+    </ol>
+  </div>
+  <p class="bottom-line">The same five steps as the hand-worked example. Only the scale has changed: 407,050 weights instead of 2.</p>
+</section>
+
+<section>
+  <h2 class="title">Optimisers: beyond plain gradient descent</h2>
+  <div class="cols three">
+    <div class="panel">
+      <h3>SGD</h3>
+      <p>\( w \leftarrow w - \eta \nabla_w L \)</p>
+      <p class="small">Simple, one fixed learning rate. Crawls along long narrow valleys and can stall in shallow local minima.</p>
+    </div>
+    <div class="panel teal fragment">
+      <h3>Momentum</h3>
+      <p>\( v_t = \mu v_{t-1} - \eta \nabla_w L \)<br>\( w_t = w_{t-1} + v_t \)</p>
+      <p class="small">A ball rolling downhill: velocity accumulates, so it speeds along valleys, damps oscillation and rolls through small dips. Typically \(\mu = 0.9\).</p>
+    </div>
+    <div class="panel purple fragment">
+      <h3>Adam</h3>
+      <p class="small" style="margin-top:0.4em">Momentum plus a separate, adaptive step size for every parameter, scaled by the recent size of its gradients. Works well with little tuning: the default choice for most problems.</p>
+    </div>
+  </div>
+  <div class="callout fragment">Go back to the loss-landscape slide of the worked example and switch on momentum: the long valley is exactly where it helps.</div>
+</section>
+
+<section>
+  <h2 class="title">The complete script</h2>
+  <pre class="dense"><code class="language-python" data-trim style="max-height:none">
+import keras
+from keras import layers
+from keras.datasets import mnist
+
+# 1. Load
+(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+
+# 2. Prepare: flatten and scale to [0, 1]
+train_images = train_images.reshape((60000, 28 * 28)).astype("float32") / 255
+test_images = test_images.reshape((10000, 28 * 28)).astype("float32") / 255
+
+# 3. Build
+model = keras.Sequential([
+    layers.Dense(512, activation="relu"),
+    layers.Dense(10, activation="softmax"),
+])
+
+# 4. Compile
+model.compile(optimizer="adam",
+              loss="sparse_categorical_crossentropy",
+              metrics=["accuracy"])
+
+# 5. Train
+model.fit(train_images, train_labels, epochs=5, batch_size=128)
+
+# 6. Evaluate on unseen data
+test_loss, test_acc = model.evaluate(test_images, test_labels)
+print(f"test accuracy: {test_acc:.3f}")
+  </code></pre>
+</section>
+
+<!-- ===================================================== WRAP UP -->
+<section data-part="Wrap-up">
+  <h2 class="title">Key takeaways</h2>
+  <ol style="font-size:0.88em">
+    <li class="fragment"><strong>AI ⊃ ML ⊃ DL.</strong> Deep learning is machine learning with many successive layers of learned representations.</li>
+    <li class="fragment"><strong>Machine learning inverts programming:</strong> from data and answers it produces the rules, stored as weights.</li>
+    <li class="fragment"><strong>One loop does all the learning:</strong> forward pass, loss, backpropagation (the chain rule), weight update \( w \leftarrow w - \eta \nabla_w L \).</li>
+    <li class="fragment"><strong>The hand-worked neuron and the MNIST network run the same loop;</strong> only the number of weights differs, 2 versus 407,050.</li>
+    <li class="fragment"><strong>Watch the gap</strong> between training and test performance: that is what generalisation means in practice.</li>
+  </ol>
+</section>
+
+<section>
+  <h2 class="title">Self-study exercises</h2>
+  <ul class="ex-list" style="list-style:none; margin-left:0">
+    <li><span class="tag">Recall</span>List the three ingredients of a machine learning system and give an example of each for autonomous vehicle perception.</li>
+    <li><span class="tag">Understand</span>Explain what "deep" refers to. Why does stacking linear layers without an activation function not make a network deeper in any useful sense?</li>
+    <li><span class="tag">Apply</span>Continue the worked example for two more iterations by hand, then check with the NumPy code. Does the MSE fall by the same fraction each time?</li>
+    <li><span class="tag">Apply</span>Bridge inspection: compare a rule-based and a learned crack detector. What data would you need, and which loss?</li>
+    <li><span class="tag">Analyse</span>Count the trainable parameters of a 784 → 256 → 10 dense network, biases included.</li>
+    <li><span class="tag">Evaluate</span>Design a network to classify three bolt types from 64 × 64 greyscale images: input shape, hidden layers, output size and activations. Justify each choice.</li>
+  </ul>
+</section>
+
+<section>
+  <h2 class="title">Next week and reading</h2>
+  <div class="cols">
+    <div class="panel purple">
+      <h3>Week 2</h3>
+      <p>Introduction to Keras and TensorFlow (Chollet, chapter 3): the tools behind today's five Keras calls.</p>
+    </div>
+    <div class="panel">
+      <h3>Reading</h3>
+      <ul style="font-size:0.85em">
+        <li>Chollet, F. (2021). <em>Deep Learning with Python</em>, 2nd ed., Manning: chapters 1 and 2.</li>
+        <li>Goodfellow, I., Bengio, Y. and Courville, A. (2016). <em>Deep Learning</em>, MIT Press. <a href="https://www.deeplearningbook.org">deeplearningbook.org</a></li>
+        <li>LeCun, Y., Bengio, Y. and Hinton, G. (2015). Deep learning. <em>Nature</em> 521, 436–444.</li>
+        <li>3Blue1Brown, <em>Neural networks</em> video series.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small" style="margin-top:22px">Office hours: Mondays 12:00 to 13:00.</p>
+</section>
+
+</div>
 </div>
 
-<script>
-  /* Edit this list to publish a week: set href and title, and the node lights up. */
-  const WEEKS = [
-    { n: 1, href: 'week1/', title: 'From machine learning to a first classifier',
-      summary: 'What deep learning is, a neural network worked through by hand, and an MNIST digit classifier in Keras.' },
-    { n: 2, href: null, title: 'Week 2', summary: 'Slides appear here before the session.' },
-    { n: 3, href: null, title: 'Week 3', summary: 'Slides appear here before the session.' },
-    { n: 4, href: null, title: 'Week 4', summary: 'Slides appear here before the session.' },
-    { n: 5, href: null, title: 'Week 5', summary: 'Slides appear here before the session.' }
-  ];
-  const list = document.getElementById('weeks');
-  let lastOpen = 0;
-  WEEKS.forEach((w, i) => {
-    const li = document.createElement('li');
-    li.className = 'week' + (w.href ? ' open' : '');
-    const inner = `<span class="node" aria-hidden="true">${w.n}</span>
-      <h2>${w.title}</h2>
-      <p>${w.summary}</p>
-      <span class="status">${w.href ? 'Open slides' : 'Not yet available'}</span>`;
-    li.innerHTML = w.href ? `<a href="${w.href}" aria-label="Week ${w.n}: ${w.title}">${inner}</a>` : `<div>${inner}</div>`;
-    list.appendChild(li);
-    if (w.href) lastOpen = i;
-  });
-  // the amber rail runs up to the latest available week
-  const style = document.createElement('style');
-  style.textContent = `@keyframes signal { to { width: calc(${lastOpen} * ((100% - 72px) / 5 + 18px)); } }`;
-  document.head.appendChild(style);
-</script>
+<footer class="deck-footer">
+  <a href="../index.html">ENGI 48915</a>
+  <span>Week 1</span>
+  <span class="part"></span>
+</footer>
+
+<script src="../assets/vendor/reveal/reveal.js"></script>
+<script src="../assets/vendor/reveal/plugin/highlight/highlight.js"></script>
+<script src="../assets/vendor/reveal/plugin/math/math.js"></script>
+<script src="../assets/vendor/reveal/plugin/notes/notes.js"></script>
+<script src="../assets/js/deck.js"></script>
+<script src="widgets.js"></script>
+<script>Deck.start();</script>
 </body>
 </html>
