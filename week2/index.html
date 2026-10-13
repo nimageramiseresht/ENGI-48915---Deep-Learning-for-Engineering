@@ -429,7 +429,7 @@ body.doc .tbl-wrap { overflow-x: auto; }
       <p class="small">We build multi-layer perceptrons for three kinds of problem: <strong>multiclass classification</strong> (handwritten digits), <strong>binary classification</strong> (movie reviews) and <strong>regression</strong> (house prices).</p>
       <h3>Outline</h3>
       <ol class="small outline">
-        <li><strong>Architecture and transfer functions:</strong> what a Dense layer computes</li>
+        <li><strong>Transfer functions:</strong> what a Dense layer computes</li>
         <li><strong>Output layer and loss function:</strong> set by what you predict</li>
         <li><strong>Input layer:</strong> images, measurements and text</li>
         <li><strong>Epochs, batches, validation and learning rate</strong></li>
@@ -481,15 +481,15 @@ body.doc .tbl-wrap { overflow-x: auto; }
   <aside class="notes"><ul><li>Classification: which category. Regression: how much. Ask for one example of each from their own projects.</li><li>Bottom line: the same network and workflow solve all of these; only the last layer and the loss change.</li></ul></aside>
 </section>
 
-<!-- ===================== SECTION 1: ARCHITECTURE AND TRANSFER FUNCTIONS ===================== -->
+<!-- ===================== SECTION 1: TRANSFER FUNCTIONS ===================== -->
 <section class="slide title divider" data-part="2">
   <div class="cols wl" style="align-items:center">
     <div>
       <p class="sec-no">Section 1</p>
-      <h1>Architecture and transfer functions</h1>
+      <h1>Transfer functions</h1>
       <p class="sub">What a Dense layer computes, and why it needs a non-linear transfer function</p>
     </div>
-    <ol class="sec-map" aria-label="Lecture outline"><li class="now"><span>1</span>Architecture and transfer functions</li><li class=""><span>2</span>Output layer and loss function</li><li class=""><span>3</span>Input layer</li><li class=""><span>4</span>Epochs, batches, validation and learning rate</li><li class=""><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="now"><span>1</span>Transfer functions</li><li class=""><span>2</span>Output layer and loss function</li><li class=""><span>3</span>Input layer</li><li class=""><span>4</span>Epochs, batches, validation and learning rate</li><li class=""><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
   </div>
   <aside class="notes"><ul><li>About 12 minutes. Goal: what one Dense layer computes, and why stacking layers needs a non-linear transfer function.</li></ul></aside>
 </section>
@@ -609,7 +609,7 @@ body.doc .tbl-wrap { overflow-x: auto; }
       <h1>Output layer and loss function</h1>
       <p class="sub">The question you ask fixes the last layer and the loss</p>
     </div>
-    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Architecture and transfer functions</li><li class="now"><span>2</span>Output layer and loss function</li><li class=""><span>3</span>Input layer</li><li class=""><span>4</span>Epochs, batches, validation and learning rate</li><li class=""><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Transfer functions</li><li class="now"><span>2</span>Output layer and loss function</li><li class=""><span>3</span>Input layer</li><li class=""><span>4</span>Epochs, batches, validation and learning rate</li><li class=""><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
   </div>
   <aside class="notes"><ul><li>About 12 minutes. The question you ask decides the output layer and the loss.</li></ul></aside>
 </section>
@@ -738,7 +738,7 @@ loss = "categorical_crossentropy"</code></pre></div>
       <h1>Input layer</h1>
       <p class="sub">Fixed-size inputs from images, measurements and text</p>
     </div>
-    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Architecture and transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="now"><span>3</span>Input layer</li><li class=""><span>4</span>Epochs, batches, validation and learning rate</li><li class=""><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="now"><span>3</span>Input layer</li><li class=""><span>4</span>Epochs, batches, validation and learning rate</li><li class=""><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
   </div>
   <aside class="notes"><ul><li>About 7 minutes. The other end of the network: the input layer, with text as the hard case.</li></ul></aside>
 </section>
@@ -840,7 +840,7 @@ loss = "categorical_crossentropy"</code></pre></div>
       <h1>Epochs, batches, validation and learning rate</h1>
       <p class="sub">The settings that control training</p>
     </div>
-    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Architecture and transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="now"><span>4</span>Epochs, batches, validation and learning rate</li><li class=""><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="now"><span>4</span>Epochs, batches, validation and learning rate</li><li class=""><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
   </div>
   <aside class="notes"><ul><li>About 12 minutes. The settings that control training: epochs, batches, validation split, learning rate, and normalised inputs.</li></ul></aside>
 </section>
@@ -997,7 +997,7 @@ for bs in [32, 512]:
       <h1>Hands-on modelling with Keras</h1>
       <p class="sub">An MLP for handwritten digits, step by step</p>
     </div>
-    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Architecture and transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="done"><span>4</span>Epochs, batches, validation and learning rate</li><li class="now"><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="done"><span>4</span>Epochs, batches, validation and learning rate</li><li class="now"><span>5</span>Hands-on modelling with Keras</li><li class=""><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
   </div>
   <aside class="notes"><ul><li>About 22 minutes. Live coding; students follow in a notebook. Every code block has a Copy button.</li></ul></aside>
 </section>
@@ -1335,7 +1335,7 @@ plt.show()</code></pre></div>
       <h1>Notes</h1>
       <p class="sub">Reading the results, then the binary and regression versions</p>
     </div>
-    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Architecture and transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="done"><span>4</span>Epochs, batches, validation and learning rate</li><li class="done"><span>5</span>Hands-on modelling with Keras</li><li class="now"><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="done"><span>4</span>Epochs, batches, validation and learning rate</li><li class="done"><span>5</span>Hands-on modelling with Keras</li><li class="now"><span>6</span>Notes</li><li class=""><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
   </div>
   <aside class="notes"><ul><li>About 16 minutes. Reading results, then the same pipeline for binary classification (IMDb) and regression (housing).</li></ul></aside>
 </section>
@@ -1625,7 +1625,7 @@ print("mean MAE:", np.mean(scores))</code></pre></div>
       <h1>Overfitting</h1>
       <p class="sub">Why a model that fits its training data too well fails on new data</p>
     </div>
-    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Architecture and transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="done"><span>4</span>Epochs, batches, validation and learning rate</li><li class="done"><span>5</span>Hands-on modelling with Keras</li><li class="done"><span>6</span>Notes</li><li class="now"><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="done"><span>4</span>Epochs, batches, validation and learning rate</li><li class="done"><span>5</span>Hands-on modelling with Keras</li><li class="done"><span>6</span>Notes</li><li class="now"><span>7</span>Overfitting</li><li class=""><span>8</span>Avoiding overfitting</li></ol>
   </div>
   <aside class="notes"><ul><li>About 14 minutes. Back to the Step 6 curves: why does validation loss turn up?</li></ul></aside>
 </section>
@@ -1782,7 +1782,7 @@ print("mean MAE:", np.mean(scores))</code></pre></div>
       <h1>Avoiding overfitting</h1>
       <p class="sub">Model size, dropout, early stopping and weight decay</p>
     </div>
-    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Architecture and transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="done"><span>4</span>Epochs, batches, validation and learning rate</li><li class="done"><span>5</span>Hands-on modelling with Keras</li><li class="done"><span>6</span>Notes</li><li class="done"><span>7</span>Overfitting</li><li class="now"><span>8</span>Avoiding overfitting</li></ol>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Transfer functions</li><li class="done"><span>2</span>Output layer and loss function</li><li class="done"><span>3</span>Input layer</li><li class="done"><span>4</span>Epochs, batches, validation and learning rate</li><li class="done"><span>5</span>Hands-on modelling with Keras</li><li class="done"><span>6</span>Notes</li><li class="done"><span>7</span>Overfitting</li><li class="now"><span>8</span>Avoiding overfitting</li></ol>
   </div>
   <aside class="notes"><ul><li>About 20 minutes. Augmentation, model size, dropout, early stopping, weight decay, then all together.</li></ul></aside>
 </section>
@@ -2087,7 +2087,7 @@ input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; paddi
   'use strict';
   var PARTS = {
     1: ['Opening', 0, 5],
-    2: ['Section 1: Architecture and transfer functions', 5, 12],
+    2: ['Section 1: Transfer functions', 5, 12],
     3: ['Section 2: Output layer and loss', 17, 12],
     4: ['Section 3: Input layer', 29, 7],
     5: ['Section 4: Epochs, batches, validation and learning rate', 36, 12],
