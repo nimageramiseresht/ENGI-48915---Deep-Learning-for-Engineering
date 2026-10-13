@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 2: Classification and Regression</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+  };
+  window.Prism = { manual: true };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+<style>
+:root {
+  --frame: #D9E1E7;
+  --paper: #F4F7F9;
+  --grid: #E3E9EE;
+  --grid-major: #D6DFE6;
+  --ink: #18222D;
+  --ink-2: #4B5867;
+  --ink-3: #7A8794;
+  --rule: #C5D0D9;
+  --panel: #E8EEF2;
+  --code-bg: #EDF2F6;
+  --code-border: #C9D5DE;
+  --tok-kw: #7B2D8E;
+  --tok-str: #1E7A45;
+  --tok-num: #A4500A;
+  --tok-fn: #1D5BA6;
+  --tok-com: #687582;
+  --tok-builtin: #0D6E6A;
+  --p1: #1F5FA8; --p2: #0E7470; --p3: #3D4A5C; --p4: #B23A2B;
+  --p5: #8F5D00; --p6: #2E7A48; --p7: #6B3FA0; --p8: #7A5C45;
+  --good: #2E7A48; --bad: #B23A2B;
+  --sec: var(--p1);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --frame: #070B0F; --paper: #111920; --grid: #172129; --grid-major: #1D2832;
+    --ink: #E4EAF0; --ink-2: #A8B4C0; --ink-3: #7D8A97; --rule: #2B3946;
+    --panel: #1A2530; --code-bg: #0C1319; --code-border: #24323E;
+    --tok-kw: #D19BEA; --tok-str: #7FD19E; --tok-num: #F0A867; --tok-fn: #82B4F2;
+    --tok-com: #8996A3; --tok-builtin: #6FD1C9;
+    --p1: #6FA3E8; --p2: #4DBDB5; --p3: #A3B2C4; --p4: #F07A6A;
+    --p5: #E0AA45; --p6: #6CC690; --p7: #B18BE6; --p8: #C9A68A;
+    --good: #6CC690; --bad: #F07A6A;
+  }
+}
+:root[data-theme="dark"] {
+  --frame: #070B0F; --paper: #111920; --grid: #172129; --grid-major: #1D2832;
+  --ink: #E4EAF0; --ink-2: #A8B4C0; --ink-3: #7D8A97; --rule: #2B3946;
+  --panel: #1A2530; --code-bg: #0C1319; --code-border: #24323E;
+  --tok-kw: #D19BEA; --tok-str: #7FD19E; --tok-num: #F0A867; --tok-fn: #82B4F2;
+  --tok-com: #8996A3; --tok-builtin: #6FD1C9;
+  --p1: #6FA3E8; --p2: #4DBDB5; --p3: #A3B2C4; --p4: #F07A6A;
+  --p5: #E0AA45; --p6: #6CC690; --p7: #B18BE6; --p8: #C9A68A;
+  --good: #6CC690; --bad: #F07A6A;
+}
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  height: 100%; margin: 0; background: var(--frame); color: var(--ink);
+  font-family: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+[data-part="1"] { --sec: var(--p1); } [data-part="2"] { --sec: var(--p2); }
+[data-part="3"] { --sec: var(--p3); } [data-part="4"] { --sec: var(--p4); }
+[data-part="5"] { --sec: var(--p5); } [data-part="6"] { --sec: var(--p6); }
+[data-part="7"] { --sec: var(--p7); } [data-part="8"] { --sec: var(--p8); }
+
+/* ---------- stage ---------- */
+.viewport {
+  position: fixed; top: 0; bottom: 0; left: 0; right: 0;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.stage {
+  width: 1280px; height: 720px; flex: none; position: relative; overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+.slide {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  padding: 38px 56px 62px; box-sizing: border-box;
+  display: flex; flex-direction: column;
+  visibility: hidden; opacity: 0; transition: opacity .22s ease;
+}
+.slide.active { visibility: visible; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .slide { transition: none; } }
+
+/* ---------- type ---------- */
+.slide h1, .slide h2, .slide h3, .slide h4, .tblock, .btn, .tbl th {
+  font-family: 'Barlow Semi Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+}
+.slide h2 {
+  font-weight: 600; font-size: 42px; line-height: 1.06; margin: 0 0 22px;
+  padding-left: 18px; border-left: 8px solid var(--sec); letter-spacing: -0.003em;
+}
+.slide h3 { font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 8px; color: var(--sec); }
+.slide h4 { font-weight: 600; font-size: 21px; margin: 0 0 4px; }
+.slide p, .slide li { font-size: 22px; line-height: 1.42; }
+.slide p { margin: 0 0 12px; }
+.slide ul, .slide ol { margin: 0 0 12px; padding-left: 26px; }
+.slide li { margin: 0 0 6px; }
+.slide li::marker { color: var(--sec); font-weight: 700; }
+.slide .small, .slide .small p, .slide .small li { font-size: 18.5px; }
+.muted { color: var(--ink-2); }
+.center { text-align: center; }
+code { font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace; font-size: .84em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+strong { font-weight: 700; }
+.opt-tag {
+  display: inline-block; vertical-align: middle; margin-left: 14px; padding: 2px 12px;
+  font: 600 16px 'Barlow Semi Condensed', sans-serif; color: var(--sec);
+  border: 1.5px solid var(--sec); border-radius: 999px; letter-spacing: .01em;
+}
+
+/* ---------- layout ---------- */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; min-height: 0; }
+.cols > * { min-width: 0; }
+.cols.wl { grid-template-columns: 1.45fr 1fr; }
+.cols.wr { grid-template-columns: 1fr 1.35fr; }
+.cols.code { grid-template-columns: 2fr 1fr; gap: 32px; }
+.cols.three { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.cols.four { grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.slide .stack > * + * { margin-top: 16px; }
+.grow { flex: 1; min-height: 0; }
+.box { border-left: 5px solid var(--sec); background: var(--panel); padding: 14px 20px; }
+.box > :last-child { margin-bottom: 0; }
+.box.quiet { border-left-color: var(--rule); }
+.ask { border: 1.5px dashed var(--sec); padding: 12px 18px; }
+.ask > :last-child { margin-bottom: 0; }
+.ask strong:first-child { color: var(--sec); }
+.bottom-line { margin-top: auto; font-size: 23px; padding-top: 12px; border-top: 1.5px solid var(--rule); }
+.bottom-line p { margin: 0; }
+
+/* tables */
+.tbl { border-collapse: collapse; width: 100%; font-size: 19px; line-height: 1.35; }
+.tbl th { text-align: left; font-weight: 600; font-size: 20px; border-bottom: 2px solid var(--ink); padding: 7px 10px; }
+.tbl td { border-bottom: 1px solid var(--rule); padding: 7px 10px; vertical-align: top; }
+.tbl td:first-child { font-weight: 700; }
+.tbl.compact td, .tbl.compact th { padding: 5px 8px; }
+.tbl .now td { background: color-mix(in srgb, var(--sec) 12%, transparent); }
+
+/* code */
+.code-wrap { position: relative; min-height: 0; }
+pre {
+  margin: 0; font: 16.5px/1.5 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  background: var(--code-bg); color: var(--ink); border: 1px solid var(--code-border);
+  border-left: 4px solid var(--sec); padding: 13px 16px; overflow: auto; tab-size: 4; max-height: 560px;
+}
+pre.dense { font-size: 16px; line-height: 1.45; }
+pre code { background: none; padding: 0; font-size: inherit; border-radius: 0; }
+.copy {
+  position: absolute; bottom: 7px; right: 8px; z-index: 2; cursor: pointer;
+  font: 600 14px 'Atkinson Hyperlegible', sans-serif; padding: 3px 10px;
+  color: var(--ink-2); background: var(--paper); border: 1px solid var(--code-border);
+}
+.copy:hover { color: var(--ink); border-color: var(--ink-3); }
+.token.comment { color: var(--tok-com); font-style: italic; }
+.token.keyword { color: var(--tok-kw); }
+.token.string, .token.triple-quoted-string { color: var(--tok-str); }
+.token.number, .token.boolean { color: var(--tok-num); }
+.token.function { color: var(--tok-fn); }
+.token.builtin { color: var(--tok-builtin); }
+.token.operator, .token.punctuation { color: var(--ink-2); }
+
+/* controls */
+.btn {
+  font-weight: 600; font-size: 17px; cursor: pointer; padding: 4px 13px;
+  color: var(--sec); background: transparent; border: 1.5px solid var(--sec);
+}
+.btn:hover, .btn[aria-pressed="true"] { background: var(--sec); color: var(--paper); }
+:focus-visible { outline: 3px solid var(--sec); outline-offset: 2px; }
+input[type=range] { accent-color: var(--sec); width: 100%; margin: 0; }
+input[type=checkbox], input[type=radio] { accent-color: var(--sec); width: 18px; height: 18px; }
+.ctl { display: grid; grid-template-columns: 40px 1fr 58px; align-items: center; gap: 10px; font-size: 18px; margin-bottom: 6px; }
+.ctl output, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.readout { font-size: 19px; line-height: 1.5; }
+.readout b { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 17px; }
+
+/* svg helpers */
+svg.fig { display: block; max-width: 100%; height: auto; }
+mjx-container[display="true"] { margin: 0.5em 0 !important; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+.ax { stroke: var(--ink-3); stroke-width: 1.2; fill: none; }
+.ax-0 { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.tick { fill: var(--ink-2); font: 11px 'Atkinson Hyperlegible', sans-serif; }
+.lbl { fill: var(--ink); font: 600 13px 'Barlow Semi Condensed', sans-serif; }
+.c-sec { stroke: var(--sec); stroke-width: 2.6; fill: none; }
+.c-alt { stroke: var(--ink-2); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-bad { stroke: var(--bad); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-good { stroke: var(--good); stroke-width: 2.6; fill: none; }
+.g-old { stroke: var(--ink-3); stroke-width: .6; opacity: .45; fill: none; }
+.g-line { stroke: var(--sec); stroke-width: 1.1; opacity: .5; fill: none; }
+.g-int { stroke: var(--sec); stroke-width: 1.6; opacity: .8; fill: none; }
+.g-sq { fill: var(--sec); fill-opacity: .16; stroke: var(--sec); stroke-width: 2; }
+.g-f { fill: var(--ink); fill-opacity: .85; stroke: none; }
+.g-arrow { stroke: var(--bad); stroke-width: 2.6; fill: none; }
+.g-arrow2 { stroke: var(--good); stroke-width: 2.6; fill: none; }
+.node { fill: var(--paper); stroke: var(--sec); stroke-width: 2; }
+.node.in { stroke: var(--ink-3); }
+.edge { stroke: var(--ink-3); stroke-width: .7; opacity: .35; }
+.dot-pt { fill: var(--sec); }
+
+/* softmax demo */
+.sm-row { display: grid; grid-template-columns: 140px 230px 56px 1fr 70px 34px; align-items: center; gap: 12px; font-size: 21px; margin-bottom: 12px; }
+.sm-bar { height: 32px; background: var(--panel); position: relative; border: 1px solid var(--rule); }
+.sm-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-3); transition: width .12s; }
+.sm-bar.top i { background: var(--sec); }
+
+/* pipeline + folds */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px 30px; margin-top: 10px; counter-reset: st; }
+.flow > div { position: relative; border: 1.5px solid var(--ink-3); background: var(--paper); padding: 16px 18px 18px; min-height: 150px; }
+.flow > div::before { counter-increment: st; content: counter(st); position: absolute; top: -13px; left: 10px; background: var(--sec); color: var(--paper); font: 700 15px 'Barlow Semi Condensed', sans-serif; padding: 1px 8px; }
+.flow > div:not(:nth-child(4n))::after { content: ''; position: absolute; right: -25px; top: 50%; border: 8px solid transparent; border-left: 12px solid var(--ink-3); transform: translateY(-50%); }
+.flow h4 { margin-top: 6px; font-size: 25px !important; }
+.slide .flow p { font-size: 19px; line-height: 1.4; margin: 0 0 4px; color: var(--ink-2); }
+.flow code { font-size: 15px; }
+.folds { margin-bottom: 10px; display: grid; grid-template-columns: 70px repeat(4, 1fr) 80px; gap: 8px; align-items: center; font-size: 18px; }
+.folds span.c { border: 1px solid var(--ink-3); text-align: center; padding: 8px 0; background: var(--paper); }
+.folds span.v { border: 2px solid var(--sec); background: color-mix(in srgb, var(--sec) 22%, var(--paper)); font-weight: 700; }
+.folds .s { color: var(--sec); font-weight: 700; }
+
+/* reveal */
+.reveal[hidden] { display: none; }
+
+/* title slide */
+.slide.title { justify-content: center; }
+.slide.title h1 { font-weight: 700; font-size: 82px; line-height: .98; margin: 0 0 14px; letter-spacing: -0.01em; }
+.slide.title .sub { font-size: 30px; color: var(--ink-2); margin-bottom: 40px; }
+.slide.title .meta p { font-size: 21px; margin: 0 0 4px; }
+.slide .keys { font-size: 16px; color: var(--ink-2); margin-top: 34px; }
+.keys kbd, .help kbd { font-family: 'JetBrains Mono', monospace; font-size: 13px; border: 1px solid var(--rule); border-bottom-width: 2px; padding: 1px 6px; background: var(--paper); color: var(--ink); }
+
+/* title block footer */
+.tblock {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 40px; z-index: 5;
+  display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: stretch;
+  border-top: 1.5px solid var(--ink); background: var(--paper); font-weight: 500; font-size: 16px;
+}
+.tblock > * { display: flex; align-items: center; padding: 0 14px; border-left: 1.5px solid var(--ink); white-space: nowrap; }
+.tblock > :first-child { border-left: 0; padding: 0; }
+.tblock .nav button { height: 100%; width: 42px; border: 0; background: transparent; color: var(--ink); font-size: 18px; cursor: pointer; }
+.tblock .nav button + button { border-left: 1.5px solid var(--ink); }
+.tblock .nav button:hover { background: var(--panel); }
+.tblock .part { gap: 10px; font-weight: 600; }
+.tblock .part i { width: 14px; height: 14px; background: var(--sec); display: inline-block; }
+.tblock .timer { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.tblock .timer.run { color: var(--ink); }
+.tblock .timer.late { color: var(--bad); font-weight: 600; }
+.tblock .count { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+/* help overlay */
+.help {
+  position: absolute; z-index: 10; right: 24px; bottom: 56px; width: 380px;
+  background: var(--paper); border: 1.5px solid var(--ink); padding: 18px 22px; font-size: 17px; line-height: 1.7;
+}
+.help[hidden] { display: none; }
+.help h4 { margin: 0 0 6px; font: 600 21px 'Barlow Semi Condensed', sans-serif; }
+
+/* ---------- handout / small-screen mode ---------- */
+body.doc { height: auto; background: var(--paper); }
+body.doc .viewport { position: static; display: block; padding: 0; overflow: visible; }
+body.doc .stage { width: auto; height: auto; transform: none !important; overflow: visible; box-shadow: none; }
+body.doc .slide {
+  position: relative; visibility: visible; opacity: 1; transition: none;
+  padding: 30px clamp(16px, 4vw, 56px) 34px; border-bottom: 2px solid var(--rule);
+}
+body.doc .tblock { display: none; }
+body.doc .help { position: fixed; bottom: 16px; right: 16px; max-width: calc(100% - 32px); }
+body.doc .slide h2 { font-size: clamp(26px, 4vw, 40px); }
+body.doc .slide p, body.doc .slide li { font-size: clamp(16px, 2.2vw, 21px); }
+body.doc .slide.title h1 { font-size: clamp(42px, 8vw, 78px); }
+body.doc .cols, body.doc .cols.wl, body.doc .cols.wr, body.doc .cols.code,
+body.doc .cols.three, body.doc .cols.four { grid-template-columns: 1fr !important; gap: 20px; }
+body.doc .ctl { grid-template-columns: auto 1fr auto !important; }
+body.doc #grid-demo > svg { max-width: 440px; }
+body.doc .flow { grid-template-columns: 1fr; }
+body.doc .flow > div::after { display: none; }
+body.doc pre { font-size: 13px; max-height: none; }
+body.doc .sm-row { grid-template-columns: 26px 104px 1fr 52px; font-size: 16px; gap: 6px 8px; }
+body.doc .sm-row > :nth-child(6) { grid-row: 1; grid-column: 1; }
+body.doc .sm-row > :nth-child(1) { grid-row: 1; grid-column: 2; }
+body.doc .sm-row > :nth-child(2) { grid-row: 1; grid-column: 3; }
+body.doc .sm-row > :nth-child(3) { grid-row: 1; grid-column: 4; }
+body.doc .sm-row > :nth-child(4) { grid-row: 2; grid-column: 2 / 4; height: 22px; }
+body.doc .sm-row > :nth-child(5) { grid-row: 2; grid-column: 4; }
+body.doc .sm-head { display: none !important; }
+body.doc #softmax-demo .ctl > span { grid-column: 1 / -1; }
+body.doc .tbl { font-size: 15px; display: block; overflow-x: auto; }
+body.doc .tbl-wrap { overflow-x: auto; }
+@media print {
+  .copy, .btnrow, .help { display: none !important; }
+  body.doc .slide { break-after: page; border: 0; }
+}
+</style>
+</head>
+<body>
+<div class="viewport">
+<div class="stage" id="stage">
+
+<!-- ===================== PART 1: OPENING ===================== -->
+<section class="slide title" data-part="1">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <h1>Classification<br>and regression</h1>
+      <p class="sub">Neural networks for real-world problems</p>
+      <div class="meta">
+        <p><strong>Deep Learning for Engineering</strong>, Week 2</p>
+        <p class="muted">Durham University, Michaelmas Term 2025</p>
+      </div>
+      <p class="keys"><kbd>→</kbd> next &nbsp; <kbd>T</kbd> lecture timer &nbsp; <kbd>D</kbd> dark/light &nbsp; <kbd>H</kbd> handout view &nbsp; <kbd>?</kbd> all keys</p>
+    </div>
+    <div><svg class="fig" id="title-grid" viewBox="0 0 400 400" aria-label="A square grid deformed by an affine map followed by ReLU"></svg></div>
+  </div>
+</section>
+
+<section class="slide" data-part="1">
+  <h2>Today's plan</h2>
+  <div class="cols wr">
+    <div>
+      <h3>By the end of this lecture you can</h3>
+      <ul>
+        <li>say what a Dense layer computes, and why it needs a nonlinearity</li>
+        <li>choose the output layer, activation and loss from <em>what you are predicting</em></li>
+        <li>build, train and inspect an MLP in Keras</li>
+        <li>read learning curves and use training, validation and test data correctly</li>
+        <li>recognise overfitting and name the first remedies</li>
+      </ul>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Part</th><th>Topic</th><th>Min</th><th>From</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Opening</td><td>5</td><td class="mono">0:00</td></tr>
+          <tr><td>2</td><td>Building blocks</td><td>10</td><td class="mono">0:05</td></tr>
+          <tr><td>3</td><td>Three kinds of prediction</td><td>10</td><td class="mono">0:15</td></tr>
+          <tr><td>4</td><td>Hands-on: an MLP for MNIST</td><td>25</td><td class="mono">0:25</td></tr>
+          <tr><td>5</td><td>Reading the results</td><td>12</td><td class="mono">0:50</td></tr>
+          <tr><td>6</td><td>Binary classification</td><td>6</td><td class="mono">1:02</td></tr>
+          <tr><td>7</td><td>Regression</td><td>8</td><td class="mono">1:08</td></tr>
+          <tr><td>8</td><td>Wrap-up</td><td>4</td><td class="mono">1:16</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="1">
+  <h2>Why this matters in engineering</h2>
+  <div class="cols">
+    <div class="box">
+      <h3>Classification: which category?</h3>
+      <ul class="small">
+        <li><strong>Quality control:</strong> is this weld or casting defective?</li>
+        <li><strong>Predictive maintenance:</strong> will this bearing fail within 30 days?</li>
+        <li><strong>Fault diagnosis:</strong> which of six failure modes is this vibration signature?</li>
+        <li><strong>Safety systems:</strong> is the process in an anomalous state?</li>
+        <li><strong>Design screening:</strong> go or no-go for a candidate design</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Regression: how much?</h3>
+      <ul class="small">
+        <li><strong>Performance prediction:</strong> energy use of a building next hour</li>
+        <li><strong>Materials:</strong> tensile strength from composition and processing</li>
+        <li><strong>Control:</strong> plant output for a given control input</li>
+        <li><strong>Cost estimation:</strong> project cost and duration from a specification</li>
+        <li><strong>Surrogate models:</strong> replace an expensive simulation with a fast network</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bottom-line"><p>The same networks and the same workflow solve all of these. What changes is the <strong>last layer</strong> and the <strong>loss</strong>.</p></div>
+</section>
+
+<section class="slide" data-part="1">
+  <h2>Vocabulary we will use all lecture</h2>
+  <div class="cols wl">
+    <table class="tbl">
+      <tbody>
+        <tr><td>Sample / input</td><td>One data point fed to the model (one image, one review, one district)</td></tr>
+        <tr><td>Prediction / output</td><td>What comes out of the model for that sample</td></tr>
+        <tr><td>Target</td><td>The ground truth the model should have predicted</td></tr>
+        <tr><td>Loss</td><td>A number measuring how far the prediction is from the target; training minimises it</td></tr>
+        <tr><td>Classes</td><td>The set of possible categories, e.g. the digits 0 to 9</td></tr>
+        <tr><td>Label</td><td>The class annotation attached to one sample</td></tr>
+      </tbody>
+    </table>
+    <div class="stack">
+      <div class="box">
+        <p><strong>Classification</strong> predicts a discrete category.</p>
+        <p><strong>Regression</strong> predicts a continuous value.</p>
+      </div>
+      <p class="small muted">Both are <em>supervised</em>: every training sample comes with a target.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PART 2: BUILDING BLOCKS ===================== -->
+<section class="slide" data-part="2">
+  <h2>What a Dense layer computes</h2>
+  <div class="cols">
+    <div>
+      <p>A Dense (fully connected) layer maps an input vector to an output vector:</p>
+      <p>\[ \mathbf{h} = f\big(W\mathbf{x} + \mathbf{b}\big), \qquad \mathbf{x}\in\mathbb{R}^{n},\; W\in\mathbb{R}^{m\times n},\; \mathbf{b}\in\mathbb{R}^{m} \]</p>
+      <p>Unit \(j\) takes a weighted sum of <em>every</em> input, adds a bias, then applies the activation \(f\):</p>
+      <p>\[ h_j = f\Big(\textstyle\sum_{i=1}^{n} W_{ji}\,x_i + b_j\Big) \]</p>
+    </div>
+    <div class="stack">
+      <div class="code-wrap"><pre><code class="language-python">layers.Dense(16, activation="relu")   # m = 16 units</code></pre></div>
+      <div class="box">
+        <h3>Parameters</h3>
+        <p>\(m \cdot n\) weights plus \(m\) biases. For 784 inputs and 128 units that is \(784\cdot128+128 = 100{,}480\). You will check this in Keras later.</p>
+      </div>
+      <p class="small muted">Keras stores the kernel with shape <code>(n, m)</code>, the transpose of \(W\) above, and computes <code>x @ kernel + bias</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>The \(W\mathbf{x}+\mathbf{b}\) part is an affine map</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="box">
+        <h3>Linear: \(\mathbf{x}\mapsto A\mathbf{x}\)</h3>
+        <p>Scales, rotates, shears or flips space. Straight lines stay straight and the origin stays fixed.</p>
+        <p>The columns of \(A\) are where the basis vectors land: \(A\mathbf{e}_1 = \begin{bmatrix}a\\c\end{bmatrix}\), \(A\mathbf{e}_2 = \begin{bmatrix}b\\d\end{bmatrix}\), so any \(\mathbf{v}=(x,y)\) maps to \(x\,A\mathbf{e}_1 + y\,A\mathbf{e}_2\).</p>
+      </div>
+      <div class="box">
+        <h3>Affine: \(\mathbf{x}\mapsto A\mathbf{x}+\mathbf{b}\)</h3>
+        <p>A linear map followed by a shift: first re-orient and stretch the space, then move the origin.</p>
+      </div>
+    </div>
+    <div>
+      <table class="tbl">
+        <thead><tr><th>Map</th><th>Matrix</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Rotation</td><td>\(\begin{bmatrix}\cos\theta &amp; -\sin\theta\\ \sin\theta &amp; \cos\theta\end{bmatrix}\)</td><td>turns by \(\theta\)</td></tr>
+          <tr><td>Scaling</td><td>\(\begin{bmatrix}s_x &amp; 0\\ 0 &amp; s_y\end{bmatrix}\)</td><td>stretches each axis</td></tr>
+          <tr><td>Shear</td><td>\(\begin{bmatrix}1 &amp; k\\ 0 &amp; 1\end{bmatrix}\)</td><td>slides rows sideways</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted" style="margin-top:14px">Area scales by \(|\det A|\); \(\det A \lt 0\) flips orientation.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Try it: a layer reshapes space</h2>
+  <div class="cols wr" id="grid-demo" style="grid-template-columns: 480px 1fr; gap: 36px">
+    <svg class="fig" viewBox="0 0 400 400" aria-label="Interactive grid transformation"></svg>
+    <div>
+      <div class="ctl"><label for="gd-a">\(a\)</label><input id="gd-a" data-k="a" type="range" min="-2" max="2" step="0.05" value="1"><output></output></div>
+      <div class="ctl"><label for="gd-b">\(b\)</label><input id="gd-b" data-k="b" type="range" min="-2" max="2" step="0.05" value="0"><output></output></div>
+      <div class="ctl"><label for="gd-c">\(c\)</label><input id="gd-c" data-k="c" type="range" min="-2" max="2" step="0.05" value="0"><output></output></div>
+      <div class="ctl"><label for="gd-d">\(d\)</label><input id="gd-d" data-k="d" type="range" min="-2" max="2" step="0.05" value="1"><output></output></div>
+      <div class="ctl"><label for="gd-bx">\(b_x\)</label><input id="gd-bx" data-k="bx" type="range" min="-1.5" max="1.5" step="0.05" value="0"><output></output></div>
+      <div class="ctl"><label for="gd-by">\(b_y\)</label><input id="gd-by" data-k="by" type="range" min="-1.5" max="1.5" step="0.05" value="0"><output></output></div>
+      <label style="display:flex;gap:10px;align-items:center;font-size:19px;margin:8px 0"><input type="checkbox" data-k="relu"> apply ReLU after the affine map</label>
+      <div class="btnrow">
+        <button class="btn" data-preset="id">Identity</button>
+        <button class="btn" data-preset="rot">Rotate 30°</button>
+        <button class="btn" data-preset="scale">Scale</button>
+        <button class="btn" data-preset="shear">Shear</button>
+        <button class="btn" data-preset="flip">Flip</button>
+        <button class="btn" data-preset="lattice">\(A=\begin{bmatrix}1.2&amp;0.6\\0.2&amp;1.1\end{bmatrix}\)</button>
+      </div>
+      <div class="readout" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Stacking affine layers gains nothing</h2>
+  <div class="cols">
+    <div>
+      <p>Two layers with no activation (or <code>activation="linear"</code>):</p>
+      <p>\[ \begin{aligned} \mathbf{h}_1 &amp;= W_1\mathbf{x} + \mathbf{b}_1\\ \mathbf{h}_2 &amp;= W_2\mathbf{h}_1 + \mathbf{b}_2 = \underbrace{W_2W_1}_{\text{one } W}\,\mathbf{x} + \underbrace{W_2\mathbf{b}_1 + \mathbf{b}_2}_{\text{one } \mathbf{b}} \end{aligned} \]</p>
+      <p>Any stack of affine maps is a single affine map. A deep network without activations can only draw <strong>flat</strong> decision boundaries.</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Composition is matrix multiplication</h3>
+        <p>Shear \(S\) then rotate \(R\) is the single matrix \(A = RS\). Order matters: in general \(RS \ne SR\).</p>
+      </div>
+      <div class="ask">
+        <p><strong>Ask the room:</strong> in the demo, set a shear, then tick ReLU. Which grid lines bend, and why?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Nonlinear activations</h2>
+  <div class="cols four">
+    <div><svg class="fig" id="act-relu"></svg><h4>ReLU</h4><p class="small">\(\max(0,z)\). Default for hidden layers: cheap, does not saturate for \(z\gt0\).</p></div>
+    <div><svg class="fig" id="act-sigmoid"></svg><h4>Sigmoid</h4><p class="small">\(1/(1+e^{-z})\). Squashes to \((0,1)\): an output for <em>probabilities</em>.</p></div>
+    <div><svg class="fig" id="act-tanh"></svg><h4>tanh</h4><p class="small">Squashes to \((-1,1)\), zero-centred. Common in recurrent networks.</p></div>
+    <div><svg class="fig" id="act-gelu"></svg><h4>GELU</h4><p class="small">A smooth ReLU. Standard in transformers.</p></div>
+  </div>
+  <div class="bottom-line"><p><strong>Hidden</strong> activations give the network expressive power. The <strong>output</strong> activation encodes what the output <em>means</em>. That is Part 3.</p></div>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Putting it together: the multilayer perceptron</h2>
+  <div class="cols wl">
+    <svg class="fig" id="mlp-diagram" viewBox="0 0 560 360" aria-label="MLP with 784 inputs, 128 ReLU hidden units and 10 softmax outputs"></svg>
+    <div class="stack">
+      <p>The network we will build today:</p>
+      <p>\[ \hat{\mathbf{y}} = \mathrm{softmax}\big(W_2\,\mathrm{ReLU}(W_1\mathbf{x}+\mathbf{b}_1)+\mathbf{b}_2\big) \]</p>
+      <div class="box">
+        <h3>One training step</h3>
+        <ol class="small">
+          <li>Forward pass on a batch of samples</li>
+          <li>Loss: compare predictions with targets</li>
+          <li>Backpropagation: gradient of the loss for every weight</li>
+          <li>Optimiser (Adam) nudges every weight downhill</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PART 3: THREE KINDS OF PREDICTION ===================== -->
+<section class="slide" data-part="3">
+  <h2>Start from the question: what are you predicting?</h2>
+  <table class="tbl">
+    <thead><tr><th>Task type</th><th>The question</th><th>Engineering example</th></tr></thead>
+    <tbody>
+      <tr><td>Binary classification</td><td>Is it A or B?</td><td>Weld passes or fails inspection</td></tr>
+      <tr><td>Multiclass classification</td><td>Which <em>one</em> of \(K\) classes?</td><td>Gearbox fault: normal, imbalance, misalignment, bearing, looseness</td></tr>
+      <tr><td>Multilabel classification</td><td>Which of \(K\) labels apply, any number of them?</td><td>A steel surface shows a scratch <em>and</em> rust, but no dent</td></tr>
+      <tr><td>Scalar regression</td><td>How much?</td><td>Energy consumption of a building next hour</td></tr>
+      <tr><td>Vector regression</td><td>Which several numbers?</td><td>Bounding box \((x, y, w, h)\) of a crack; 3 displacement components</td></tr>
+    </tbody>
+  </table>
+  <div class="bottom-line"><p>The <strong>type of the answer</strong> fixes the last layer, its activation and the loss. The hidden layers barely change.</p></div>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Binary classification: the output is one probability</h2>
+  <div class="cols">
+    <div>
+      <p>One output unit, sigmoid activation. Its value means</p>
+      <p>\[ p = P(y = 1 \mid \mathbf{x}) = \sigma(z) = \frac{1}{1+e^{-z}} \]</p>
+      <p>and \(1-p\) is the probability of class 0. A decision needs a threshold \(t\): predict 1 if \(p \gt t\), usually \(t = 0.5\).</p>
+      <p><strong>Binary cross-entropy</strong> over \(N\) samples:</p>
+      <p>\[ \mathcal{L}_{\text{BCE}} = -\frac{1}{N}\sum_{i=1}^{N}\Big[y_i\log p_i + (1-y_i)\log(1-p_i)\Big] \]</p>
+    </div>
+    <div>
+      <svg class="fig" id="bce-plot" aria-label="Binary cross-entropy as a function of predicted probability"></svg>
+      <div class="ctl" style="grid-template-columns: 26px 1fr 58px"><label for="bce-p">\(p\)</label><input id="bce-p" type="range" min="0.01" max="0.99" step="0.01" value="0.8"><output></output></div>
+      <div class="readout small" id="bce-read" aria-live="polite"></div>
+      <p class="small muted">Confident and wrong costs a lot; confident and right costs almost nothing. BCE is convex in \(p\) (and in \(z\)), but the loss surface over a deep network's <em>weights</em> is not convex.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Multiclass: the output is a probability distribution</h2>
+  <div class="cols">
+    <div>
+      <p>\(K\) output units with <strong>softmax</strong> turn raw scores (logits) \(z_k\) into probabilities that are all positive and sum to 1:</p>
+      <p>\[ \hat{y}_k = \frac{e^{z_k}}{\sum_{j=1}^{K} e^{z_j}} \]</p>
+      <p><strong>Categorical cross-entropy</strong> with a one-hot target keeps only the true class \(c\):</p>
+      <p>\[ \mathcal{L}_{\text{CCE}} = -\sum_{k=1}^{K} y_k \log\hat{y}_k = -\log \hat{y}_c \]</p>
+      <p class="small">Predicted class: \(\arg\max_k \hat{y}_k\). No threshold needed.</p>
+    </div>
+    <div class="stack">
+      <div class="code-wrap"><pre><code class="language-python"># integer labels, e.g. y = 3
+loss = "sparse_categorical_crossentropy"
+
+# one-hot labels, e.g. y = [0,0,0,1,0,0,0,0,0,0]
+y_1hot = keras.utils.to_categorical(y, 10)
+loss = "categorical_crossentropy"</code></pre></div>
+      <div class="box quiet"><p class="small">Same loss value, different label format. Using <code>categorical_crossentropy</code> with integer labels is a common shape error.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Try it: logits, softmax and the loss</h2>
+  <div id="softmax-demo">
+    <p class="small muted" style="margin-bottom:14px">Five gearbox states. Drag the logits, pick the true class, and watch the probabilities and the loss.</p>
+    <div class="sm-rows"></div>
+    <div class="ctl" style="grid-template-columns: 118px 170px 50px 1fr; margin-top:10px"><label for="sm-t">temperature</label><input id="sm-t" type="range" min="0.25" max="4" step="0.05" value="1"><output></output><span class="small muted">softmax(z / T): low T is confident, high T is uniform</span></div>
+    <div class="readout" aria-live="polite" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Regression: the output is a number</h2>
+  <div class="cols">
+    <div>
+      <p>One output unit and <strong>no activation</strong>, so the output can be any real value. Sigmoid, tanh or ReLU would clip the range.</p>
+      <p>Trained with MSE, the network learns the <strong>conditional mean</strong> \(\mathbb{E}[y\mid\mathbf{x}]\); with MAE, the conditional median.</p>
+      <p>There is no "accuracy": a prediction is never exactly right, so we measure <em>how far off</em> it is, in the target's own units.</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Mean squared error</h3>
+        <p>\(\mathcal{L}_{\text{MSE}} = \frac{1}{N}\sum_i (y_i-\hat{y}_i)^2\)</p>
+        <p class="small">Smooth, the standard training loss. Penalises large errors heavily, so it is sensitive to outliers.</p>
+      </div>
+      <div class="box">
+        <h3>Mean absolute error</h3>
+        <p>\(\mathcal{L}_{\text{MAE}} = \frac{1}{N}\sum_i |y_i-\hat{y}_i|\)</p>
+        <p class="small">Directly interpretable ("off by $30k on average"), robust to outliers. The usual metric to report.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>One idea behind every loss: negative log-likelihood</h2>
+  <p>Each output layer parameterises a probability distribution over the target. The loss is \(-\log\) of the probability that distribution gives to the true target.</p>
+  <table class="tbl">
+    <thead><tr><th>Task</th><th>The output parameterises</th><th>\(-\log p(y\mid\mathbf{x})\)</th><th>Loss</th></tr></thead>
+    <tbody>
+      <tr><td>Binary</td><td>Bernoulli with \(P(y{=}1)=p\)</td><td>\(-[y\log p+(1-y)\log(1-p)]\)</td><td>BCE</td></tr>
+      <tr><td>Multiclass</td><td>Categorical over \(K\) classes</td><td>\(-\log\hat{y}_c\)</td><td>CCE</td></tr>
+      <tr><td>Multilabel</td><td>\(K\) independent Bernoullis</td><td>sum of \(K\) BCE terms</td><td>BCE per label</td></tr>
+      <tr><td>Regression</td><td>Gaussian with mean \(\hat{y}\), fixed \(\sigma\)</td><td>\(\dfrac{(y-\hat{y})^2}{2\sigma^2}+\text{const}\)</td><td>MSE</td></tr>
+      <tr><td>Regression</td><td>Laplace with centre \(\hat{y}\)</td><td>\(\dfrac{|y-\hat{y}|}{b}+\text{const}\)</td><td>MAE</td></tr>
+    </tbody>
+  </table>
+  <div class="bottom-line"><p>Choosing a loss means choosing <strong>what kind of uncertainty</strong> you assume about the target. That is why each output layer has its natural partner loss.</p></div>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Cheat sheet: last layer, loss, metric</h2>
+  <table class="tbl">
+    <thead><tr><th>Task</th><th>Last layer</th><th>Loss</th><th>Metric</th><th>Target format</th></tr></thead>
+    <tbody>
+      <tr><td>Binary</td><td><code>Dense(1, "sigmoid")</code></td><td><code>binary_crossentropy</code></td><td>accuracy, precision, recall</td><td>0 or 1</td></tr>
+      <tr class="now"><td>Multiclass</td><td><code>Dense(K, "softmax")</code></td><td><code>sparse_categorical_crossentropy</code></td><td>accuracy, top-k</td><td>integer 0 to K−1</td></tr>
+      <tr><td>Multilabel</td><td><code>Dense(K, "sigmoid")</code></td><td><code>binary_crossentropy</code></td><td>per-label precision, recall</td><td>K-long 0/1 vector</td></tr>
+      <tr><td>Scalar regression</td><td><code>Dense(1)</code></td><td><code>mse</code></td><td><code>mae</code></td><td>real number</td></tr>
+      <tr><td>Vector regression</td><td><code>Dense(d)</code></td><td><code>mse</code></td><td><code>mae</code></td><td>d real numbers</td></tr>
+    </tbody>
+  </table>
+  <div class="bottom-line"><p>Next: we build the highlighted row by hand, on MNIST.</p></div>
+</section>
+
+<!-- ===================== PART 4: HANDS-ON MNIST ===================== -->
+<section class="slide" data-part="4">
+  <h2>Hands-on: classify handwritten digits with an MLP</h2>
+  <div class="cols wl">
+    <div class="stack">
+      <svg class="fig" id="mlp-diagram-2" viewBox="0 0 560 330" aria-label="MLP for MNIST: 784 to 128 to 10"></svg>
+      <table class="tbl compact small">
+        <tbody>
+          <tr><td>Inputs</td><td>28&nbsp;×&nbsp;28 grayscale images, pixel values 0 to 255</td></tr>
+          <tr><td>Targets</td><td>the digit 0 to 9: a 10-class problem</td></tr>
+          <tr><td>Data</td><td>60,000 training and 10,000 test images, roughly balanced</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>What we will do, step by step</h3>
+      <ol class="small" start="0">
+        <li>Set up the notebook</li>
+        <li>Load the data and look at it</li>
+        <li>Flatten and scale the images</li>
+        <li>Build the model and count its parameters</li>
+        <li>Compile, and sanity-check the untrained loss</li>
+        <li>Train with a validation split</li>
+        <li>Plot the learning curves</li>
+        <li>Evaluate once on the test set</li>
+        <li>Inspect predictions, mistakes and the confusion matrix</li>
+        <li>Look inside: what did the hidden units learn?</li>
+      </ol>
+      <p class="small muted">Engineering analogue: reading a gauge, sorting parts by type, or classifying a defect from a camera image.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 0: setup</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+import keras
+from keras import layers
+
+keras.utils.set_random_seed(42)    # same run every time
+print(keras.__version__, keras.backend.backend())</code></pre></div>
+    <div class="stack">
+      <p class="small">Keras 3 runs on TensorFlow, JAX or PyTorch. Everything today works on any backend, on a laptop CPU.</p>
+      <p class="small">Fixing the seed makes weight initialisation and shuffling repeatable, so your numbers match between runs.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 1: load the data and look at it</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+
+print(x_train.shape, y_train.shape)  # (60000, 28, 28) (60000,)
+print(x_test.shape, y_test.shape)    # (10000, 28, 28) (10000,)
+print(x_train.dtype, x_train.min(), x_train.max())  # uint8 0 255
+print(np.bincount(y_train))          # about 6,000 per digit
+
+fig, axes = plt.subplots(4, 8, figsize=(10, 5.5))
+for ax, img, label in zip(axes.flat, x_train, y_train):
+    ax.imshow(img, cmap="gray_r")
+    ax.set_title(label)
+    ax.axis("off")
+plt.tight_layout()
+plt.show()</code></pre></div>
+    <div class="stack">
+      <div class="ask"><p><strong>Ask the room:</strong> what is one <em>sample</em> here, and what is its <em>target</em>?</p></div>
+      <p class="small">The classes are roughly balanced, so plain accuracy is a fair metric. With 95% of one class it would not be.</p>
+      <p class="small">Always look at raw data before modelling: some of these digits are genuinely ambiguous.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 2: flatten and scale</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">x_train_flat = x_train.reshape(-1, 28 * 28).astype("float32") / 255
+x_test_flat = x_test.reshape(-1, 28 * 28).astype("float32") / 255
+
+print(x_train_flat.shape)                      # (60000, 784)
+print(x_train_flat.min(), x_train_flat.max())  # 0.0 1.0
+print(y_train[:10])          # [5 0 4 1 9 2 1 3 1 4] integer labels
+
+plt.figure(figsize=(10, 2))
+plt.plot(x_train_flat[0])    # what the network actually sees
+plt.xlabel("pixel index")
+plt.show()</code></pre></div>
+    <div class="stack">
+      <p class="small"><strong>Flatten:</strong> a Dense layer takes a vector, so each 28&nbsp;×&nbsp;28 image becomes 784 numbers.</p>
+      <p class="small"><strong>Scale to [0, 1]:</strong> small, similar-sized inputs keep early training stable. Same idea as feature normalisation in regression.</p>
+      <p class="small"><strong>Labels stay integers</strong>, so we will use <code>sparse_categorical_crossentropy</code>.</p>
+      <div class="box quiet"><p class="small">Thought experiment: shuffle all pixels with one fixed permutation. The MLP's accuracy would not change. It ignores spatial structure, which is what CNNs fix next.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 3: build the model</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre><code class="language-python">model = keras.Sequential([
+    keras.Input(shape=(784,)),
+    layers.Dense(128, activation="relu", name="hidden"),
+    layers.Dense(10, activation="softmax", name="output"),
+])
+model.summary()</code></pre></div>
+    <div class="stack">
+      <div class="ask">
+        <p><strong>Ask the room:</strong> before running <code>summary()</code>, how many parameters?</p>
+        <button class="btn" data-reveal="params">Show the count</button>
+        <div class="reveal" id="params" hidden>
+          <table class="tbl compact small" style="margin-top:10px">
+            <tbody>
+              <tr><td>hidden</td><td>784 × 128 + 128</td><td class="mono">100,480</td></tr>
+              <tr><td>output</td><td>128 × 10 + 10</td><td class="mono">1,290</td></tr>
+              <tr><td>total</td><td></td><td class="mono">101,770</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="small">99% of the parameters sit in the first layer: wide inputs are expensive.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 4: compile, then sanity-check before training</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">model.compile(
+    optimizer="adam",                        # how weights are updated
+    loss="sparse_categorical_crossentropy",  # integer labels 0..9
+    metrics=["accuracy"],                    # what we report
+)
+
+# Before training: what should the loss be?
+loss0, acc0 = model.evaluate(x_train_flat[:2000], y_train[:2000],
+                             verbose=0)
+print(f"untrained: loss={loss0:.3f}  accuracy={acc0:.3f}")
+# expect loss near ln(10) = 2.303 and accuracy near 0.10</code></pre></div>
+    <div class="stack">
+      <p class="small"><strong>Loss</strong> is what the optimiser minimises. <strong>Metrics</strong> are only reported; they do not affect training.</p>
+      <div class="box">
+        <h3>Why 2.303?</h3>
+        <p class="small">An untrained network spreads probability roughly evenly: \(\hat{y}_c \approx 1/10\), so \(-\log(1/10) = \ln 10 \approx 2.303\). Far from that means a bug: wrong labels, wrong loss or unscaled inputs.</p>
+      </div>
+      <p class="small muted">We check on training data. The test set stays untouched until Step 7.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 5: train with a validation split</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre><code class="language-python">history = model.fit(
+    x_train_flat, y_train,
+    epochs=10,
+    batch_size=128,
+    validation_split=0.1,   # last 6,000 training images
+)</code></pre></div>
+    <div class="stack">
+      <h3>Reading the progress bar</h3>
+      <p class="small"><code>422/422</code>: 54,000 training images in batches of 128 is 421.9, so 422 steps per epoch.</p>
+      <p class="small"><code>loss</code>, <code>accuracy</code>: on the training batches, averaged over the epoch.</p>
+      <p class="small"><code>val_loss</code>, <code>val_accuracy</code>: on the 6,000 held-out images, after the epoch.</p>
+      <div class="box quiet"><p class="small"><code>validation_split</code> takes the <em>last</em> 10% without shuffling. Fine for MNIST; dangerous if your data is sorted by time or by class.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 6: plot the learning curves</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">h = history.history
+ep = range(1, len(h["loss"]) + 1)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+ax1.plot(ep, h["loss"], "o-", label="training")
+ax1.plot(ep, h["val_loss"], "s--", label="validation")
+ax1.set(xlabel="epoch", ylabel="loss", title="Loss")
+ax2.plot(ep, h["accuracy"], "o-", label="training")
+ax2.plot(ep, h["val_accuracy"], "s--", label="validation")
+ax2.set(xlabel="epoch", ylabel="accuracy", title="Accuracy")
+for ax in (ax1, ax2):
+    ax.legend()
+    ax.grid(alpha=0.3)
+plt.show()</code></pre></div>
+    <div class="stack">
+      <div class="ask">
+        <p><strong>Ask the room:</strong></p>
+        <ul class="small">
+          <li>At which epoch is validation loss lowest?</li>
+          <li>Is the gap between training and validation growing?</li>
+          <li>In epoch 1, why can validation accuracy beat training accuracy?</li>
+        </ul>
+      </div>
+      <p class="small muted">We come back to all three in Part 5.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 7: evaluate on the test set, once</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre><code class="language-python">test_loss, test_acc = model.evaluate(x_test_flat, y_test,
+                                     verbose=0)
+print(f"test loss = {test_loss:.4f}")
+print(f"test accuracy = {test_acc:.4f}")</code></pre></div>
+    <div class="stack">
+      <p class="small">Expect roughly <strong>97 to 98%</strong> for this model, against 10% for guessing.</p>
+      <p class="small">Compare with the final validation accuracy. If they are close, validation was a good stand-in for unseen data.</p>
+      <div class="box"><p class="small">This is the first and only time the test set is used. If you now change the model because of this number, the test set has become a second validation set.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 8a: what does a prediction look like?</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">probs = model.predict(x_test_flat[:8], verbose=0)
+print(probs.shape, probs[0].sum())   # (8, 10) about 1.0
+preds = probs.argmax(axis=1)
+
+fig, axes = plt.subplots(2, 8, figsize=(15, 4))
+for i in range(8):
+    top, bottom = axes[0, i], axes[1, i]
+    top.imshow(x_test[i], cmap="gray_r")
+    top.set_title(f"true {y_test[i]}, pred {preds[i]}")
+    top.axis("off")
+    bottom.bar(range(10), probs[i])
+    bottom.set_xticks(range(10))
+    bottom.set_ylim(0, 1)
+plt.tight_layout()
+plt.show()</code></pre></div>
+    <div class="stack">
+      <p class="small"><code>predict</code> returns the softmax output: one probability distribution per image.</p>
+      <p class="small"><code>argmax</code> turns it into a class.</p>
+      <p class="small">Most bars are a single spike near 1. Look for an image where two bars share the mass: that is the network being unsure, and it usually agrees with your own hesitation.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 8b: look at the mistakes</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">all_probs = model.predict(x_test_flat, verbose=0)
+y_pred = all_probs.argmax(axis=1)
+wrong = np.flatnonzero(y_pred != y_test)
+print(len(wrong), "of", len(y_test), "test images misclassified")
+
+fig, axes = plt.subplots(3, 8, figsize=(12, 5.5))
+for ax, i in zip(axes.flat, wrong):
+    ax.imshow(x_test[i], cmap="gray_r")
+    conf = all_probs[i, y_pred[i]]
+    ax.set_title(f"{y_test[i]} as {y_pred[i]} ({conf:.2f})")
+    ax.axis("off")
+plt.tight_layout()
+plt.show()</code></pre></div>
+    <div class="stack">
+      <div class="ask"><p><strong>Ask the room:</strong> would a human get these right? Which ones look like labelling errors?</p></div>
+      <p class="small">Check the confidence in brackets. Wrong <em>and</em> confident (0.95+) is the expensive case in engineering, and it is exactly what cross-entropy punishes hardest.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 8c: the confusion matrix</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">cm = np.zeros((10, 10), dtype=int)
+np.add.at(cm, (y_test, y_pred), 1)   # rows: true, cols: predicted
+
+fig, ax = plt.subplots(figsize=(6.5, 5.5))
+im = ax.imshow(cm, cmap="Blues")
+fig.colorbar(im)
+ax.set(xlabel="predicted", ylabel="true",
+       xticks=range(10), yticks=range(10))
+for i in range(10):
+    for j in range(10):
+        dark = cm[i, j] &gt; cm.max() / 2
+        ax.text(j, i, cm[i, j], ha="center", va="center",
+                fontsize=8, color="white" if dark else "black")
+plt.show()</code></pre></div>
+    <div class="stack">
+      <p class="small">The diagonal holds the correct predictions. Every off-diagonal cell is a <em>specific</em> confusion: row 4, column 9 counts fours called nines.</p>
+      <p class="small">Typical MLP confusions are shape neighbours such as 4/9, 3/5 and 7/2.</p>
+      <p class="small muted">Tip: the diagonal dominates the colour scale. Copy <code>cm</code>, run <code>np.fill_diagonal(cm_off, 0)</code> and plot again to see only the errors.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Step 9: look inside the hidden layer</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">W1, b1 = model.get_layer("hidden").get_weights()
+print(W1.shape, b1.shape)   # (784, 128) (128,)
+
+fig, axes = plt.subplots(8, 16, figsize=(16, 8.5))
+for k, ax in enumerate(axes.flat):
+    w = W1[:, k].reshape(28, 28)
+    lim = np.abs(w).max()
+    ax.imshow(w, cmap="RdBu_r", vmin=-lim, vmax=lim)
+    ax.axis("off")
+plt.suptitle("What each hidden unit responds to")
+plt.tight_layout()
+plt.show()</code></pre></div>
+    <div class="stack">
+      <p class="small">Column \(k\) of the kernel holds the 784 weights of hidden unit \(k\). Reshaped, it is an image.</p>
+      <p class="small">The unit computes a dot product of the input with this image: <span style="color:var(--bad)">red</span> pixels push it up, blue pull it down. Each unit is a learned template or stroke detector.</p>
+      <p class="small">This is the Building blocks slide made concrete: \(W\mathbf{x}+\mathbf{b}\) is 128 template matches, and ReLU keeps the positive ones.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Stretch: squeeze the network through 2 numbers <span class="opt-tag">optional</span></h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">tiny = keras.Sequential([
+    keras.Input(shape=(784,)),
+    layers.Dense(64, activation="relu"),
+    layers.Dense(2, name="bottleneck"),     # only 2 numbers survive
+    layers.Dense(10, activation="softmax"),
+])
+tiny.compile(optimizer="adam",
+             loss="sparse_categorical_crossentropy",
+             metrics=["accuracy"])
+h2 = tiny.fit(x_train_flat, y_train, epochs=10, batch_size=128,
+              validation_split=0.1, verbose=0).history
+print("best val accuracy, bottleneck:", max(h2["val_accuracy"]))
+print("best val accuracy, 128 units: ",
+      max(history.history["val_accuracy"]))</code></pre></div>
+    <div class="stack">
+      <p class="small">Every image must now be described by two numbers before the classifier sees it. Accuracy drops noticeably.</p>
+      <div class="box"><p class="small">Information lost at a narrow layer cannot be recovered by later layers. In the Reuters 46-topic example, shrinking a hidden layer from 64 to 4 units cut validation accuracy from 79% to 71%.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Stretch: see the 2-D representation <span class="opt-tag">optional</span></h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">encoder = keras.Model(tiny.inputs,
+                      tiny.get_layer("bottleneck").output)
+z = encoder.predict(x_train_flat[-6000:], verbose=0)  # validation part
+labels = y_train[-6000:]
+
+plt.figure(figsize=(7, 6))
+sc = plt.scatter(z[:, 0], z[:, 1], c=labels, cmap="tab10",
+                 s=4, alpha=0.6)
+plt.colorbar(sc, ticks=range(10))
+plt.title("Validation images in the 2-D bottleneck")
+plt.show()</code></pre></div>
+    <div class="stack">
+      <p class="small">Each point is one image, placed by the two bottleneck values and coloured by its true digit.</p>
+      <div class="ask"><p><strong>Ask the room:</strong> which digits overlap? Do they match the confusion matrix?</p></div>
+      <p class="small">The hidden layers' job is to move the classes apart so the last layer can separate them. Two dimensions are not enough room for ten classes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PART 5: READING THE RESULTS ===================== -->
+<section class="slide" data-part="5">
+  <h2>The pipeline you just ran</h2>
+  <div class="flow">
+    <div><h4>Get data</h4><p><code>mnist.load_data()</code></p><p>inspect shapes, ranges, class balance</p></div>
+    <div><h4>Split</h4><p>train / validation / test</p><p><code>validation_split=0.1</code></p></div>
+    <div><h4>Preprocess</h4><p>flatten, scale to [0, 1]</p><p>statistics from training data only</p></div>
+    <div><h4>Build</h4><p><code>Sequential([...])</code></p><p>last layer set by the task</p></div>
+    <div><h4>Compile</h4><p>loss, optimiser, metrics</p><p>check the untrained loss</p></div>
+    <div><h4>Fit</h4><p>epochs × batches of gradient steps</p><p><code>model.fit(...)</code></p></div>
+    <div><h4>Monitor and choose</h4><p>learning curves pick epochs and hyperparameters</p></div>
+    <div><h4>Test once, then use</h4><p><code>evaluate</code> on test, then <code>predict</code> on new data</p></div>
+  </div>
+  <div class="bottom-line"><p>Steps 3 to 7 loop many times while you experiment. Step 8 happens <strong>once</strong>.</p></div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Three datasets, three different jobs</h2>
+  <div class="cols three">
+    <div class="box">
+      <h3>Training set</h3>
+      <p class="small">The optimiser fits the <strong>weights</strong> to it.</p>
+      <p class="small">MNIST today: 54,000 images.</p>
+    </div>
+    <div class="box">
+      <h3>Validation set</h3>
+      <p class="small">The model never trains on it, but <em>you</em> learn from it: number of epochs, layer sizes, learning rate.</p>
+      <p class="small">MNIST today: the last 6,000 training images.</p>
+    </div>
+    <div class="box">
+      <h3>Test set</h3>
+      <p class="small">Estimates performance on unseen data. Used once, at the end.</p>
+      <p class="small">MNIST today: the separate 10,000 images.</p>
+    </div>
+  </div>
+  <div class="cols" style="margin-top:22px">
+    <div>
+      <h3>Leakage</h3>
+      <p class="small">Any information from validation or test data that reaches training inflates your scores. Classic case: normalising with the mean and standard deviation of the <em>whole</em> dataset. Compute them on training data only.</p>
+    </div>
+    <div>
+      <h3>Why tuning on test data fails</h3>
+      <p class="small">Every decision made by looking at a score fits that data a little. After enough decisions, the test score describes your choices, not the model's behaviour on new data.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Epochs, batches and steps</h2>
+  <div class="cols">
+    <div>
+      <p><strong>Batch:</strong> the samples used for one gradient estimate.</p>
+      <p><strong>Step:</strong> one forward pass on a batch, the batch-averaged loss, backpropagation and one weight update.</p>
+      <p><strong>Epoch:</strong> one pass over all training samples.</p>
+      <p>\[ \text{steps per epoch} = \left\lceil \frac{N_{\text{train}}}{\text{batch size}} \right\rceil \]</p>
+      <p class="small muted">The last batch of each epoch is smaller when the division is not exact.</p>
+    </div>
+    <div id="steps-calc" class="box">
+      <h3>Calculator</h3>
+      <div class="ctl" style="grid-template-columns: 160px 1fr"><label for="sc-n">samples</label><input id="sc-n" type="number" value="60000" min="1" class="mono"></div>
+      <div class="ctl" style="grid-template-columns: 160px 1fr"><label for="sc-v">validation fraction</label><input id="sc-v" type="number" value="0.1" min="0" max="0.9" step="0.05" class="mono"></div>
+      <div class="ctl" style="grid-template-columns: 160px 1fr"><label for="sc-b">batch size</label><input id="sc-b" type="number" value="128" min="1" class="mono"></div>
+      <div class="ctl" style="grid-template-columns: 160px 1fr"><label for="sc-e">epochs</label><input id="sc-e" type="number" value="10" min="1" class="mono"></div>
+      <div class="readout" aria-live="polite" style="margin-top:10px"></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Batch size is a trade-off</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">def build_model(hidden=128):
+    model = keras.Sequential([
+        keras.Input(shape=(784,)),
+        layers.Dense(hidden, activation="relu"),
+        layers.Dense(10, activation="softmax"),
+    ])
+    model.compile(optimizer="adam",
+                  loss="sparse_categorical_crossentropy",
+                  metrics=["accuracy"])
+    return model
+
+for bs in [32, 512]:
+    keras.utils.set_random_seed(0)
+    h = build_model().fit(x_train_flat, y_train, epochs=5,
+                          batch_size=bs, validation_split=0.1,
+                          verbose=0).history
+    print(bs, [round(a, 3) for a in h["val_accuracy"]])</code></pre></div>
+    <div class="stack">
+      <table class="tbl compact small">
+        <thead><tr><th></th><th>Small batch</th><th>Large batch</th></tr></thead>
+        <tbody>
+          <tr><td>Updates per epoch</td><td>many (1,688 at 32)</td><td>few (106 at 512)</td></tr>
+          <tr><td>Gradient</td><td>noisy</td><td>smooth</td></tr>
+          <tr><td>Time per epoch</td><td>longer</td><td>shorter on a GPU</td></tr>
+          <tr><td>Memory</td><td>low</td><td>high</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Compare accuracy <em>per epoch</em>, not per step. Some gradient noise often helps generalisation; very large batches usually need a larger learning rate.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Loss and accuracy measure different things</h2>
+  <div class="cols">
+    <div class="stack">
+      <p><strong>Loss</strong> is what the optimiser sees. It is smooth and uses the <em>confidence</em> of each prediction.</p>
+      <p><strong>Accuracy</strong> is what we report. It only asks whether the argmax is right, and has no useful gradient.</p>
+      <div class="box">
+        <h3>So they can disagree</h3>
+        <p class="small">Validation loss can rise while validation accuracy stays flat. The model is becoming <em>more confident</em> on the examples it gets wrong. This is often the first visible sign of overfitting.</p>
+      </div>
+    </div>
+    <div>
+      <table class="tbl">
+        <thead><tr><th>Prediction for the true class</th><th>Correct?</th><th>CCE \(=-\ln\hat{y}_c\)</th></tr></thead>
+        <tbody>
+          <tr><td>\(\hat{y}_c = 0.90\)</td><td>yes</td><td class="mono">0.105</td></tr>
+          <tr><td>\(\hat{y}_c = 0.51\)</td><td>yes</td><td class="mono">0.673</td></tr>
+          <tr><td>\(\hat{y}_c = 0.40\), another at 0.45</td><td>no</td><td class="mono">0.916</td></tr>
+          <tr><td>\(\hat{y}_c = 0.01\)</td><td>no</td><td class="mono">4.605</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted" style="margin-top:12px">Rows 2 and 3 differ by little in loss but completely in accuracy. Row 4 alone outweighs dozens of good predictions.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Reading learning curves</h2>
+  <div class="cols three">
+    <div>
+      <svg class="fig" id="lc-under"></svg>
+      <h4>Underfitting</h4>
+      <p class="small">Both curves high and still falling. Train longer, or give the model more capacity.</p>
+    </div>
+    <div>
+      <svg class="fig" id="lc-good"></svg>
+      <h4>Good fit</h4>
+      <p class="small">Both curves level off together with a small, stable gap. Stop around here.</p>
+    </div>
+    <div>
+      <svg class="fig" id="lc-over"></svg>
+      <h4>Overfitting</h4>
+      <p class="small">Training keeps improving while validation turns upward. Stop earlier, regularise, or get more data.</p>
+    </div>
+  </div>
+  <div class="bottom-line"><p class="small"><span style="color:var(--sec)">━━</span> training &nbsp;&nbsp; <span class="muted">╍╍</span> validation. Use loss for diagnosis: it reacts before accuracy does.</p></div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Sanity checks and baselines</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="box">
+        <h3>Know your baselines</h3>
+        <p class="small">Chance: \(1/K\) = 10%. Always predicting the commonest digit: about 11%. A number like 97% only means something next to these. For imbalanced data the majority baseline can be 95%.</p>
+      </div>
+      <div class="box">
+        <h3>Check the untrained loss</h3>
+        <p class="small">\(\ln K\) for \(K\) classes, \(\ln 2 \approx 0.693\) for binary.</p>
+      </div>
+      <div class="box">
+        <h3>Training metrics are running averages</h3>
+        <p class="small">The epoch's training accuracy averages batches seen while the weights were still improving. Validation is measured at the end. That is why validation can beat training in early epochs.</p>
+      </div>
+    </div>
+    <div class="stack">
+      <h3>Can the model learn at all?</h3>
+      <p class="small">Train on 100 samples only. A working pipeline memorises them.</p>
+      <div class="code-wrap"><pre class="dense"><code class="language-python">x100, y100 = x_train_flat[:100], y_train[:100]
+probe = build_model()
+probe.fit(x100, y100, epochs=100, verbose=0)
+print(probe.evaluate(x100, y100, verbose=0))
+# accuracy should reach about 1.0</code></pre></div>
+      <p class="small muted">If it cannot overfit 100 samples, look for a bug before tuning anything.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Stop at the right epoch automatically</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">keras.utils.set_random_seed(42)
+model = build_model()
+stop = keras.callbacks.EarlyStopping(
+    monitor="val_loss",
+    patience=3,                  # tolerate 3 epochs without gain
+    restore_best_weights=True,   # roll back to the best epoch
+)
+history = model.fit(x_train_flat, y_train, epochs=50,
+                    batch_size=128, validation_split=0.1,
+                    callbacks=[stop])
+print("stopped after", len(history.history["loss"]), "epochs")</code></pre></div>
+    <div class="stack">
+      <p class="small">Set <code>epochs</code> generously and let validation loss decide when to stop.</p>
+      <p class="small"><code>restore_best_weights=True</code> matters: without it you keep the weights from the last, already worse, epoch.</p>
+      <div class="box quiet"><p class="small">Early stopping uses the validation set to choose a hyperparameter. That is fine, and it is exactly why the test set must be separate.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Beyond accuracy <span class="opt-tag">optional</span></h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">precision = np.diag(cm) / cm.sum(axis=0)  # of predicted k: right
+recall = np.diag(cm) / cm.sum(axis=1)     # of true k: found
+for k in range(10):
+    print(k, f"P={precision[k]:.3f}  R={recall[k]:.3f}")
+
+top3 = np.argsort(all_probs, axis=1)[:, -3:]
+hit = [t in row for t, row in zip(y_test, top3)]
+print("top-3 accuracy:", np.mean(hit))</code></pre></div>
+    <div class="stack">
+      <p class="small"><strong>Precision</strong> for class \(k\): when the model says \(k\), how often is it right?</p>
+      <p class="small"><strong>Recall</strong> for class \(k\): of all true \(k\), how many did it find?</p>
+      <p class="small"><strong>Top-k accuracy:</strong> is the true class among the \(k\) most likely? A second-choice answer scores 0 in accuracy but is far better than random.</p>
+      <div class="box"><p class="small">In defect detection, a missed defect (low recall) and a false alarm (low precision) rarely cost the same. Pick the metric that matches the cost.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Is a 0.2% improvement real? <span class="opt-tag">optional</span></h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">x_tr, y_tr = x_train_flat[:-6000], y_train[:-6000]
+x_val, y_val = x_train_flat[-6000:], y_train[-6000:]
+
+accs = []
+for seed in range(3):
+    keras.utils.set_random_seed(seed)
+    m = build_model()
+    m.fit(x_tr, y_tr, epochs=5, batch_size=128, verbose=0)
+    accs.append(m.evaluate(x_val, y_val, verbose=0)[1])
+print(f"val accuracy {np.mean(accs):.4f} ± {np.std(accs):.4f}")</code></pre></div>
+    <div class="stack">
+      <p class="small">Same model, same data, different seeds: the score moves. That spread is the noise floor for any comparison.</p>
+      <p class="small">If two settings differ by less than the run-to-run spread, you have not shown a difference. Report mean ± standard deviation over several seeds.</p>
+      <p class="small muted">Note the explicit split: the same pattern you need when data must be shuffled or grouped before splitting.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PART 6: BINARY ===================== -->
+<section class="slide" data-part="6">
+  <h2>Binary classification: same pipeline, different question</h2>
+  <p>IMDb movie reviews: positive or negative? 25,000 training and 25,000 test reviews, exactly balanced. The engineering analogue is a normal/fault decision from a sensor record.</p>
+  <table class="tbl">
+    <thead><tr><th></th><th>MNIST, what we built</th><th>IMDb, binary</th></tr></thead>
+    <tbody>
+      <tr><td>Question</td><td>which of 10 digits?</td><td>positive or negative?</td></tr>
+      <tr><td>Input</td><td>784 pixel values</td><td>10,000-long multi-hot word vector</td></tr>
+      <tr><td>Last layer</td><td><code>Dense(10, activation="softmax")</code></td><td><code>Dense(1, activation="sigmoid")</code></td></tr>
+      <tr><td>Loss</td><td><code>sparse_categorical_crossentropy</code></td><td><code>binary_crossentropy</code></td></tr>
+      <tr><td>Prediction</td><td><code>argmax</code> of 10 probabilities</td><td>\(p \gt t\) for a threshold \(t\)</td></tr>
+      <tr><td>Chance baseline</td><td>10%</td><td>50%</td></tr>
+    </tbody>
+  </table>
+  <div class="bottom-line"><p class="small">Fact worth knowing: \(\sigma(z) = \mathrm{softmax}([z, 0])_1\). A sigmoid output <em>is</em> a two-class softmax with one logit fixed at 0.</p></div>
+</section>
+
+<section class="slide" data-part="6">
+  <h2>Turning variable-length text into a fixed vector</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">(seq_train, yb_train), (seq_test, yb_test) = \
+    keras.datasets.imdb.load_data(num_words=10000)
+
+def multi_hot(sequences, dim=10000):
+    out = np.zeros((len(sequences), dim), dtype="float32")
+    for i, seq in enumerate(sequences):
+        out[i, seq] = 1.0          # word i present: 1
+    return out
+
+xb_train = multi_hot(seq_train)
+xb_test = multi_hot(seq_test)
+print(xb_train.shape)              # (25000, 10000)</code></pre></div>
+    <div class="stack">
+      <p class="small">Reviews arrive as lists of word indices of varying length. A Dense layer needs a fixed size.</p>
+      <p class="small"><strong>Bag of words:</strong> position \(i\) records whether word \(i\) occurs (multi-hot), how often (counts) or how informative it is (TF-IDF).</p>
+      <div class="box quiet">
+        <p class="small"><strong>Works because</strong> words like <em>great</em>, <em>awful</em>, <em>boring</em> carry the signal on their own.</p>
+        <p class="small"><strong>Fails because</strong> word order is lost: "not good" looks like "good".</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="6">
+  <h2>The binary model, as a diff from ours</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">model_b = keras.Sequential([
+    keras.Input(shape=(10000,)),            # was 784
+    layers.Dense(16, activation="relu"),
+    layers.Dense(16, activation="relu"),
+    layers.Dense(1, activation="sigmoid"),  # was Dense(10, softmax)
+])
+model_b.compile(optimizer="adam",
+                loss="binary_crossentropy",  # was sparse CCE
+                metrics=["accuracy"])
+hb = model_b.fit(xb_train, yb_train, epochs=20, batch_size=512,
+                 validation_split=0.4)       # 10,000 for validation
+
+p = model_b.predict(xb_test[:5], verbose=0)  # shape (5, 1)
+y_hat = (p[:, 0] &gt; 0.5).astype(int)        # threshold, not argmax</code></pre></div>
+    <div class="stack">
+      <p class="small">In the reference run, validation loss bottoms out around epoch 4. Retrained for 4 epochs on all 25,000 reviews: about <strong>88%</strong> test accuracy, test loss 0.29.</p>
+      <div class="box">
+        <h3>The threshold is a design choice</h3>
+        <p class="small">0.5 assumes a false alarm and a missed fault cost the same. For a safety-critical fault detector you would lower \(t\): more false alarms, fewer misses. Choose \(t\) on the validation set.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PART 7: REGRESSION ===================== -->
+<section class="slide" data-part="7">
+  <h2>Regression: predict a number, not a class</h2>
+  <p>California housing (small version): predict the median house value of a district from 8 features such as location, house age, population and median income. Only 480 training and 120 test samples.</p>
+  <table class="tbl">
+    <thead><tr><th></th><th>MNIST, what we built</th><th>Housing, regression</th></tr></thead>
+    <tbody>
+      <tr><td>Target</td><td>an integer class 0 to 9</td><td>a price, $60k to $500k</td></tr>
+      <tr><td>Last layer</td><td><code>Dense(10, activation="softmax")</code></td><td><code>Dense(1)</code>, no activation</td></tr>
+      <tr><td>Loss</td><td><code>sparse_categorical_crossentropy</code></td><td><code>mean_squared_error</code></td></tr>
+      <tr><td>Metric</td><td>accuracy</td><td>mean absolute error, in target units</td></tr>
+      <tr><td>Preprocessing</td><td>scale pixels to [0, 1]</td><td>standardise each feature; scale the target</td></tr>
+      <tr><td>Validation</td><td>one 10% split</td><td>K-fold cross-validation: too little data for one split</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="slide" data-part="7">
+  <h2>Preprocessing: features and target</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">(xr_train, yr_train), (xr_test, yr_test) = \
+    keras.datasets.california_housing.load_data(version="small")
+print(xr_train.shape, xr_test.shape)   # (480, 8) (120, 8)
+
+mean = xr_train.mean(axis=0)     # training statistics only
+std = xr_train.std(axis=0)
+xr_train = (xr_train - mean) / std
+xr_test = (xr_test - mean) / std  # the same mean and std
+
+yr_train = yr_train / 100_000    # $60k-$500k becomes 0.6-5.0
+yr_test = yr_test / 100_000</code></pre></div>
+    <div class="stack">
+      <div class="box">
+        <h3>Features on wildly different scales</h3>
+        <p class="small">Longitude −124 to −114, population 3 to 35,682, median income 0.5 to 15. Without standardising, the large-scale features dominate the gradients.</p>
+      </div>
+      <div class="box">
+        <h3>Target scaling</h3>
+        <p class="small">Inputs near 0 and small initial weights give small initial outputs. Targets of 500,000 would need huge weights and slow training. Multiply predictions by 100,000 to get dollars back.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="7">
+  <h2>The regression model, as a diff from ours</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">def build_regressor():
+    model = keras.Sequential([
+        keras.Input(shape=(8,)),           # was 784
+        layers.Dense(64, activation="relu"),
+        layers.Dense(64, activation="relu"),
+        layers.Dense(1),                   # no activation
+    ])
+    model.compile(optimizer="adam",
+                  loss="mean_squared_error",
+                  metrics=["mean_absolute_error"])
+    return model</code></pre></div>
+    <div class="stack">
+      <p class="small"><strong>No activation:</strong> the output must be free to take any value.</p>
+      <p class="small"><strong>MSE to train, MAE to report:</strong> an MAE of 0.30 on scaled targets means about $30,000 off on average.</p>
+      <p class="small"><strong>Small network on purpose:</strong> with 480 samples, a large model memorises the training set quickly.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="7">
+  <h2>K-fold cross-validation for small datasets</h2>
+  <div class="cols wr">
+    <div class="stack">
+      <p class="small">A single 20% validation split would hold about 100 samples, and its score would depend heavily on <em>which</em> 100.</p>
+      <div class="folds" aria-label="Four-fold cross-validation diagram">
+        <span>Fold 1</span><span class="c v">val</span><span class="c">train</span><span class="c">train</span><span class="c">train</span><span class="s">score 1</span>
+        <span>Fold 2</span><span class="c">train</span><span class="c v">val</span><span class="c">train</span><span class="c">train</span><span class="s">score 2</span>
+        <span>Fold 3</span><span class="c">train</span><span class="c">train</span><span class="c v">val</span><span class="c">train</span><span class="s">score 3</span>
+        <span>Fold 4</span><span class="c">train</span><span class="c">train</span><span class="c">train</span><span class="c v">val</span><span class="s">score 4</span>
+      </div>
+      <p class="small">Train \(K\) fresh models, each validated on a different part, and average the \(K\) scores. Every sample is used for validation exactly once.</p>
+      <p class="small muted">Individual folds can differ a lot: one reference run gave MAE between 0.23 and 0.35. That spread is the reason to average.</p>
+    </div>
+    <div class="code-wrap"><pre class="dense"><code class="language-python">k = 4
+n = len(xr_train) // k
+scores = []
+for i in range(k):
+    val = slice(i * n, (i + 1) * n)
+    xv, yv = xr_train[val], yr_train[val]
+    xf = np.concatenate([xr_train[:i * n],
+                         xr_train[(i + 1) * n:]])
+    yf = np.concatenate([yr_train[:i * n],
+                         yr_train[(i + 1) * n:]])
+    m = build_regressor()
+    m.fit(xf, yf, epochs=50, batch_size=16, verbose=0)
+    scores.append(m.evaluate(xv, yv, verbose=0)[1])
+print("fold MAE:", np.round(scores, 3))
+print("mean MAE:", np.mean(scores))</code></pre></div>
+  </div>
+</section>
+
+<!-- ===================== PART 8: WRAP-UP ===================== -->
+<section class="slide" data-part="8">
+  <h2>What changes with the task, and what does not</h2>
+  <div class="cols">
+    <div class="box">
+      <h3>Set by the question you ask</h3>
+      <ul class="small">
+        <li>number of output units</li>
+        <li>output activation: sigmoid, softmax or none</li>
+        <li>loss: BCE, CCE or MSE, each a negative log-likelihood</li>
+        <li>metric: accuracy, precision and recall, top-k, or MAE</li>
+        <li>target format: 0/1, integer, one-hot or real number</li>
+      </ul>
+    </div>
+    <div class="box quiet">
+      <h3>The same every time</h3>
+      <ul class="small">
+        <li>Dense hidden layers with ReLU</li>
+        <li>Adam as a sensible default optimiser</li>
+        <li>inputs scaled with training statistics only</li>
+        <li>training, validation and test sets with separate jobs</li>
+        <li>learning curves to choose epochs and spot overfitting</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bottom-line"><p><strong>Test data is sacred:</strong> use it once, for the final number. Tuning on it is overfitting by another name.</p></div>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Before you deploy a model in engineering practice</h2>
+  <div class="cols">
+    <div>
+      <h3>Questions to ask</h3>
+      <ol>
+        <li>What happens when the model is wrong?</li>
+        <li>Do false positives and false negatives cost the same?</li>
+        <li>Does the training data represent deployment conditions?</li>
+        <li>How will you monitor performance once it is running?</li>
+      </ol>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Overfitting will come back every lecture</h3>
+        <p class="small">First remedies: a smaller model, early stopping, more data. Next lecture adds regularisation (L1, L2, dropout) and data augmentation.</p>
+      </div>
+      <div class="box quiet">
+        <p class="small">Models degrade as data drifts away from what they were trained on: a new sensor, a new supplier, a new season. Plan for retraining.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Self-study exercises</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="box"><h3>1. Architecture on MNIST</h3><p class="small">Try 32, 128 and 512 hidden units; one versus two hidden layers; tanh instead of ReLU. Compare accuracy and training time, with three seeds each.</p></div>
+      <div class="box"><h3>2. Labels and losses</h3><p class="small">Train once with integer labels and sparse CCE, once with <code>to_categorical</code> and CCE. Confirm the losses match. Plot \(-\ln p\) against \(p\).</p></div>
+      <div class="box"><h3>3. Pixel shuffle</h3><p class="small">Apply one fixed random permutation to all 784 pixels, train and test again. Explain the result, and what it means for CNNs.</p></div>
+    </div>
+    <div class="stack">
+      <div class="box"><h3>4. Bottleneck sweep</h3><p class="small">Hidden sizes 2, 4, 8, 16, 32, 64, 128 on MNIST. Plot best validation accuracy against size. Where does it plateau?</p></div>
+      <div class="box"><h3>5. Small-data regression</h3><p class="small">Housing with 240 training samples; 4-fold versus 10-fold; min-max versus robust scaling; add latitude × longitude as a feature.</p></div>
+      <div class="box"><h3>6. Choose a threshold</h3><p class="small">For IMDb, plot precision and recall against \(t\) on the validation set. Pick \(t\) if a missed negative review costs five times a false alarm.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Questions?</h2>
+  <div class="cols">
+    <div class="stack">
+      <h3>Next lecture</h3>
+      <p><strong>Fundamentals of machine learning:</strong> generalisation, overfitting and regularisation, and systematic model evaluation.</p>
+      <p class="small muted">Complete the self-study exercises before the next session.</p>
+    </div>
+    <div class="stack">
+      <h3>Reading and resources</h3>
+      <ul class="small">
+        <li>Textbook chapter 5, Fundamentals of machine learning</li>
+        <li>Keras documentation and guides: keras.io</li>
+        <li>Goodfellow, Bengio and Courville, <em>Deep Learning</em>: deeplearningbook.org</li>
+        <li>Implement this MLP in plain NumPy once: forward pass, loss and gradients</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="tblock" id="tblock" data-part="1">
+  <div class="nav"><button id="prev" type="button" aria-label="Previous slide">‹</button><button id="next" type="button" aria-label="Next slide">›</button></div>
+  <div class="part"><i></i><span id="part-name"></span></div>
+  <div id="part-time"></div>
+  <div class="timer" id="timer" role="button" tabindex="0" title="Lecture timer: T to start or pause, R to reset"></div>
+  <div class="count" id="count"></div>
+</div>
+
+<div class="help" id="help" hidden>
+  <h4>Keys</h4>
+  <kbd>→</kbd> <kbd>Space</kbd> <kbd>PgDn</kbd> next slide<br>
+  <kbd>←</kbd> <kbd>PgUp</kbd> previous slide<br>
+  <kbd>Home</kbd> <kbd>End</kbd> first or last slide<br>
+  <kbd>T</kbd> start or pause the lecture timer, <kbd>R</kbd> reset it<br>
+  <kbd>D</kbd> switch dark and light<br>
+  <kbd>H</kbd> handout view: all slides in one scrolling page<br>
+  <kbd>F</kbd> full screen &nbsp; <kbd>Esc</kbd> close this
+  <p style="margin:8px 0 0;font-size:15px;color:var(--ink-2)">The timer turns red when you run past the planned end of the current part. Add <code>#12</code> to the address to open slide 12.</p>
+</div>
+
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<style>
+.mk-bad { fill: var(--bad); } .mk-good { fill: var(--good); }
+.sm-head { color: var(--ink-2); font-size: 15px !important; margin-bottom: 4px !important; }
+input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; padding: 4px 8px; width: 130px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var PARTS = {
+    1: ['Opening', 0, 5], 2: ['Building blocks', 5, 10], 3: ['Three kinds of prediction', 15, 10],
+    4: ['Hands-on: an MLP for MNIST', 25, 25], 5: ['Reading the results', 50, 12],
+    6: ['Binary classification', 62, 6], 7: ['Regression', 68, 8], 8: ['Wrap-up', 76, 4]
+  };
+  var NS = 'http://www.w3.org/2000/svg';
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* ---------- theme ---------- */
+  var savedTheme = store.get('l3-theme');
+  if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme);
+  function isDark() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t) return t === 'dark';
+    return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function toggleTheme() {
+    var next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    store.set('l3-theme', next);
+  }
+
+  /* ---------- slides ---------- */
+  var slides = $$('.slide');
+  var N = slides.length;
+  var stage = $('#stage');
+  var vp = $('.viewport');
+  var cur = 0;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmtSec(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+    return (h ? h + ':' + pad(m) : String(m)) + ':' + pad(s);
+  }
+  function fmtMin(min) { return Math.floor(min / 60) + ':' + pad(min % 60); }
+
+  function fit() {
+    if (document.body.classList.contains('doc')) { stage.style.transform = ''; return; }
+    var cs = getComputedStyle(vp);
+    var w = vp.clientWidth;
+    var h = vp.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var s = Math.min(w / 1280, h / 720);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+
+  function updateFooter() {
+    var p = slides[cur].getAttribute('data-part');
+    var info = PARTS[p];
+    $('#tblock').setAttribute('data-part', p);
+    $('#part-name').textContent = 'Part ' + p + ' of 8: ' + info[0];
+    $('#part-time').textContent = 'planned ' + fmtMin(info[1]) + '\u2013' + fmtMin(info[1] + info[2]);
+    $('#count').textContent = (cur + 1) + ' / ' + N;
+    renderTimer();
+  }
+
+  function go(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    slides[cur].classList.remove('active');
+    cur = i;
+    slides[cur].classList.add('active');
+    updateFooter();
+    try { history.replaceState(null, '', '#' + (cur + 1)); } catch (e) {}
+  }
+
+  /* ---------- timer ---------- */
+  var tRun = false, tStart = 0, tAcc = 0, tInt = null;
+  function elapsed() { return tAcc + (tRun ? (Date.now() - tStart) / 1000 : 0); }
+  function renderTimer() {
+    var el = $('#timer');
+    if (!tRun && tAcc === 0) { el.textContent = 'T: start timer'; el.className = 'timer'; return; }
+    var e = elapsed();
+    var info = PARTS[slides[cur].getAttribute('data-part')];
+    el.textContent = (tRun ? '' : 'paused ') + fmtSec(e);
+    el.className = 'timer' + (tRun ? ' run' : '') + (e > (info[1] + info[2]) * 60 ? ' late' : '');
+  }
+  function toggleTimer() {
+    if (tRun) { tAcc = elapsed(); tRun = false; clearInterval(tInt); }
+    else { tStart = Date.now(); tRun = true; tInt = setInterval(renderTimer, 1000); }
+    renderTimer();
+  }
+  function resetTimer() { tRun = false; tAcc = 0; clearInterval(tInt); renderTimer(); }
+
+  /* ---------- handout mode ---------- */
+  var docForced = null;
+  var narrow = window.matchMedia ? matchMedia('(max-width: 760px)') : null;
+  function setDoc(on) {
+    var was = document.body.classList.contains('doc');
+    document.body.classList.toggle('doc', on);
+    fit();
+    if (on && !was) requestAnimationFrame(function () { slides[cur].scrollIntoView(); });
+  }
+  function autoDoc() { setDoc(docForced !== null ? docForced : !!(narrow && narrow.matches)); }
+  if (narrow) {
+    if (narrow.addEventListener) narrow.addEventListener('change', autoDoc);
+    else if (narrow.addListener) narrow.addListener(autoDoc);
+  }
+  var docBeforePrint = false;
+  window.addEventListener('beforeprint', function () { docBeforePrint = document.body.classList.contains('doc'); setDoc(true); });
+  window.addEventListener('afterprint', function () { setDoc(docBeforePrint); });
+
+  /* ---------- input ---------- */
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target, k = e.key;
+    if (k === 'Escape') { $('#help').hidden = true; return; }
+    if (t && t.matches && t.matches('input[type=number], input[type=text], textarea, select')) return;
+    var navKey = /^(Arrow|Page|Home$|End$)/.test(k);
+    if (navKey && t && t.matches && t.matches('input[type=range], input[type=radio]')) return;
+    var isDoc = document.body.classList.contains('doc');
+    var onButton = t && t.matches && t.matches('button, [role=button]');
+    if (!isDoc && (k === 'ArrowRight' || k === 'PageDown' || k === 'ArrowDown' || (k === ' ' && !onButton))) { e.preventDefault(); go(cur + 1); }
+    else if (!isDoc && (k === 'ArrowLeft' || k === 'PageUp' || k === 'ArrowUp')) { e.preventDefault(); go(cur - 1); }
+    else if (!isDoc && k === 'Home') { e.preventDefault(); go(0); }
+    else if (!isDoc && k === 'End') { e.preventDefault(); go(N - 1); }
+    else if (k === 't' || k === 'T') toggleTimer();
+    else if (k === 'r' || k === 'R') resetTimer();
+    else if (k === 'd' || k === 'D') toggleTheme();
+    else if (k === 'h' || k === 'H') { docForced = !isDoc; setDoc(docForced); if (!docForced) go(cur); }
+    else if (k === '?') { var h = $('#help'); h.hidden = !h.hidden; }
+    else if (k === 'f' || k === 'F') {
+      try {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      } catch (err) {}
+    }
+  });
+  $('#prev').addEventListener('click', function () { go(cur - 1); });
+  $('#next').addEventListener('click', function () { go(cur + 1); });
+  $('#timer').addEventListener('click', toggleTimer);
+  $('#timer').addEventListener('keydown', function (e) { if (e.key === 'Enter') toggleTimer(); });
+  window.addEventListener('hashchange', function () {
+    var m = location.hash.match(/^#(\d+)$/);
+    if (m && +m[1] - 1 !== cur) go(+m[1] - 1);
+  });
+  window.addEventListener('resize', fit);
+  /* after a mouse drag, hand the arrow keys back to slide navigation */
+  document.addEventListener('pointerup', function (e) {
+    var t = e.target;
+    if (t && t.matches && t.matches('input[type=range], input[type=radio], input[type=checkbox], button') && e.pointerType === 'mouse') {
+      setTimeout(function () { t.blur(); }, 0);
+    }
+  });
+
+  var tx = null, ty = null;
+  stage.addEventListener('touchstart', function (e) {
+    if (e.target.closest('input, button, pre, .sm-rows, svg')) { tx = null; return; }
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (tx === null || document.body.classList.contains('doc')) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < 60) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, { passive: true });
+
+  /* ---------- code: highlight + copy ---------- */
+  try { if (window.Prism && Prism.highlightAll) Prism.highlightAll(); } catch (e) {}
+  $$('.code-wrap').forEach(function (wrap) {
+    var pre = $('pre', wrap);
+    if (!pre) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'copy'; b.textContent = 'Copy';
+    b.addEventListener('click', function () {
+      var text = pre.textContent;
+      function done(ok) { b.textContent = ok ? 'Copied' : 'Select the code to copy'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); done(ok);
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+        else fallback();
+      } catch (e) { fallback(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  $$('[data-reveal]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var el = document.getElementById(b.getAttribute('data-reveal'));
+      el.hidden = !el.hidden;
+      b.setAttribute('aria-pressed', String(!el.hidden));
+      b.textContent = el.hidden ? 'Show the count' : 'Hide the count';
+    });
+  });
+
+  /* ---------- svg helpers ---------- */
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, s, cls, anchor) {
+    var t = el('text', { x: x, y: y, 'class': cls || 'tick', 'text-anchor': anchor || 'middle' }, parent);
+    t.textContent = s;
+    return t;
+  }
+  var clipN = 0;
+  function makePlot(svg, o) {
+    var W = o.w || 300, H = o.h || 200, L = o.l != null ? o.l : 34, R = 10, T = 12, B = o.b != null ? o.b : (o.xl ? (o.xt ? 44 : 26) : 28);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    function sx(x) { return L + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - L - R); }
+    function sy(y) { return T + (1 - (y - o.y[0]) / (o.y[1] - o.y[0])) * (H - T - B); }
+    var id = 'clip' + (++clipN);
+    var cp = el('clipPath', { id: id }, el('defs', {}, svg));
+    el('rect', { x: L, y: T - 2, width: W - L - R, height: H - T - B + 2 }, cp);
+    if (o.x[0] < 0 && o.x[1] > 0) el('line', { x1: sx(0), x2: sx(0), y1: T, y2: H - B, 'class': 'ax-0' }, svg);
+    if (o.y[0] < 0 && o.y[1] > 0) el('line', { x1: L, x2: W - R, y1: sy(0), y2: sy(0), 'class': 'ax-0' }, svg);
+    el('path', { d: 'M' + L + ',' + T + ' V' + (H - B) + ' H' + (W - R), 'class': 'ax' }, svg);
+    (o.xt || []).forEach(function (v) { txt(svg, sx(v), H - B + 15, String(v)); });
+    (o.yt || []).forEach(function (v) { txt(svg, L - 6, sy(v) + 4, String(v), 'tick', 'end'); });
+    if (o.xl) txt(svg, (L + W - R) / 2, H - 6, o.xl, 'tick');
+    if (o.yl) txt(svg, L + 6, T + 10, o.yl, 'tick', 'start');
+    return {
+      sx: sx, sy: sy, svg: svg,
+      curve: function (f, cls, a, b) {
+        a = a != null ? a : o.x[0]; b = b != null ? b : o.x[1];
+        var d = '', n = 200;
+        for (var i = 0; i <= n; i++) {
+          var x = a + (b - a) * i / n, y = f(x);
+          if (!isFinite(y)) continue;
+          y = Math.max(o.y[0] - 1, Math.min(o.y[1] + 1, y));
+          d += (d ? 'L' : 'M') + sx(x).toFixed(2) + ',' + sy(y).toFixed(2);
+        }
+        return el('path', { d: d, 'class': cls, 'clip-path': 'url(#' + id + ')' }, svg);
+      }
+    };
+  }
+
+  /* ---------- activation plots ---------- */
+  function sig(z) { return 1 / (1 + Math.exp(-z)); }
+  function gelu(x) { return 0.5 * x * (1 + Math.tanh(Math.sqrt(2 / Math.PI) * (x + 0.044715 * x * x * x))); }
+  [['#act-relu', function (x) { return Math.max(0, x); }, [-1, 4], [0, 2, 4]],
+   ['#act-sigmoid', sig, [-0.2, 1.2], [0, 0.5, 1]],
+   ['#act-tanh', Math.tanh, [-1.3, 1.3], [-1, 0, 1]],
+   ['#act-gelu', gelu, [-1, 4], [0, 2, 4]]].forEach(function (a) {
+    var svg = $(a[0]); if (!svg) return;
+    var P = makePlot(svg, { w: 270, h: 180, x: [-4, 4], y: a[2], xt: [-4, 0, 4], yt: a[3] });
+    P.curve(a[1], 'c-sec');
+  });
+
+  /* ---------- BCE plot ---------- */
+  (function () {
+    var svg = $('#bce-plot'), inp = $('#bce-p'); if (!svg || !inp) return;
+    var P = makePlot(svg, { w: 440, h: 250, l: 30, x: [0, 1], y: [0, 5], xt: [0, 0.25, 0.5, 0.75, 1], yt: [0, 1, 2, 3, 4, 5], xl: 'predicted p', yl: 'loss' });
+    P.curve(function (p) { return -Math.log(p); }, 'c-sec', 0.003, 1);
+    P.curve(function (p) { return -Math.log(1 - p); }, 'c-alt', 0, 0.997);
+    txt(svg, P.sx(0.17), P.sy(3.2), 'true y = 1', 'lbl', 'start');
+    txt(svg, P.sx(0.5), P.sy(1.45), 'true y = 0', 'lbl', 'start');
+    var m1 = el('circle', { r: 6, 'class': 'dot-pt' }, svg);
+    var m0 = el('circle', { r: 6, fill: 'var(--ink-2)', style: 'fill:var(--ink-2)' }, svg);
+    var vline = el('line', { 'class': 'ax-0' }, svg);
+    var out = inp.nextElementSibling, read = $('#bce-read');
+    function upd() {
+      var p = +inp.value, l1 = -Math.log(p), l0 = -Math.log(1 - p);
+      out.textContent = p.toFixed(2);
+      m1.setAttribute('cx', P.sx(p)); m1.setAttribute('cy', P.sy(Math.min(l1, 5)));
+      m0.setAttribute('cx', P.sx(p)); m0.setAttribute('cy', P.sy(Math.min(l0, 5)));
+      vline.setAttribute('x1', P.sx(p)); vline.setAttribute('x2', P.sx(p));
+      vline.setAttribute('y1', P.sy(0)); vline.setAttribute('y2', P.sy(5));
+      read.innerHTML = 'If the true label is 1: loss = \u2212ln(' + p.toFixed(2) + ') = <b>' + l1.toFixed(3) + '</b><br>If the true label is 0: loss = \u2212ln(' + (1 - p).toFixed(2) + ') = <b>' + l0.toFixed(3) + '</b>';
+    }
+    inp.addEventListener('input', upd); upd();
+  })();
+
+  /* ---------- learning curve sketches ---------- */
+  (function () {
+    var specs = [
+      ['#lc-under', function (x) { return 0.5 + 0.55 * Math.exp(-x / 14); }, function (x) { return 0.58 + 0.55 * Math.exp(-x / 14); }, null],
+      ['#lc-good', function (x) { return 0.12 + 0.9 * Math.exp(-x / 2.5); }, function (x) { return 0.21 + 0.9 * Math.exp(-x / 2.5) + 0.0015 * x; }, null],
+      ['#lc-over', function (x) { return 0.03 + 0.95 * Math.exp(-x / 2.5); }, function (x) { return 0.2 + 0.95 * Math.exp(-x / 2.2) + 0.022 * x; }, 6.55]
+    ];
+    specs.forEach(function (s) {
+      var svg = $(s[0]); if (!svg) return;
+      var P = makePlot(svg, { w: 340, h: 250, l: 14, x: [0, 20], y: [0, 1.2], xl: 'epoch', yl: 'loss' });
+      P.curve(s[1], 'c-sec', 0.5, 20);
+      P.curve(s[2], 'c-alt', 0.5, 20);
+      if (s[3]) {
+        el('line', { x1: P.sx(s[3]), x2: P.sx(s[3]), y1: P.sy(0), y2: P.sy(1.15), 'class': 'ax-0' }, svg);
+        txt(svg, P.sx(s[3]) + 5, P.sy(1.02), 'best epoch', 'tick', 'start');
+      }
+    });
+  })();
+
+  /* ---------- MLP diagrams ---------- */
+  function drawMLP(svg, cols) {
+    var vb = svg.getAttribute('viewBox').split(/\s+/).map(Number), W = vb[2], H = vb[3];
+    var x0 = 80, x1 = W - 130;
+    var xs = cols.map(function (c, i) { return x0 + i * (x1 - x0) / (cols.length - 1); });
+    var top = 22, bot = H - 58;
+    var pos = cols.map(function (c, ci) {
+      var n = c.labels.length;
+      return c.labels.map(function (lab, k) { return { x: xs[ci], y: n === 1 ? (top + bot) / 2 : top + (bot - top) * k / (n - 1), lab: lab }; });
+    });
+    for (var ci = 0; ci < cols.length - 1; ci++) {
+      pos[ci].forEach(function (a) {
+        if (a.lab === '\u22ee') return;
+        pos[ci + 1].forEach(function (b) {
+          if (b.lab === '\u22ee') return;
+          el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'class': 'edge' }, svg);
+        });
+      });
+    }
+    pos.forEach(function (col, ci) {
+      col.forEach(function (p) {
+        if (p.lab === '\u22ee') { txt(svg, p.x, p.y + 7, '\u22ee', 'lbl'); return; }
+        el('circle', { cx: p.x, cy: p.y, r: 8.5, 'class': 'node' + (ci === 0 ? ' in' : '') }, svg);
+        if (cols[ci].side === 'left') txt(svg, p.x - 16, p.y + 4, p.lab, 'tick', 'end');
+        if (cols[ci].side === 'right') txt(svg, p.x + 16, p.y + 4, p.lab, 'tick', 'start');
+      });
+    });
+    cols.forEach(function (c, i) {
+      txt(svg, xs[i], H - 32, c.title, 'lbl');
+      txt(svg, xs[i], H - 14, c.sub, 'tick');
+    });
+  }
+  var mlpCols = [
+    { labels: ['x\u2081', 'x\u2082', 'x\u2083', '\u22ee', 'x\u2087\u2088\u2083', 'x\u2087\u2088\u2084'], side: 'left', title: '784 inputs', sub: 'one per pixel' },
+    { labels: ['', '', '', '\u22ee', '', '', ''], title: '128 hidden units', sub: 'Dense + ReLU' },
+    { labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], side: 'right', title: '10 outputs', sub: 'Dense + softmax' }
+  ];
+  ['#mlp-diagram', '#mlp-diagram-2'].forEach(function (s) { var svg = $(s); if (svg) drawMLP(svg, mlpCols); });
+
+  /* ---------- title grid ---------- */
+  (function () {
+    var svg = $('#title-grid'); if (!svg) return;
+    var S = 80, OX = 80, OY = 320;
+    function X(x) { return OX + x * S; } function Y(y) { return OY - y * S; }
+    function T(p) { var u = 1.1 * p[0] + 0.55 * p[1] - 0.9, v = 0.25 * p[0] + 1.05 * p[1] - 0.7; return [Math.max(0, u), Math.max(0, v)]; }
+    var cp = el('clipPath', { id: 'tg-clip' }, el('defs', {}, svg));
+    el('rect', { x: 0, y: 0, width: 400, height: 400 }, cp);
+    var g = el('g', { 'clip-path': 'url(#tg-clip)' }, svg);
+    for (var k = -4; k <= 6; k += 0.5) {
+      [[[k, -4], [k, 6]], [[-4, k], [6, k]]].forEach(function (seg) {
+        var pts = [];
+        for (var i = 0; i <= 60; i++) {
+          var t = i / 60, p = [seg[0][0] + (seg[1][0] - seg[0][0]) * t, seg[0][1] + (seg[1][1] - seg[0][1]) * t];
+          var q = T(p); pts.push(X(q[0]).toFixed(1) + ',' + Y(q[1]).toFixed(1));
+        }
+        el('polyline', { points: pts.join(' '), 'class': Number.isInteger(k) ? 'g-int' : 'g-line' }, g);
+      });
+    }
+    el('path', { d: 'M' + X(0) + ',0 V' + Y(0) + ' H400', 'class': 'ax' }, svg);
+    txt(svg, 392, Y(0) - 8, 'ReLU(Ax + b)', 'lbl', 'end');
+  })();
+
+  /* ---------- interactive grid ---------- */
+  (function () {
+    var root = $('#grid-demo'); if (!root) return;
+    var svg = $('svg', root), out = $('.readout', root);
+    var S = 400 / 7, C = 200;
+    function X(x) { return C + x * S; } function Y(y) { return C - y * S; }
+    var st = { a: 1, b: 0, c: 0, d: 1, bx: 0, by: 0, relu: false };
+    var defs = el('defs', {}, svg);
+    var cp = el('clipPath', { id: 'gd-clip' }, defs);
+    el('rect', { x: 0, y: 0, width: 400, height: 400 }, cp);
+    [['mk-bad', 'mk-bad'], ['mk-good', 'mk-good']].forEach(function (m) {
+      var mk = el('marker', { id: m[0], viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' }, defs);
+      el('path', { d: 'M0,0 L10,5 L0,10 z', 'class': m[1] }, mk);
+    });
+    var base = el('g', {}, svg);
+    for (var k = -3.5; k <= 3.5; k += 0.5) {
+      el('line', { x1: X(k), y1: 0, x2: X(k), y2: 400, 'class': 'g-old' }, base);
+      el('line', { x1: 0, y1: Y(k), x2: 400, y2: Y(k), 'class': 'g-old' }, base);
+    }
+    el('line', { x1: 0, y1: Y(0), x2: 400, y2: Y(0), 'class': 'ax' }, base);
+    el('line', { x1: X(0), y1: 0, x2: X(0), y2: 400, 'class': 'ax' }, base);
+    var dyn = el('g', { 'clip-path': 'url(#gd-clip)' }, svg);
+    var F = [[0.2, 0.1], [0.36, 0.1], [0.36, 0.45], [0.66, 0.45], [0.66, 0.59], [0.36, 0.59], [0.36, 0.76], [0.8, 0.76], [0.8, 0.9], [0.2, 0.9]];
+    function T(p) {
+      var u = st.a * p[0] + st.b * p[1] + st.bx, v = st.c * p[0] + st.d * p[1] + st.by;
+      if (st.relu) { u = Math.max(0, u); v = Math.max(0, v); }
+      return [u, v];
+    }
+    function dense(pts, closed, n) {
+      var o = [], m = closed ? pts.length : pts.length - 1;
+      for (var i = 0; i < m; i++) {
+        var p = pts[i], q = pts[(i + 1) % pts.length];
+        for (var j = 0; j < n; j++) o.push([p[0] + (q[0] - p[0]) * j / n, p[1] + (q[1] - p[1]) * j / n]);
+      }
+      if (!closed) o.push(pts[pts.length - 1]);
+      return o;
+    }
+    function pstr(pts) { return pts.map(function (p) { var q = T(p); return X(q[0]).toFixed(1) + ',' + Y(q[1]).toFixed(1); }).join(' '); }
+    function f2(v) { return (v < 0 ? '\u2212' : '') + Math.abs(v).toFixed(2); }
+    function draw() {
+      while (dyn.firstChild) dyn.removeChild(dyn.firstChild);
+      for (var k = -6; k <= 6; k += 0.5) {
+        var cls = Number.isInteger(k) ? 'g-int' : 'g-line';
+        el('polyline', { points: pstr(dense([[k, -6], [k, 6]], false, 48)), 'class': cls }, dyn);
+        el('polyline', { points: pstr(dense([[-6, k], [6, k]], false, 48)), 'class': cls }, dyn);
+      }
+      el('polygon', { points: pstr(dense([[0, 0], [1, 0], [1, 1], [0, 1]], true, 24)), 'class': 'g-sq' }, dyn);
+      el('polygon', { points: pstr(dense(F, true, 10)), 'class': 'g-f' }, dyn);
+      if (!st.relu) {
+        el('line', { x1: X(st.bx), y1: Y(st.by), x2: X(st.bx + st.a), y2: Y(st.by + st.c), 'class': 'g-arrow', 'marker-end': 'url(#mk-bad)' }, dyn);
+        el('line', { x1: X(st.bx), y1: Y(st.by), x2: X(st.bx + st.b), y2: Y(st.by + st.d), 'class': 'g-arrow2', 'marker-end': 'url(#mk-good)' }, dyn);
+      }
+      var det = st.a * st.d - st.b * st.c, note;
+      if (st.relu) note = 'ReLU folds everything outside the positive quadrant onto the axes. Straight lines now bend: the map is no longer affine.';
+      else if (Math.abs(det) < 0.03) note = 'det A \u2248 0: the plane collapses onto a line, and that information cannot be recovered.';
+      else if (det < 0) note = 'det A < 0: orientation flips, so the F is mirrored.';
+      else note = 'Area of the unit square scales by |det A|.';
+      out.innerHTML = 'A = [[' + f2(st.a) + ', ' + f2(st.b) + '], [' + f2(st.c) + ', ' + f2(st.d) + ']] &nbsp; b = (' + f2(st.bx) + ', ' + f2(st.by) + ')<br>det A = <b>' + f2(det) + '</b><br>' +
+        (st.relu ? '' : '<span style="color:var(--bad)">Red arrow</span>: A e\u2081, the first column. <span style="color:var(--good)">Green arrow</span>: A e\u2082.<br>') + note;
+      $$('input[type=range]', root).forEach(function (r) { r.nextElementSibling.textContent = f2(st[r.getAttribute('data-k')]); });
+    }
+    $$('input[type=range]', root).forEach(function (r) {
+      r.addEventListener('input', function () { st[r.getAttribute('data-k')] = +r.value; draw(); });
+    });
+    var chk = $('input[type=checkbox]', root);
+    chk.addEventListener('change', function () { st.relu = chk.checked; draw(); });
+    var c30 = Math.cos(Math.PI / 6), s30 = Math.sin(Math.PI / 6);
+    var presets = {
+      id: [1, 0, 0, 1], rot: [c30, -s30, s30, c30], scale: [1.5, 0, 0, 0.5],
+      shear: [1, 0.8, 0, 1], flip: [1, 0, 0, -0.5], lattice: [1.2, 0.6, 0.2, 1.1]
+    };
+    $$('[data-preset]', root).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var p = presets[b.getAttribute('data-preset')];
+        st.a = p[0]; st.b = p[1]; st.c = p[2]; st.d = p[3]; st.bx = 0; st.by = 0;
+        $$('input[type=range]', root).forEach(function (r) { r.value = st[r.getAttribute('data-k')]; });
+        draw();
+      });
+    });
+    draw();
+  })();
+
+  /* ---------- softmax demo ---------- */
+  (function () {
+    var root = $('#softmax-demo'); if (!root) return;
+    var names = ['normal', 'imbalance', 'misalignment', 'bearing', 'looseness'];
+    var z = [2.0, 0.5, -0.5, 1.0, -1.0], T = 1, truth = 0;
+    var rowsEl = $('.sm-rows', root), out = $('.readout', root), tIn = $('#sm-t'), tOut = tIn.nextElementSibling;
+    var head = document.createElement('div');
+    head.className = 'sm-row sm-head';
+    head.innerHTML = '<span>class</span><span>logit z</span><span></span><span>probability</span><span></span><span>true</span>';
+    rowsEl.appendChild(head);
+    var bars = [], ps = [], zs = [];
+    names.forEach(function (nm, k) {
+      var r = document.createElement('div');
+      r.className = 'sm-row';
+      r.innerHTML = '<span>' + nm + '</span><input type="range" min="-4" max="4" step="0.1" value="' + z[k] + '" aria-label="logit for ' + nm + '"><output class="mono"></output><div class="sm-bar"><i></i></div><span class="mono sm-p"></span><input type="radio" name="sm-true" aria-label="' + nm + ' is the true class"' + (k === truth ? ' checked' : '') + '>';
+      rowsEl.appendChild(r);
+      var inputs = r.querySelectorAll('input');
+      inputs[0].addEventListener('input', function () { z[k] = +inputs[0].value; upd(); });
+      inputs[1].addEventListener('change', function () { if (inputs[1].checked) { truth = k; upd(); } });
+      bars.push(r.querySelector('.sm-bar')); ps.push(r.querySelector('.sm-p')); zs.push(r.querySelector('output'));
+    });
+    tIn.addEventListener('input', function () { T = +tIn.value; upd(); });
+    function upd() {
+      var m = Math.max.apply(null, z), e = z.map(function (v) { return Math.exp((v - m) / T); });
+      var s = e.reduce(function (a, b) { return a + b; }, 0), p = e.map(function (v) { return v / s; });
+      var top = p.indexOf(Math.max.apply(null, p));
+      p.forEach(function (v, k) {
+        bars[k].firstChild.style.width = (v * 100).toFixed(1) + '%';
+        bars[k].classList.toggle('top', k === top);
+        ps[k].textContent = v.toFixed(3);
+        zs[k].textContent = (z[k] < 0 ? '\u2212' : '') + Math.abs(z[k]).toFixed(1);
+      });
+      tOut.textContent = T.toFixed(2);
+      var loss = -Math.log(p[truth]);
+      out.innerHTML = 'Probabilities sum to <b>' + p.reduce(function (a, b) { return a + b; }, 0).toFixed(3) + '</b>. Predicted (argmax): <b>' + names[top] + '</b>, ' +
+        (top === truth ? '<span style="color:var(--good)">correct</span>' : '<span style="color:var(--bad)">wrong</span>') +
+        '.<br>Loss for true class \u201c' + names[truth] + '\u201d: \u2212ln(' + p[truth].toFixed(3) + ') = <b>' + loss.toFixed(3) + '</b>';
+    }
+    upd();
+  })();
+
+  /* ---------- steps calculator ---------- */
+  (function () {
+    var root = $('#steps-calc'); if (!root) return;
+    var out = $('.readout', root);
+    function n(id) { return Number($(id).value); }
+    function fmtN(v) { return v.toLocaleString('en-GB'); }
+    function upd() {
+      var N0 = n('#sc-n'), v = n('#sc-v'), b = n('#sc-b'), e = n('#sc-e');
+      if (!(N0 >= 1 && b >= 1 && e >= 1 && v >= 0 && v < 1)) { out.textContent = 'Enter whole numbers above 0, and a validation fraction from 0 to below 1.'; return; }
+      var nt = Math.floor(N0 * (1 - v) + 1e-6), nv = N0 - nt;
+      if (nt < 1) { out.textContent = 'No training samples left: lower the validation fraction.'; return; }
+      var steps = Math.ceil(nt / b), last = nt - (steps - 1) * b;
+      out.innerHTML = 'Training samples <b>' + fmtN(nt) + '</b>, validation <b>' + fmtN(nv) + '</b><br>' +
+        'Steps per epoch <b>' + fmtN(steps) + '</b>' + (last !== b ? ' (last batch: ' + fmtN(last) + ' samples)' : '') + '<br>' +
+        'Weight updates in total <b>' + fmtN(steps * e) + '</b>';
+    }
+    $$('input', root).forEach(function (i) { i.addEventListener('input', upd); });
+    upd();
+  })();
+
+  /* ---------- start ---------- */
+  var m = location.hash.match(/^#(\d+)$/);
+  var start = m ? Math.max(0, Math.min(N - 1, +m[1] - 1)) : 0;
+  slides[0].classList.remove('active');
+  cur = start;
+  slides[cur].classList.add('active');
+  updateFooter();
+  autoDoc();
+  fit();
+})();
+</script>
+</body>
+</html>
