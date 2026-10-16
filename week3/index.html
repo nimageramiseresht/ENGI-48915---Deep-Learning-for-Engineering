@@ -1,0 +1,2670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 3: Convolutional Neural Networks and Computer Vision</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+  };
+  window.Prism = { manual: true };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+<style>
+:root {
+  --frame: #D9E1E7;
+  --paper: #F4F7F9;
+  --grid: #E3E9EE;
+  --grid-major: #D6DFE6;
+  --ink: #18222D;
+  --ink-2: #4B5867;
+  --ink-3: #7A8794;
+  --rule: #C5D0D9;
+  --panel: #E8EEF2;
+  --code-bg: #EDF2F6;
+  --code-border: #C9D5DE;
+  --tok-kw: #7B2D8E;
+  --tok-str: #1E7A45;
+  --tok-num: #A4500A;
+  --tok-fn: #1D5BA6;
+  --tok-com: #687582;
+  --tok-builtin: #0D6E6A;
+  --p1: #1F5FA8; --p2: #0E7470; --p3: #3D4A5C; --p4: #B23A2B;
+  --p5: #8F5D00; --p6: #2E7A48; --p7: #6B3FA0; --p8: #9C2F62;
+  --p9: #5A6812; --p10: #3B48A6; --p11: #7A5C45;
+  --good: #2E7A48; --bad: #B23A2B;
+  --sec: var(--p1);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --frame: #070B0F; --paper: #111920; --grid: #172129; --grid-major: #1D2832;
+    --ink: #E4EAF0; --ink-2: #A8B4C0; --ink-3: #7D8A97; --rule: #2B3946;
+    --panel: #1A2530; --code-bg: #0C1319; --code-border: #24323E;
+    --tok-kw: #D19BEA; --tok-str: #7FD19E; --tok-num: #F0A867; --tok-fn: #82B4F2;
+    --tok-com: #8996A3; --tok-builtin: #6FD1C9;
+    --p1: #6FA3E8; --p2: #4DBDB5; --p3: #A3B2C4; --p4: #F07A6A;
+    --p5: #E0AA45; --p6: #6CC690; --p7: #B18BE6; --p8: #E58BB6;
+    --p9: #B5C55A; --p10: #98A2F2; --p11: #C9A68A;
+    --good: #6CC690; --bad: #F07A6A;
+  }
+}
+:root[data-theme="dark"] {
+  --frame: #070B0F; --paper: #111920; --grid: #172129; --grid-major: #1D2832;
+  --ink: #E4EAF0; --ink-2: #A8B4C0; --ink-3: #7D8A97; --rule: #2B3946;
+  --panel: #1A2530; --code-bg: #0C1319; --code-border: #24323E;
+  --tok-kw: #D19BEA; --tok-str: #7FD19E; --tok-num: #F0A867; --tok-fn: #82B4F2;
+  --tok-com: #8996A3; --tok-builtin: #6FD1C9;
+  --p1: #6FA3E8; --p2: #4DBDB5; --p3: #A3B2C4; --p4: #F07A6A;
+  --p5: #E0AA45; --p6: #6CC690; --p7: #B18BE6; --p8: #E58BB6;
+  --p9: #B5C55A; --p10: #98A2F2; --p11: #C9A68A;
+  --good: #6CC690; --bad: #F07A6A;
+}
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  height: 100%; margin: 0; background: var(--frame); color: var(--ink);
+  font-family: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+[data-part="1"] { --sec: var(--p1); } [data-part="2"] { --sec: var(--p2); }
+[data-part="3"] { --sec: var(--p3); } [data-part="4"] { --sec: var(--p4); }
+[data-part="5"] { --sec: var(--p5); } [data-part="6"] { --sec: var(--p6); }
+[data-part="7"] { --sec: var(--p7); } [data-part="8"] { --sec: var(--p8); }
+[data-part="9"] { --sec: var(--p9); } [data-part="10"] { --sec: var(--p10); }
+[data-part="11"] { --sec: var(--p11); }
+
+/* ---------- stage ---------- */
+.viewport {
+  position: fixed; top: 0; bottom: 0; left: 0; right: 0;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.stage {
+  width: 1280px; height: 720px; flex: none; position: relative; overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+.slide {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  padding: 38px 56px 62px; box-sizing: border-box;
+  display: flex; flex-direction: column;
+  visibility: hidden; opacity: 0; transition: opacity .22s ease;
+}
+.slide.active { visibility: visible; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .slide { transition: none; } }
+
+/* ---------- type ---------- */
+.slide h1, .slide h2, .slide h3, .slide h4, .tblock, .btn, .tbl th {
+  font-family: 'Barlow Semi Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+}
+.slide h2 {
+  font-weight: 600; font-size: 42px; line-height: 1.06; margin: 0 0 22px;
+  padding-left: 18px; border-left: 8px solid var(--sec); letter-spacing: -0.003em;
+}
+.slide h3 { font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 8px; color: var(--sec); }
+.slide h4 { font-weight: 600; font-size: 21px; margin: 0 0 4px; }
+.slide p, .slide li { font-size: 22px; line-height: 1.42; }
+.slide p { margin: 0 0 12px; }
+.slide ul, .slide ol { margin: 0 0 12px; padding-left: 26px; }
+.slide li { margin: 0 0 6px; }
+.slide li::marker { color: var(--sec); font-weight: 700; }
+.slide .small, .slide .small p, .slide .small li { font-size: 18.5px; }
+.muted { color: var(--ink-2); }
+.center { text-align: center; }
+code { font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace; font-size: .84em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+strong { font-weight: 700; }
+.opt-tag {
+  display: inline-block; vertical-align: middle; margin-left: 14px; padding: 2px 12px;
+  font: 600 16px 'Barlow Semi Condensed', sans-serif; color: var(--sec);
+  border: 1.5px solid var(--sec); border-radius: 999px; letter-spacing: .01em;
+}
+
+/* ---------- layout ---------- */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; min-height: 0; }
+.cols > * { min-width: 0; }
+.cols.wl { grid-template-columns: 1.45fr 1fr; }
+.cols.wr { grid-template-columns: 1fr 1.35fr; }
+.cols.code { grid-template-columns: 2fr 1fr; gap: 32px; }
+.cols.three { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.cols.four { grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.slide .stack > * + * { margin-top: 16px; }
+.grow { flex: 1; min-height: 0; }
+.box { border-left: 5px solid var(--sec); background: var(--panel); padding: 14px 20px; }
+.box > :last-child { margin-bottom: 0; }
+.box.quiet { border-left-color: var(--rule); }
+.ask { border: 1.5px dashed var(--sec); padding: 12px 18px; }
+.ask > :last-child { margin-bottom: 0; }
+.ask strong:first-child { color: var(--sec); }
+.bottom-line { margin-top: auto; font-size: 23px; padding-top: 12px; border-top: 1.5px solid var(--rule); }
+.bottom-line p { margin: 0; }
+
+/* tables */
+.tbl { border-collapse: collapse; width: 100%; font-size: 19px; line-height: 1.35; }
+.tbl th { text-align: left; font-weight: 600; font-size: 20px; border-bottom: 2px solid var(--ink); padding: 7px 10px; }
+.tbl td { border-bottom: 1px solid var(--rule); padding: 7px 10px; vertical-align: top; }
+.tbl td:first-child { font-weight: 700; }
+.tbl.compact td, .tbl.compact th { padding: 5px 8px; }
+.tbl .now td { background: color-mix(in srgb, var(--sec) 12%, transparent); }
+
+/* code */
+.code-wrap { position: relative; min-height: 0; }
+pre {
+  margin: 0; font: 16.5px/1.5 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  background: var(--code-bg); color: var(--ink); border: 1px solid var(--code-border);
+  border-left: 4px solid var(--sec); padding: 13px 16px; overflow: auto; tab-size: 4; max-height: 560px;
+}
+pre.dense { font-size: 16px; line-height: 1.45; }
+pre code { background: none; padding: 0; font-size: inherit; border-radius: 0; }
+.copy {
+  position: absolute; bottom: 7px; right: 8px; z-index: 2; cursor: pointer;
+  font: 600 14px 'Atkinson Hyperlegible', sans-serif; padding: 3px 10px;
+  color: var(--ink-2); background: var(--paper); border: 1px solid var(--code-border);
+}
+.copy:hover { color: var(--ink); border-color: var(--ink-3); }
+.token.comment { color: var(--tok-com); font-style: italic; }
+.token.keyword { color: var(--tok-kw); }
+.token.string, .token.triple-quoted-string { color: var(--tok-str); }
+.token.number, .token.boolean { color: var(--tok-num); }
+.token.function { color: var(--tok-fn); }
+.token.builtin { color: var(--tok-builtin); }
+.token.operator, .token.punctuation { color: var(--ink-2); }
+
+/* controls */
+.btn {
+  font-weight: 600; font-size: 17px; cursor: pointer; padding: 4px 13px;
+  color: var(--sec); background: transparent; border: 1.5px solid var(--sec);
+}
+.btn:hover, .btn[aria-pressed="true"] { background: var(--sec); color: var(--paper); }
+:focus-visible { outline: 3px solid var(--sec); outline-offset: 2px; }
+input[type=range] { accent-color: var(--sec); width: 100%; margin: 0; }
+input[type=checkbox], input[type=radio] { accent-color: var(--sec); width: 18px; height: 18px; }
+.ctl { display: grid; grid-template-columns: 40px 1fr 58px; align-items: center; gap: 10px; font-size: 18px; margin-bottom: 6px; }
+.ctl output, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.readout { font-size: 19px; line-height: 1.5; }
+.readout b { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 17px; }
+
+/* svg helpers */
+svg.fig { display: block; max-width: 100%; height: auto; }
+mjx-container[display="true"] { margin: 0.5em 0 !important; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+.ax { stroke: var(--ink-3); stroke-width: 1.2; fill: none; }
+.ax-0 { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.tick { fill: var(--ink-2); font: 11px 'Atkinson Hyperlegible', sans-serif; }
+.lbl { fill: var(--ink); font: 600 13px 'Barlow Semi Condensed', sans-serif; }
+.c-sec { stroke: var(--sec); stroke-width: 2.6; fill: none; }
+.c-alt { stroke: var(--ink-2); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-bad { stroke: var(--bad); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-good { stroke: var(--good); stroke-width: 2.6; fill: none; }
+.g-old { stroke: var(--ink-3); stroke-width: .6; opacity: .45; fill: none; }
+.g-line { stroke: var(--sec); stroke-width: 1.1; opacity: .5; fill: none; }
+.g-int { stroke: var(--sec); stroke-width: 1.6; opacity: .8; fill: none; }
+.g-sq { fill: var(--sec); fill-opacity: .16; stroke: var(--sec); stroke-width: 2; }
+.g-f { fill: var(--ink); fill-opacity: .85; stroke: none; }
+.g-arrow { stroke: var(--bad); stroke-width: 2.6; fill: none; }
+.g-arrow2 { stroke: var(--good); stroke-width: 2.6; fill: none; }
+.node { fill: var(--paper); stroke: var(--sec); stroke-width: 2; }
+.node.in { stroke: var(--ink-3); }
+.edge { stroke: var(--ink-3); stroke-width: .7; opacity: .35; }
+.dot-pt { fill: var(--sec); }
+
+/* softmax demo */
+.sm-row { display: grid; grid-template-columns: 140px 230px 56px 1fr 70px 34px; align-items: center; gap: 12px; font-size: 21px; margin-bottom: 12px; }
+.sm-bar { height: 32px; background: var(--panel); position: relative; border: 1px solid var(--rule); }
+.sm-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-3); transition: width .12s; }
+.sm-bar.top i { background: var(--sec); }
+
+/* pipeline + folds */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px 30px; margin-top: 10px; counter-reset: st; }
+.flow > div { position: relative; border: 1.5px solid var(--ink-3); background: var(--paper); padding: 16px 18px 18px; min-height: 150px; }
+.flow > div::before { counter-increment: st; content: counter(st); position: absolute; top: -13px; left: 10px; background: var(--sec); color: var(--paper); font: 700 15px 'Barlow Semi Condensed', sans-serif; padding: 1px 8px; }
+.flow > div:not(:nth-child(4n))::after { content: ''; position: absolute; right: -25px; top: 50%; border: 8px solid transparent; border-left: 12px solid var(--ink-3); transform: translateY(-50%); }
+.flow h4 { margin-top: 6px; font-size: 25px !important; }
+.slide .flow p { font-size: 19px; line-height: 1.4; margin: 0 0 4px; color: var(--ink-2); }
+.flow code { font-size: 15px; }
+.folds { margin-bottom: 10px; display: grid; grid-template-columns: 70px repeat(4, 1fr) 80px; gap: 8px; align-items: center; font-size: 18px; }
+.folds span.c { border: 1px solid var(--ink-3); text-align: center; padding: 8px 0; background: var(--paper); }
+.folds span.v { border: 2px solid var(--sec); background: color-mix(in srgb, var(--sec) 22%, var(--paper)); font-weight: 700; }
+.folds .s { color: var(--sec); font-weight: 700; }
+
+
+/* overfitting demos */
+.lab { display: grid; grid-template-columns: 1.12fr 1fr; gap: 34px; align-items: start; min-height: 0; }
+.lab > * { min-width: 0; }
+.lab .ctl, #sel-demo .ctl { grid-template-columns: 92px 1fr 64px; }
+#sel-demo .ctl { grid-template-columns: 150px 1fr 76px; }
+.lab .readout { margin-top: 6px; }
+.lab-plots > svg + svg { margin-top: 6px; }
+.slide .lab-key { font-size: 16.5px; line-height: 1.5; margin: 0 0 10px; }
+.k-dot, .k-ring { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: middle; }
+.k-dot { background: var(--sec); } .k-ring { border: 1.6px solid var(--ink-3); width: 9px; height: 9px; }
+.k-dash { color: var(--ink-2); }
+.chk { display: flex; gap: 10px; align-items: center; font-size: 18px; margin: 4px 0; }
+.dot-val { fill: none; stroke: var(--ink-3); stroke-width: 1.4; }
+.c-sec-d { stroke: var(--sec); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-bad-s { stroke: var(--bad); stroke-width: 2.6; fill: none; }
+.c-faint { opacity: .25; }
+.shade { fill: var(--ink-3); opacity: .1; }
+.mark-now { stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 2 3; }
+.lbl-sec, .lbl-alt, .lbl-bad { font: 600 13px 'Barlow Semi Condensed', sans-serif; }
+.lbl-sec { fill: var(--sec); } .lbl-alt { fill: var(--ink-2); } .lbl-bad { fill: var(--bad); }
+.edge.on { opacity: .55; }
+.node.off { stroke: var(--ink-3); stroke-dasharray: 3 3; opacity: .6; }
+.x-mark { stroke: var(--bad); stroke-width: 2; }
+
+
+/* animated and interactive slides, part 2 */
+.pa-card { fill: var(--panel); stroke: var(--ink-3); stroke-width: 1.2; }
+.pa-arrow { stroke: var(--ink-2); stroke-width: 1.6; fill: none; }
+.pa-mkf { fill: var(--ink-2); }
+.pa-big { fill: var(--ink); font: 700 34px 'Barlow Semi Condensed', sans-serif; }
+.slide.active .pa-step { animation: paIn .7s ease both; animation-delay: var(--d, 0s); }
+@keyframes paIn { from { opacity: 0; } to { opacity: 1; } }
+.slide.active .flow-e { stroke-dasharray: 3 7; animation: flowE 1.4s linear infinite; }
+@keyframes flowE { to { stroke-dashoffset: -20; } }
+.w-pos { stroke: var(--sec); } .w-neg { stroke: var(--bad); }
+.w-pos, .w-neg, .w-lbl { transition: opacity .25s; }
+.w-lbl { fill: var(--ink); font: 600 13px 'JetBrains Mono', monospace; text-anchor: middle; paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
+.pulse { fill: var(--sec); }
+.mat-eq { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px; }
+.mat-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mat { display: grid; gap: 1px 8px; padding: 3px 7px; border-left: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); border-radius: 7px; }
+.mat span { text-align: right; padding: 1px 3px; transition: background .2s; }
+.mat span.hl { background: color-mix(in srgb, var(--sec) 24%, transparent); }
+.mat-lbl { font: 600 15px 'Barlow Semi Condensed', sans-serif; color: var(--ink-2); }
+.mat-eq .op { color: var(--ink-2); font-size: 18px; }
+.cf-frame { fill: none; stroke: var(--rule); }
+.cf-eq { fill: var(--ink); font: 600 40px 'Barlow Semi Condensed', sans-serif; text-anchor: middle; }
+.contour { fill: none; stroke: var(--ink-3); stroke-width: 1; opacity: .7; }
+.min-pt { fill: var(--ink); }
+.bow-strip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; margin-top: 18px; }
+.bow-cell { text-align: center; min-width: 0; }
+.bow-cell .w { font-size: 14.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bow-cell .v { font: 600 22px 'JetBrains Mono', monospace; border: 1.5px solid var(--rule); padding: 7px 0; margin-top: 4px; background: var(--paper); transition: background .15s; }
+.bow-cell.on .v { border-color: var(--sec); background: color-mix(in srgb, var(--sec) 18%, var(--paper)); color: var(--sec); }
+#bow-text { width: 100%; box-sizing: border-box; font: 19px 'Atkinson Hyperlegible', sans-serif; padding: 7px 10px; border: 1.5px solid var(--ink-3); background: var(--paper); color: var(--ink); }
+.ep-s { transition: transform .6s ease; }
+.ep-s rect { fill: var(--panel); stroke: var(--ink-3); stroke-width: 1.2; transition: fill .2s, stroke .2s; }
+.ep-s.on rect { fill: color-mix(in srgb, var(--sec) 28%, var(--paper)); stroke: var(--sec); stroke-width: 2; }
+.ep-flow { stroke: var(--sec); stroke-width: 2.2; transition: opacity .2s; }
+.vr-bar { display: flex; height: 36px; border: 1.5px solid var(--ink-3); margin-top: 10px; font: 600 15px 'Barlow Semi Condensed', sans-serif; }
+.vr-bar > div { display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; transition: width .2s; }
+.vr-bar .tr { background: color-mix(in srgb, var(--sec) 28%, var(--paper)); }
+.vr-bar .va { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--sec) 45%, var(--paper)) 0 4px, var(--paper) 4px 9px); }
+.refs li { margin-bottom: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .slide.active .pa-step, .slide.active .flow-e { animation: none; }
+  .ep-s, .vr-bar > div, .mat span, .w-pos, .w-neg, .w-lbl { transition: none; }
+}
+body.doc .bow-strip { grid-template-columns: repeat(4, 1fr); }
+
+/* section title slides, outline, notes */
+.sec-no { font: 600 30px 'Barlow Semi Condensed', sans-serif; color: var(--sec); margin: 0 0 6px !important; }
+.slide.divider h1 { font-size: 72px; }
+.sec-map { list-style: none; margin: 0; padding: 0 0 0 4px; border-left: 2px solid var(--rule); }
+.slide .sec-map li { font-size: 19px; line-height: 1.3; margin: 0; padding: 7px 0 7px 18px; color: var(--ink-2); }
+.sec-map li span { display: inline-block; width: 24px; font: 600 18px 'Barlow Semi Condensed', sans-serif; }
+.slide .sec-map li.done { color: var(--ink-3); }
+.slide .sec-map li.now { color: var(--ink); font-weight: 700; border-left: 6px solid var(--sec); margin-left: -6px; }
+.sec-map li.now span { color: var(--sec); }
+.slide ol.outline li { margin-bottom: 7px; }
+aside.notes { display: none !important; }
+.tblock .nbtn { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.tblock .nbtn:hover { color: var(--ink); }
+
+/* ---------- week 3: grids, kernels, scenes ---------- */
+.g-cell { fill: var(--paper); stroke: var(--rule); stroke-width: 1; }
+.g-cell.on { fill: var(--ink); }
+.g-cell.pad { fill: var(--panel); stroke-dasharray: 3 3; }
+.kwin { fill: color-mix(in srgb, var(--sec) 10%, transparent); stroke: var(--sec); stroke-width: 3.5; }
+.k-cell { stroke: var(--rule); stroke-width: 1.2; }
+.k-txt { font: 600 15px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink); }
+.sum-txt { font: 700 22px 'JetBrains Mono', ui-monospace, monospace; fill: var(--sec); }
+.o-cell { stroke: var(--rule); stroke-width: 1; }
+.o-cell.hidden { stroke-dasharray: 2 3; }
+.o-cell.now { stroke: var(--sec); stroke-width: 3; }
+.o-cell.match { stroke: var(--ink); stroke-width: 3; }
+.o-txt { font: 500 12px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink-2); }
+.o-txt.match { font-weight: 800; font-size: 15px; fill: var(--ink); }
+.tie { stroke: var(--sec); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; opacity: .7; }
+.kbr { fill: none; stroke: var(--sec); stroke-width: 2; }
+.slab { fill: color-mix(in srgb, var(--sec) 14%, var(--paper)); stroke: var(--ink-3); }
+.slab.k { fill: color-mix(in srgb, var(--bad) 28%, var(--paper)); }
+.slab.one { fill: color-mix(in srgb, var(--sec) 38%, var(--paper)); }
+.pool-grid { stroke: var(--ink); stroke-width: 2; }
+.rf-box { fill: none; stroke-width: 3.5; }
+.blk { stroke: var(--ink-3); stroke-width: 1; }
+.blk.in { fill: var(--panel); }
+.blk.conv { fill: color-mix(in srgb, var(--sec) 35%, var(--paper)); }
+.blk.pool { fill: color-mix(in srgb, var(--p6) 30%, var(--paper)); }
+.blk.flat, .blk.dense { fill: color-mix(in srgb, var(--p5) 35%, var(--paper)); }
+.det-box { fill: none; stroke-width: 2.5; }
+.det-box.c0, .det-chip.c0 { stroke: var(--p10); } .det-box.c1, .det-chip.c1 { stroke: var(--p8); } .det-box.c2, .det-chip.c2 { stroke: var(--p6); }
+.det-chip { stroke-width: 1.5; }
+.det-chip.c0 { fill: color-mix(in srgb, var(--p10) 26%, var(--paper)); }
+.det-chip.c1 { fill: color-mix(in srgb, var(--p8) 26%, var(--paper)); }
+.det-chip.c2 { fill: color-mix(in srgb, var(--p6) 26%, var(--paper)); }
+.det-chip.plain { fill: var(--paper); stroke: var(--rule); }
+.det-txt { font: 600 12.5px 'Barlow Semi Condensed', sans-serif; fill: var(--ink); }
+.det-txt.b { font-weight: 700; font-size: 14px; }
+.sc-sky { fill: color-mix(in srgb, var(--p1) 14%, var(--paper)); }
+.sc-ground { fill: color-mix(in srgb, var(--p11) 24%, var(--paper)); }
+.sc-line { stroke: var(--ink-3); }
+.sc-track { fill: var(--ink-2); }
+.sc-wheel { fill: var(--ink-3); }
+.sc-body { fill: color-mix(in srgb, var(--p5) 70%, var(--paper)); stroke: var(--ink-2); stroke-width: 1.5; }
+.sc-glass { fill: color-mix(in srgb, var(--p1) 35%, var(--paper)); }
+.sc-arm { fill: none; stroke: color-mix(in srgb, var(--p5) 70%, var(--ink)); stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+.sc-helmet { fill: var(--p5); }
+.sc-skin { fill: #C99A76; }
+.sc-vest { fill: color-mix(in srgb, var(--p4) 75%, var(--paper)); }
+.sc-legs { stroke: var(--ink-2); stroke-width: 7; stroke-linecap: round; fill: none; }
+.sc-cone { fill: var(--p4); }
+.yg-cell { fill: transparent; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; cursor: pointer; }
+.yg-cell:hover { fill: color-mix(in srgb, var(--sec) 10%, transparent); }
+.yg-cell.sel { fill: color-mix(in srgb, var(--sec) 22%, transparent); stroke: var(--sec); stroke-width: 2.5; stroke-dasharray: none; }
+.yc-dot { fill: var(--bad); stroke: var(--paper); stroke-width: 2; }
+.gt-box { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 7 5; }
+.pr-box { fill: color-mix(in srgb, var(--sec) 10%, transparent); stroke: var(--sec); stroke-width: 3; }
+.iou-int { fill: color-mix(in srgb, var(--sec) 40%, transparent); }
+.tag-good { color: var(--good); font-weight: 700; } .tag-bad { color: var(--bad); font-weight: 700; }
+.ghost, .ghost * { fill: color-mix(in srgb, var(--ink-3) 25%, transparent); stroke: color-mix(in srgb, var(--ink-3) 25%, transparent); }
+.nms-box { fill: none; stroke-width: 1.8; }
+.nms-box.pending { stroke: var(--ink-3); }
+.nms-box.kept { stroke: var(--sec); stroke-width: 3.5; }
+.nms-box.suppressed { stroke: var(--bad); stroke-dasharray: 4 4; opacity: .45; }
+.nms-txt { font: 600 12px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink-2); }
+.nms-txt.kept { fill: var(--sec); font-size: 14px; }
+.tl-stem { stroke: var(--ink-3); }
+.tl-dot { fill: var(--ink-2); } .tl-dot.hi { fill: var(--sec); }
+.pr-area { fill: color-mix(in srgb, var(--sec) 16%, transparent); }
+.conv-eq { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+.conv-eq .mat span { font-size: 22px; padding: 4px 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.conv-eq .op { font-size: 24px; color: var(--ink-2); font-family: 'Barlow Semi Condensed', sans-serif; }
+.conv-eq .mat.out-1 { border-color: var(--sec); }
+.btnrow .sp { flex: 1; }
+.btnrow.vert { flex-direction: column; align-items: stretch; }
+.edge-pair { display: flex; gap: 24px; }
+.slide figure { margin: 0; }
+canvas.px { image-rendering: pixelated; width: 300px; height: 300px; border: 1px solid var(--rule); display: block; }
+.slide figcaption { font-size: 15.5px; color: var(--ink-2); margin-top: 6px; max-width: 300px; line-height: 1.3; }
+.sw { display: inline-block; width: 14px; height: 14px; vertical-align: middle; border-radius: 3px; }
+.sw.pos { background: var(--sec); } .sw.neg { background: var(--bad); }
+.fmap-grid { display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 10px 14px; margin: 12px 0 8px; }
+.fmap-grid canvas.px { width: 170px; height: 170px; }
+.fmap-grid figcaption { font-size: 14.5px; max-width: 170px; }
+.occ-wrap { position: relative; width: 420px; height: 420px; touch-action: none; cursor: crosshair; }
+.occ-wrap canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.occ-img { image-rendering: pixelated; border: 1px solid var(--rule); }
+.occ-patch { position: absolute; background: rgb(158, 158, 158); outline: 2px solid var(--ink); pointer-events: none; }
+body.doc .edge-pair { flex-wrap: wrap; }
+body.doc .fmap-grid { grid-template-columns: repeat(3, auto); }
+body.doc .occ-wrap { width: min(420px, 90vw); height: min(420px, 90vw); }
+
+/* reveal */
+.reveal[hidden] { display: none; }
+
+/* title slide */
+.slide.title { justify-content: center; }
+.slide.title h1 { font-weight: 700; font-size: 82px; line-height: .98; margin: 0 0 14px; letter-spacing: -0.01em; }
+.slide.title .sub { font-size: 30px; color: var(--ink-2); margin-bottom: 40px; }
+.slide.title .meta p { font-size: 21px; margin: 0 0 4px; }
+.slide .keys { font-size: 16px; color: var(--ink-2); margin-top: 34px; }
+.keys kbd, .help kbd { font-family: 'JetBrains Mono', monospace; font-size: 13px; border: 1px solid var(--rule); border-bottom-width: 2px; padding: 1px 6px; background: var(--paper); color: var(--ink); }
+
+/* title block footer */
+.tblock {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 40px; z-index: 5;
+  display: grid; grid-template-columns: auto 1fr auto auto auto auto; align-items: stretch;
+  border-top: 1.5px solid var(--ink); background: var(--paper); font-weight: 500; font-size: 16px;
+}
+.tblock > * { display: flex; align-items: center; padding: 0 14px; border-left: 1.5px solid var(--ink); white-space: nowrap; }
+.tblock > :first-child { border-left: 0; padding: 0; }
+.tblock .nav button { height: 100%; width: 42px; border: 0; background: transparent; color: var(--ink); font-size: 18px; cursor: pointer; }
+.tblock .nav button + button { border-left: 1.5px solid var(--ink); }
+.tblock .nav button:hover { background: var(--panel); }
+.tblock .part { gap: 10px; font-weight: 600; }
+.tblock .part i { width: 14px; height: 14px; background: var(--sec); display: inline-block; }
+.tblock .timer { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.tblock .timer.run { color: var(--ink); }
+.tblock .timer.late { color: var(--bad); font-weight: 600; }
+.tblock .count { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+/* help overlay */
+.help {
+  position: absolute; z-index: 10; right: 24px; bottom: 56px; width: 380px;
+  background: var(--paper); border: 1.5px solid var(--ink); padding: 18px 22px; font-size: 17px; line-height: 1.7;
+}
+.help[hidden] { display: none; }
+.help h4 { margin: 0 0 6px; font: 600 21px 'Barlow Semi Condensed', sans-serif; }
+
+/* ---------- handout / small-screen mode ---------- */
+body.doc { height: auto; background: var(--paper); }
+body.doc .viewport { position: static; display: block; padding: 0; overflow: visible; }
+body.doc .stage { width: auto; height: auto; transform: none !important; overflow: visible; box-shadow: none; }
+body.doc .slide {
+  position: relative; visibility: visible; opacity: 1; transition: none;
+  padding: 30px clamp(16px, 4vw, 56px) 34px; border-bottom: 2px solid var(--rule);
+}
+body.doc .tblock { display: none; }
+body.doc .help { position: fixed; bottom: 16px; right: 16px; max-width: calc(100% - 32px); }
+body.doc .slide h2 { font-size: clamp(26px, 4vw, 40px); }
+body.doc .slide p, body.doc .slide li { font-size: clamp(16px, 2.2vw, 21px); }
+body.doc .slide.title h1 { font-size: clamp(42px, 8vw, 78px); }
+body.doc .cols, body.doc .cols.wl, body.doc .cols.wr, body.doc .cols.code,
+body.doc .cols.three, body.doc .cols.four { grid-template-columns: 1fr !important; gap: 20px; }
+body.doc .ctl { grid-template-columns: auto 1fr auto !important; }
+body.doc #grid-demo > svg { max-width: 440px; }
+body.doc .flow { grid-template-columns: 1fr; }
+body.doc .lab { grid-template-columns: 1fr !important; gap: 20px; }
+body.doc .flow > div::after { display: none; }
+body.doc pre { font-size: 13px; max-height: none; }
+body.doc .sm-row { grid-template-columns: 26px 104px 1fr 52px; font-size: 16px; gap: 6px 8px; }
+body.doc .sm-row > :nth-child(6) { grid-row: 1; grid-column: 1; }
+body.doc .sm-row > :nth-child(1) { grid-row: 1; grid-column: 2; }
+body.doc .sm-row > :nth-child(2) { grid-row: 1; grid-column: 3; }
+body.doc .sm-row > :nth-child(3) { grid-row: 1; grid-column: 4; }
+body.doc .sm-row > :nth-child(4) { grid-row: 2; grid-column: 2 / 4; height: 22px; }
+body.doc .sm-row > :nth-child(5) { grid-row: 2; grid-column: 4; }
+body.doc .sm-head { display: none !important; }
+body.doc #softmax-demo .ctl > span { grid-column: 1 / -1; }
+body.doc .tbl { font-size: 15px; display: block; overflow-x: auto; }
+body.doc .tbl-wrap { overflow-x: auto; }
+@media print {
+  .copy, .btnrow, .help { display: none !important; }
+  body.doc .slide { break-after: page; border: 0; }
+}
+</style>
+</head>
+<body>
+<div class="viewport">
+<div class="stage" id="stage">
+
+<!-- ===================== OPENING ===================== -->
+<section class="slide title" data-part="1">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <h1 style="font-size:70px">Convolutional<br>neural networks and<br>computer vision</h1>
+      <p class="sub">From a sliding kernel to object detection with YOLO</p>
+      <div class="meta">
+        <p><strong>Deep Learning for Engineering</strong>, Week 3</p>
+        <p class="muted">Durham University, Michaelmas Term 2026</p>
+      </div>
+      <p class="keys"><kbd>→</kbd> next &nbsp; <kbd>N</kbd> lecture notes &nbsp; <kbd>T</kbd> lecture timer &nbsp; <kbd>D</kbd> dark/light &nbsp; <kbd>H</kbd> handout view &nbsp; <kbd>?</kbd> all keys</p>
+    </div>
+    <div><svg class="fig" id="hero-conv" viewBox="0 0 400 400" aria-label="A 3 by 3 kernel sliding over an image grid, lighting up the feature map where the pattern matches"></svg></div>
+  </div>
+  <aside class="notes"><ul><li>Welcome back. Last week: MLPs. Today: the network built for images, what it actually sees, and how it finds objects.</li><li>Keys: <b>N</b> notes, <b>T</b> timer, arrows move slides from either window.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="1">
+  <h2>Today's plan</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.05fr; gap: 34px">
+    <div>
+      <p class="small">Week 2's MLP treated an image as a list of 784 numbers. Today we build networks that use the fact that an image is a <strong>grid</strong>, then look inside them, then use them to find objects.</p>
+      <h3>Outline</h3>
+      <ol class="small outline">
+        <li><strong>From MLP to CNN:</strong> kernels, convolution, pooling, the CNN architecture</li>
+        <li><strong>What CNNs see:</strong> feature maps and Grad-CAM</li>
+        <li><strong>Computer vision tasks:</strong> classification, detection, segmentation</li>
+        <li><strong>Object detection with YOLO:</strong> boxes, IoU, NMS, mAP, and YOLOv8 in Keras</li>
+      </ol>
+    </div>
+    <svg class="fig" id="plan-strip" viewBox="0 0 560 400" aria-label="The four sections as pictures: a kernel on a grid, a feature map, a labelled image, and detected boxes"></svg>
+  </div>
+  <aside class="notes"><ul><li>One story: a kernel slides over an image (1); stacking kernels builds features we can visualise (2); the same features power several tasks (3); detection is the one we study in depth (4).</li><li>Roughly 40, 25, 12 and 38 minutes.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 1 ===================== -->
+<section class="slide title divider" data-part="2">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 1</p>
+      <h1>From MLP to CNN</h1>
+      <p class="sub">Kernels, convolution and pooling: a network that knows an image is a grid</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="now"><span>1</span>From MLP to CNN</li><li><span>2</span>What CNNs see</li><li><span>3</span>Computer vision tasks</li><li><span>4</span>Object detection with YOLO</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 40 minutes. Goal: students can compute a convolution by hand, explain stride, padding and pooling, count parameters, and read a CNN architecture.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Why an MLP struggles with images</h2>
+  <div class="cols" style="grid-template-columns: 1.1fr 1fr">
+    <div class="stack">
+      <div class="box">
+        <h3>Far too many weights</h3>
+        <p class="small">A modest 200 × 200 colour image is 120,000 inputs. One Dense layer of 1,000 units needs <strong>120 million</strong> weights: slow, memory-hungry, and easy to overfit.</p>
+      </div>
+      <div class="box">
+        <h3>No idea of neighbourhood</h3>
+        <p class="small">Week 2's thought experiment: shuffle all pixels with one fixed permutation and the MLP trains just as well. It never used the fact that neighbouring pixels belong together.</p>
+      </div>
+      <div class="box">
+        <h3>Position matters too much</h3>
+        <p class="small">Move a pattern a few pixels and it lands on different inputs, so different weights. An MLP must learn every feature separately at every position.</p>
+      </div>
+    </div>
+    <div>
+      <svg class="fig" id="shift-fig" viewBox="0 0 470 300" aria-label="The same pattern at two positions shares almost no pixels"></svg>
+      <p class="small muted" style="margin-top:8px">The same shape, moved a few pixels. To a Dense layer these two inputs have almost nothing in common.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Three problems, one cause: the MLP throws away the grid structure.</li><li>Point at the figure: same shape, nearly disjoint sets of active inputs. A CNN will use the same weights at both positions.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Two ideas behind convolution</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="box">
+        <h3>Local connections</h3>
+        <p class="small">Each output looks only at a small patch of the input, typically 3 × 3. Nearby pixels are combined first; distant ones only in deeper layers.</p>
+      </div>
+      <div class="box">
+        <h3>Shared weights</h3>
+        <p class="small">The same small set of weights, the <strong>kernel</strong>, is used at every position. A vertical edge at the top left is detected by exactly the weights that detect one at the bottom right.</p>
+      </div>
+      <p class="small">Together they give <strong>translation equivariance</strong>: move the pattern, and its response in the output moves with it. The idea goes back to receptive fields in the visual cortex (Hubel and Wiesel, 1962) and to LeNet (LeCun et al., 1998).</p>
+    </div>
+    <div class="stack">
+      <table class="tbl">
+        <thead><tr><th>200 × 200 × 3 input</th><th>Parameters</th></tr></thead>
+        <tbody>
+          <tr><td>Dense layer, 1,000 units</td><td class="mono">120,001,000</td></tr>
+          <tr><td>Conv layer, 32 kernels of 3 × 3</td><td class="mono">896</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Each kernel spans all 3 colour channels: 3 × 3 × 3 = 27 weights plus 1 bias. 32 kernels: 32 × 28 = 896.</p>
+      <div class="box quiet"><p class="small">The conv layer does not connect every input to every output, and it reuses its weights. That is a strong assumption about images, and it is the right one.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Local plus shared is the whole trick. The parameter count drops by five orders of magnitude.</li><li>Equivariance, not invariance: the map moves with the input. Pooling and the dense head add (some) invariance later.</li><li>The Week 3 PDF says 27 parameters per kernel: that leaves out the bias, which makes 28.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>The convolution operation, at one position</h2>
+  <p class="small">Lay the kernel on a patch of the image, multiply element by element, and add everything up. That sum is <strong>one</strong> value of the output.</p>
+  <div class="conv-eq">
+    <div class="mat-col"><div class="mat" style="grid-template-columns: repeat(3, auto)"><span>1</span><span>2</span><span>3</span><span>0</span><span>1</span><span>2</span><span>1</span><span>0</span><span>1</span></div><span class="mat-lbl">image patch</span></div>
+    <span class="op">⊙</span>
+    <div class="mat-col"><div class="mat" style="grid-template-columns: repeat(3, auto)"><span>1</span><span>0</span><span>−1</span><span>1</span><span>0</span><span>−1</span><span>1</span><span>0</span><span>−1</span></div><span class="mat-lbl">kernel (vertical edge)</span></div>
+    <span class="op">=</span>
+    <div class="mat-col"><div class="mat" style="grid-template-columns: repeat(3, auto)"><span>1</span><span>0</span><span>−3</span><span>0</span><span>0</span><span>−2</span><span>1</span><span>0</span><span>−1</span></div><span class="mat-lbl">element-wise products</span></div>
+    <span class="op">→ sum →</span>
+    <div class="mat-col"><div class="mat out-1"><span><b>−4</b></span></div><span class="mat-lbl">output value</span></div>
+  </div>
+  <div class="cols" style="margin-top:22px">
+    <p class="small">\[ y_{ij} = \sum_{m=0}^{2}\sum_{n=0}^{2} K_{mn}\; x_{i+m,\,j+n} \; + \; b \]</p>
+    <div class="box quiet"><p class="small">Strictly this is <em>cross-correlation</em>: mathematical convolution flips the kernel first. Deep-learning libraries skip the flip; since the kernel is learned, it makes no difference.</p></div>
+  </div>
+  <div class="bottom-line"><p class="small">The value is large and positive where the patch looks like the kernel, large and negative where it looks like its opposite. Here the right column is brighter than the left, so the result is negative.</p></div>
+  <aside class="notes"><ul><li>Work it through aloud: 1 + 0 − 3, then 0 + 0 − 2, then 1 + 0 − 1: total −4.</li><li>Correction to the PDF slide: it states −3 for this example; the correct sum is −4.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Try it: slide the kernel over the image</h2>
+  <div id="conv-demo">
+    <div class="btnrow" role="group" aria-label="Choose a kernel">
+      <button class="btn" type="button" data-k="vline" aria-pressed="true">Vertical line</button>
+      <button class="btn" type="button" data-k="hline" aria-pressed="false">Horizontal line</button>
+      <button class="btn" type="button" data-k="diag" aria-pressed="false">Diagonal</button>
+      <button class="btn" type="button" data-k="plus" aria-pressed="false">Cross</button>
+      <button class="btn" type="button" data-k="edge" aria-pressed="false">Vertical edge</button>
+      <span class="sp"></span>
+      <button class="btn" type="button" data-act="play" aria-pressed="true">Pause</button>
+      <button class="btn" type="button" data-act="step">Step</button>
+      <button class="btn" type="button" data-act="all">Show all</button>
+      <button class="btn" type="button" data-act="restart">Restart</button>
+    </div>
+    <svg class="fig" viewBox="0 0 1160 410" aria-label="Input image with the kernel window, the kernel and the products, and the output feature map"></svg>
+    <p class="small muted cd-read" aria-live="polite"></p>
+  </div>
+  <aside class="notes"><ul><li>Let it run on Vertical line: output cells light up as the window passes; the strongest values, drawn bold, sit exactly where the image contains the kernel's pattern.</li><li>Switch kernels: each one finds only its own shape. Click input cells to draw; the output updates.</li><li>Vertical edge (the Lecture 5 kernel) gives positive values on one side of a line and negative on the other: an edge detector, not a line detector.</li><li>Output is 10 × 10 for a 12 × 12 input: no padding (next slides).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Real kernels find edges</h2>
+  <div class="cols" id="edge-demo" style="grid-template-columns: 1.3fr 1fr; gap: 30px">
+    <div>
+      <div class="edge-pair">
+        <figure><canvas width="120" height="120" class="px" data-c="in"></canvas><figcaption>input: a steel plate with a bolt hole, a slot and a crack</figcaption></figure>
+        <figure><canvas width="120" height="120" class="px" data-c="out"></canvas><figcaption class="ed-cap">output</figcaption></figure>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="btnrow" role="group" aria-label="Choose a kernel">
+        <button class="btn" type="button" data-k="v" aria-pressed="true">Vertical edges</button>
+        <button class="btn" type="button" data-k="h" aria-pressed="false">Horizontal edges</button>
+        <button class="btn" type="button" data-k="d" aria-pressed="false">Diagonal</button>
+        <button class="btn" type="button" data-k="blur" aria-pressed="false">Blur</button>
+        <button class="btn" type="button" data-k="lap" aria-pressed="false">Outline</button>
+      </div>
+      <div class="mat-eq ed-k"></div>
+      <label class="chk"><input type="checkbox" id="ed-relu"> apply ReLU (keep positive responses only)</label>
+      <p class="small"><span class="sw pos"></span> positive response &nbsp; <span class="sw neg"></span> negative response</p>
+      <p class="small">Hand-designed kernels like these were the heart of classical image processing. A CNN <strong>learns</strong> its kernels from data, and its first layer usually ends up with very similar ones.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Vertical edges: the hole's left and right sides and the slot's ends light up, with opposite signs on opposite sides. Horizontal: top and bottom.</li><li>Diagonal picks out the crack. Tick ReLU: half of each edge disappears; that is what the next layer receives.</li><li>Point forward: in Section 2 these become the feature maps we visualise.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Stride and padding</h2>
+  <div class="cols" id="sp-demo" style="grid-template-columns: 1.15fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 600 190" aria-label="One row of the input with padding cells and the kernel's positions"></svg>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 50px"><label for="sp-n">input size n</label><input id="sp-n" type="range" min="5" max="16" step="1" value="9"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 50px"><label for="sp-k">kernel size k</label><input id="sp-k" type="range" min="1" max="7" step="2" value="3"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 50px"><label for="sp-s">stride s</label><input id="sp-s" type="range" min="1" max="3" step="1" value="1"><output></output></div>
+      <div class="btnrow" role="group" aria-label="Padding">
+        <button class="btn" type="button" data-pad="valid" aria-pressed="true">padding="valid"</button>
+        <button class="btn" type="button" data-pad="same" aria-pressed="false">padding="same"</button>
+      </div>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+    <div class="stack">
+      <p class="small"><strong>Stride</strong> is how far the kernel moves each step. Stride 2 halves the output size.</p>
+      <p class="small"><strong>Padding</strong> adds a border of zeros. <code>"valid"</code>: none, so the output shrinks by \(k-1\). <code>"same"</code>: enough to keep the size at stride 1.</p>
+      <p>\[ n_{\text{out}} = \left\lfloor \frac{n + 2p - k}{s} \right\rfloor + 1 \]</p>
+      <table class="tbl compact small">
+        <tbody>
+          <tr><td>28 × 28, 3 × 3, valid, stride 1</td><td class="mono">26 × 26</td></tr>
+          <tr><td>28 × 28, 3 × 3, same, stride 1</td><td class="mono">28 × 28</td></tr>
+          <tr><td>200 × 200, 3 × 3, same, stride 2</td><td class="mono">100 × 100</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Drag k and s; switch padding. The row shows one line of the image; brackets are the kernel's positions.</li><li>"same" padding p = (k − 1)/2 for odd k. Keras default is "valid".</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Many kernels, many channels</h2>
+  <div class="cols">
+    <div>
+      <svg class="fig" id="chan-fig" viewBox="0 0 560 330" aria-label="An input with C channels, one kernel spanning all channels producing one feature map, and F kernels producing F feature maps"></svg>
+    </div>
+    <div class="stack">
+      <p class="small">A kernel always spans <strong>all</strong> input channels: on an RGB image a 3 × 3 kernel is really 3 × 3 × 3. Each kernel produces one feature map; a layer with \(F\) kernels outputs \(F\) channels.</p>
+      <p>\[ \text{parameters} = (k \cdot k \cdot C_{\text{in}} + 1) \cdot F \]</p>
+      <table class="tbl compact small">
+        <tbody>
+          <tr><td><code>Conv2D(32, 3)</code> on RGB</td><td class="mono">(27 + 1) × 32 = 896</td></tr>
+          <tr><td><code>Conv2D(64, 3)</code> on 32 channels</td><td class="mono">(288 + 1) × 64 = 18,496</td></tr>
+        </tbody>
+      </table>
+      <div class="code-wrap"><pre class="dense"><code class="language-python">layers.Conv2D(32, kernel_size=3, strides=1,
+              padding="same", activation="relu")</code></pre></div>
+      <p class="small muted">The number of parameters does not depend on the image size: the same layer works on 28 × 28 or 1,000 × 1,000 images.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Common confusion: a "3 × 3 kernel" on 64 input channels has 576 weights. Depth always matches the input.</li><li>Ask: how many parameters for Conv2D(128, 3) on 64 channels? (576 + 1) × 128 = 73,856.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Pooling: keep the strongest response</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.15fr">
+    <div class="stack">
+      <svg class="fig" id="pool-fig" viewBox="0 0 470 230" aria-label="A 4 by 4 input split into four 2 by 2 windows; max pooling keeps 8, 7, 5 and 9"></svg>
+      <p class="small"><strong>Max pooling</strong> slides a 2 × 2 window with stride 2 and keeps the largest value. It halves height and width, keeps one value in four, and has <strong>no parameters</strong>.</p>
+      <ul class="small">
+        <li>less computation in later layers</li>
+        <li>each later kernel sees a larger part of the image</li>
+        <li>small shifts of a feature often do not change the output</li>
+      </ul>
+    </div>
+    <div id="pool-shift">
+      <p class="small" style="margin-bottom:6px">Move the detected feature and watch the pooled map:</p>
+      <svg class="fig" viewBox="0 0 560 280" aria-label="An 8 by 8 feature map with one bright cell and its 4 by 4 max-pooled version"></svg>
+      <div class="btnrow">
+        <button class="btn" type="button" data-mv="-1,0">←</button>
+        <button class="btn" type="button" data-mv="1,0">→</button>
+        <button class="btn" type="button" data-mv="0,-1">↑</button>
+        <button class="btn" type="button" data-mv="0,1">↓</button>
+      </div>
+      <p class="small muted ps-read" aria-live="polite"></p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Left: the Lecture 5 example: 8, 7, 5, 9.</li><li>Right: move the bright cell inside its 2 × 2 window: the pooled map does not change. Cross a window border: it moves. Pooling gives robustness to <em>small</em> shifts, not full translation invariance.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Deeper layers see more of the image</h2>
+  <div class="cols">
+    <div>
+      <svg class="fig" id="rf-fig" viewBox="0 0 560 340" aria-label="One unit in a deep layer depends on a growing square of the input"></svg>
+    </div>
+    <div class="stack">
+      <p class="small">The <strong>receptive field</strong> of a unit is the part of the input it depends on. Each 3 × 3 convolution adds 2 pixels per stride step so far; each pooling doubles the step.</p>
+      <table class="tbl compact small">
+        <thead><tr><th>MNIST CNN layer</th><th>Receptive field</th></tr></thead>
+        <tbody>
+          <tr><td>Conv 3 × 3</td><td class="mono">3 × 3</td></tr>
+          <tr><td>Max pool 2 × 2</td><td class="mono">4 × 4</td></tr>
+          <tr><td>Conv 3 × 3</td><td class="mono">8 × 8</td></tr>
+          <tr><td>Max pool 2 × 2</td><td class="mono">10 × 10</td></tr>
+          <tr><td>Conv 3 × 3</td><td class="mono">18 × 18 of 28 × 28</td></tr>
+        </tbody>
+      </table>
+      <p class="small">This is how a CNN goes from edges to shapes to objects: early units see a few pixels, deep units see most of the image.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Rule: r grows by (k − 1) × j, where j is the product of the strides so far.</li><li>Link to Lecture 5's hierarchy: edges, then corners and shapes, then parts, then objects.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>The CNN architecture</h2>
+  <svg class="fig" id="arch-fig" viewBox="0 0 1160 300" aria-label="The MNIST CNN: input, three convolution blocks shrinking in size and growing in depth, flatten and a dense output"></svg>
+  <div class="cols three" style="margin-top:14px">
+    <div class="box"><h3>Feature extraction</h3><p class="small">Repeat Conv, ReLU, Pool. Height and width shrink, the number of channels grows: fewer, richer features.</p></div>
+    <div class="box"><h3>Flatten</h3><p class="small">Turn the final 3-D tensor into a vector. <code>GlobalAveragePooling2D</code> is a common alternative: one average per channel, far fewer weights.</p></div>
+    <div class="box"><h3>Classification head</h3><p class="small">Dense layers exactly as in Week 2, ending in the output layer and loss chosen from the question.</p></div>
+  </div>
+  <aside class="notes"><ul><li>Read the shapes left to right: 28 → 26 → 13 → 11 → 5 → 3 in size, 1 → 32 → 64 → 128 in depth.</li><li>Lecture 5's 200 × 200 example follows the same pattern with "same" padding: 100 × 100 × 32, 50 × 50 × 64, 25 × 25 × 128, then 80,000 values after flattening.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>MLP versus CNN on MNIST</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">x_train = x_train[..., None].astype("float32") / 255  # add a channel
+
+model = keras.Sequential([
+    keras.Input(shape=(28, 28, 1)),            # keep the 2-D image
+    layers.Conv2D(32, 3, activation="relu"),   # 26 x 26 x 32
+    layers.MaxPooling2D(2),                    # 13 x 13 x 32
+    layers.Conv2D(64, 3, activation="relu"),   # 11 x 11 x 64
+    layers.MaxPooling2D(2),                    #  5 x  5 x 64
+    layers.Conv2D(128, 3, activation="relu"),  #  3 x  3 x 128
+    layers.Flatten(),                          # 1,152 values
+    layers.Dense(10, activation="softmax"),
+])
+model.compile(optimizer="adam", metrics=["accuracy"],
+              loss="sparse_categorical_crossentropy")
+model.fit(x_train, y_train, epochs=5, batch_size=64,
+          validation_split=0.1)</code></pre></div>
+    <div class="stack">
+      <table class="tbl compact">
+        <thead><tr><th></th><th>MLP (Week 2)</th><th>CNN</th></tr></thead>
+        <tbody>
+          <tr><td>parameters</td><td class="mono">101,770</td><td class="mono">104,202</td></tr>
+          <tr><td>test accuracy</td><td class="mono">≈ 97.8%</td><td class="mono">≈ 99.1%</td></tr>
+          <tr><td>test error</td><td class="mono">≈ 2.2%</td><td class="mono">≈ 0.9%</td></tr>
+        </tbody>
+      </table>
+      <p class="small">About the same number of parameters, and fewer than half the mistakes. The difference is not size: it is the assumption built into the architecture.</p>
+      <p class="small muted">Typical results; yours will differ by a few tenths of a percent.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Only two things change from Week 2: the input keeps its 2-D shape (plus a channel axis), and Conv/Pool layers replace the first Dense layer.</li><li>Accuracy figures are typical values (the CNN figure matches Chollet's textbook run); ask students to run it.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Ask the room</h2>
+  <div class="cols">
+    <div class="ask">
+      <p><strong>1.</strong> Shuffle every image's pixels with the same fixed permutation, then train both models again. What happens to each?</p>
+      <button class="btn" type="button" data-reveal="ar-1">Show the answer</button>
+      <div class="reveal" id="ar-1" hidden><p class="small" style="margin-top:10px">The MLP is unaffected: it never used pixel order. The CNN collapses towards MLP accuracy or worse, because its kernels rely on neighbouring pixels belonging together. The CNN's advantage <em>is</em> its assumption about images.</p></div>
+    </div>
+    <div class="ask">
+      <p><strong>2.</strong> A CNN recognises a digit wherever it appears. Will it also recognise the digit rotated by 90°, or at twice the size?</p>
+      <button class="btn" type="button" data-reveal="ar-2">Show the answer</button>
+      <div class="reveal" id="ar-2" hidden><p class="small" style="margin-top:10px">Not reliably. Shared weights handle <em>shifts</em>; nothing in the architecture handles rotation or scale. Those have to be learned from examples, which is what data augmentation (Week 2) provides.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Give pairs a minute per question before revealing.</li><li>Both answers make the same point: architecture encodes assumptions; data must cover everything else.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 2 ===================== -->
+<section class="slide title divider" data-part="3">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 2</p>
+      <h1>What CNNs see</h1>
+      <p class="sub">Feature maps show what each layer detects; Grad-CAM shows where the network looked</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>From MLP to CNN</li><li class="now"><span>2</span>What CNNs see</li><li><span>3</span>Computer vision tasks</li><li><span>4</span>Object detection with YOLO</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 25 minutes. Two techniques: intermediate activations and Grad-CAM, and what they reveal about trained models.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Opening the black box</h2>
+  <div class="cols">
+    <div class="stack">
+      <p>Deep networks are often called black boxes. In engineering that is not good enough:</p>
+      <div class="ask"><p><strong>Your classifier flags a component as defective.</strong> Was it the crack, or a shadow next to it?</p></div>
+      <p class="small">Fortunately, CNNs are among the easiest networks to inspect: their internal representations are images too, laid out on the same grid as the input.</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Intermediate activations</h3>
+        <p class="small"><strong>What does each layer detect?</strong> Show the feature maps a layer produces for one image, channel by channel.</p>
+      </div>
+      <div class="box">
+        <h3>Class activation maps (Grad-CAM)</h3>
+        <p class="small"><strong>Where did the network look?</strong> A heatmap of the regions that drove one specific decision.</p>
+      </div>
+      <p class="small muted">Both are cheap to compute for any trained Keras CNN.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Frame: inspection tools for models, the same way we inspect structures. Medical imaging, quality control and autonomous systems all need explanations.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Feature maps: one image, many filtered versions</h2>
+  <div id="fmap-demo">
+    <div class="btnrow" role="group" aria-label="Choose an image">
+      <button class="btn" type="button" data-img="crack" aria-pressed="true">Plate with a crack</button>
+      <button class="btn" type="button" data-img="shadow" aria-pressed="false">Plate with a shadow</button>
+      <button class="btn" type="button" data-img="clean" aria-pressed="false">Clean plate</button>
+    </div>
+    <div class="fmap-grid"></div>
+    <p class="small muted">A toy two-layer network with hand-made kernels, so we know what each map should show. A trained network learns its own kernels; its maps look similar in early layers and far more abstract in deep ones.</p>
+  </div>
+  <aside class="notes"><ul><li>Layer 1 maps are still recognisably the plate: edges in each direction, a blurred copy, thin dark lines.</li><li>Layer 2 maps are smaller (pooled) and more selective: the "thin line" map lights up only for the crack. Switch to the shadow and the clean plate: the crack map goes dark; edges of the hole stay.</li><li>That contrast, same filters on different images, is exactly how activations are used for debugging.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>The hierarchy of features</h2>
+  <div class="cols three">
+    <div class="box"><h3>Early layers</h3><p class="small">Edges, lines, colours, simple gradients.</p><p class="small muted">The input is still clearly recognisable.</p></div>
+    <div class="box"><h3>Middle layers</h3><p class="small">Textures, simple shapes, parts of objects: corners, circles, a bolt head, a wheel.</p><p class="small muted">Increasingly abstract.</p></div>
+    <div class="box"><h3>Deep layers</h3><p class="small">Class-specific concepts: "crack", "weld bead", "cat face".</p><p class="small muted">Sparse: many channels are blank for a given image.</p></div>
+  </div>
+  <svg class="fig" id="distil-fig" viewBox="0 0 1160 120" aria-label="An information distillation pipeline from raw pixels to task-relevant concepts" style="margin-top:14px"></svg>
+  <div class="cols" style="margin-top:6px">
+    <p class="small">A CNN is an <strong>information distillation pipeline</strong>: it discards what does not matter for the task (lighting, background) and amplifies what does.</p>
+    <p class="small muted">Train the same architecture twice and the individual filters differ, but the overall behaviour is similar. Do not over-interpret one channel.</p>
+  </div>
+  <aside class="notes"><ul><li>The four practical observations from the reading: first layers keep most of the information; middle layers look like texture and shape detectors; deep layers are sparse; individual filters vary between runs.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Extracting activations in Keras</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">from keras import layers
+
+# a second model that returns every conv and pooling output
+kinds = (layers.Conv2D, layers.MaxPooling2D)
+outs = [l.output for l in model.layers if isinstance(l, kinds)]
+activation_model = keras.Model(model.inputs, outs)
+
+acts = activation_model.predict(image[None])  # one array per layer
+first = acts[0][0]                            # (H, W, channels)
+print([a.shape for a in acts])
+
+fig, axes = plt.subplots(4, 8, figsize=(12, 6))
+for k, ax in enumerate(axes.flat):            # 32 channels of layer 1
+    ax.imshow(first[:, :, k], cmap="viridis")
+    ax.axis("off")
+plt.show()</code></pre></div>
+    <div class="stack">
+      <p class="small">No retraining: the new model shares the trained weights and just exposes the internal outputs.</p>
+      <p class="small">Each activation is a 3-D tensor. Plot each channel as an image: bright means the feature is present there.</p>
+      <div class="box quiet"><p class="small"><strong>Debugging uses:</strong> check the network detects edges and shapes as expected, spot <strong>dead filters</strong> that never activate, and catch a model attending to the background instead of the object.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Works for any Keras model built with an Input. image[None] adds the batch axis.</li><li>Normalise each channel before plotting if the colours look flat.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Grad-CAM: where did the network look?</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">Activations show <em>what</em> is detected. Gradient-weighted Class Activation Mapping (Grad-CAM; Selvaraju et al., 2017) shows <em>where</em> the network looked to make <strong>one specific</strong> decision.</p>
+      <ol class="small">
+        <li>Forward pass: get the score \(y^c\) for class \(c\), and the last conv layer's feature maps \(A^k\).</li>
+        <li>Backward pass: how much would \(y^c\) change if each value of each map changed? \(\partial y^c / \partial A^k\).</li>
+        <li>Average each map's gradients: one importance weight per channel, \(\alpha_k\).</li>
+        <li>Weighted sum of the maps, keep the positive part, resize to the image and overlay.</li>
+      </ol>
+      <p>\[ \alpha_k = \frac{1}{Z}\sum_{i,j}\frac{\partial y^c}{\partial A^k_{ij}}, \qquad L^c = \mathrm{ReLU}\Big(\sum_k \alpha_k A^k\Big) \]</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Why the last conv layer?</h3>
+        <p class="small">It is the deepest layer that still has a spatial layout. After it, Flatten or pooling throws the "where" away.</p>
+      </div>
+      <div class="box quiet">
+        <h3>Resolution</h3>
+        <p class="small">The heatmap is coarse, often 7 × 7 or 14 × 14, because it comes from a deep layer. It is upsampled for display: it shows regions, not precise outlines.</p>
+      </div>
+      <p class="small"><strong>Analogy:</strong> cover parts of the image with your hand and watch the score. Grad-CAM estimates that for every region at once, with one backward pass.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Intuition first (the hand analogy), then the four steps, then the formula.</li><li>The next slide is the hand analogy made literal: occlusion sensitivity.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Try it: cover part of the image</h2>
+  <div class="cols" id="occ-demo" style="grid-template-columns: 1.05fr 1fr">
+    <div>
+      <div class="occ-wrap"><canvas width="120" height="120" class="px occ-img"></canvas><canvas width="120" height="120" class="occ-heat"></canvas><div class="occ-patch" aria-hidden="true"></div></div>
+      <p class="small muted" style="margin-top:8px">Drag the grey square over the image.</p>
+    </div>
+    <div class="stack">
+      <div class="btnrow" role="group" aria-label="Choose an image">
+        <button class="btn" type="button" data-img="both" aria-pressed="true">Crack and shadow</button>
+        <button class="btn" type="button" data-img="shadow" aria-pressed="false">Shadow only</button>
+        <button class="btn" type="button" data-img="clean" aria-pressed="false">Clean</button>
+      </div>
+      <div class="btnrow" role="group" aria-label="Choose a model">
+        <button class="btn" type="button" data-model="good" aria-pressed="true">Model A</button>
+        <button class="btn" type="button" data-model="biased" aria-pressed="false">Model B</button>
+      </div>
+      <div class="readout" aria-live="polite"></div>
+      <div class="btnrow"><button class="btn" type="button" data-act="map">Compute the full map</button><button class="btn" type="button" data-act="clear">Clear map</button></div>
+      <p class="small">The map shows how much the model's score drops when each region is covered: <strong>occlusion sensitivity</strong> (Zeiler and Fergus, 2014). Grad-CAM approximates this from gradients, in one pass.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Model A: covering the crack drops P(defective) sharply; covering the shadow does nothing. Its map lights up the crack.</li><li>Model B was "trained" on data where defective parts were also photographed in poor light: its full map lights up dark regions (the shadow, and even the bolt hole and slot), and covering the shadow drops its score. On "Shadow only" it calls a sound plate defective. Same accuracy on a biased test set; very different reasons. Both are toy models with hand-made features.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Grad-CAM in Keras</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">import tensorflow as tf    # this snippet needs the TF backend
+
+last_conv = model.get_layer("conv2d_2")      # the last Conv2D
+grad_model = keras.Model(model.inputs,
+                         [last_conv.output, model.output])
+
+with tf.GradientTape() as tape:
+    maps, preds = grad_model(image[None])    # model(x), not predict
+    c = tf.argmax(preds[0])                  # or a class you choose
+    score = preds[:, c]
+
+grads = tape.gradient(score, maps)           # d score / d A
+alpha = tf.reduce_mean(grads, axis=(0, 1, 2))   # one per channel
+cam = tf.nn.relu(tf.reduce_sum(maps[0] * alpha, axis=-1))
+cam = (cam / (tf.reduce_max(cam) + 1e-8)).numpy()   # 0 to 1
+
+plt.imshow(image.squeeze(), cmap="gray")
+plt.imshow(cam, cmap="jet", alpha=0.4,
+           extent=(0, image.shape[1], image.shape[0], 0))</code></pre></div>
+    <div class="stack">
+      <div class="box">
+        <h3>Call the model, not predict</h3>
+        <p class="small"><code>model.predict(x)</code> is for inference and does not track gradients. Inside a <code>GradientTape</code>, use <code>model(x)</code>.</p>
+      </div>
+      <div class="box quiet">
+        <h3>Preprocess exactly as in training</h3>
+        <p class="small">Same scaling, same size, same channel order. OpenCV loads images as BGR, not RGB. If heatmaps look random, check preprocessing first.</p>
+      </div>
+      <p class="small muted">Find the layer name with <code>model.summary()</code>.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>This is the keras.io Grad-CAM recipe, trimmed. With pretrained models from keras.applications, use that model's own preprocess_input.</li><li> With the JAX or PyTorch backend, use that backend's gradient function instead of GradientTape.</li><li>The extent argument stretches the coarse map over the full image.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Case study: wolf or husky?</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">Ribeiro, Singh and Guestrin (2016) trained a classifier to tell wolves from huskies, deliberately choosing training photos where every wolf stood in snow.</p>
+      <p class="small">It scored well on similar test photos. Their explanation method (LIME, a relative of the maps on the previous slides) showed why: it was looking at the <strong>snow</strong>, not the animal. A husky in snow became a "wolf".</p>
+      <div class="box"><p class="small"><strong>The lesson:</strong> high test accuracy does not mean the model learned the right thing, if the test set shares the training set's bias. Only an explanation reveals it.</p></div>
+    </div>
+    <div class="stack">
+      <h3>The same trap in engineering</h3>
+      <ul class="small">
+        <li>all defect photos taken on one rig, under one lamp: the model learns the lamp</li>
+        <li>a scale bar, timestamp or inspector's mark appears mostly on defective samples</li>
+        <li>X-rays of sick patients come from one hospital's scanner, with its own text in the corner</li>
+      </ul>
+      <p class="small muted">This is Week 2's "chance correlation" again, now visible as a heatmap.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Attribution: the wolf/husky experiment is from the LIME paper, and the bias was introduced on purpose to test whether people could spot it from explanations. The PDF credits Grad-CAM; the idea transfers, but the original used LIME.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>What visualisation catches, and how to fix it</h2>
+  <table class="tbl">
+    <thead><tr><th>Problem the maps reveal</th><th>Example</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>Spurious correlation</td><td>focus on a watermark, timestamp, ruler or border</td><td>crop or mask it; augment so it appears in every class</td></tr>
+      <tr><td>Dataset bias</td><td>every "beach" image has blue sky; every defect has poor lighting</td><td>collect varied backgrounds and conditions for every class</td></tr>
+      <tr><td>Dead or redundant filters</td><td>channels that are blank for every image</td><td>smaller layers, or a different learning rate</td></tr>
+      <tr><td>Preprocessing mismatch</td><td>random-looking heatmaps</td><td>match training's scaling, size and colour order</td></tr>
+    </tbody>
+  </table>
+  <div class="bottom-line"><p>Make Grad-CAM part of every evaluation, especially on the images the model gets <strong>right</strong>: those are where hidden shortcuts hide.</p></div>
+  <aside class="notes"><ul><li>Self-study idea from the reading: apply Grad-CAM to correct and incorrect predictions of a pretrained model (VGG16 or ResNet50) and compare.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 3 ===================== -->
+<section class="slide title divider" data-part="4">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 3</p>
+      <h1>Computer vision tasks</h1>
+      <p class="sub">The same CNN features, asked different questions</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>From MLP to CNN</li><li class="done"><span>2</span>What CNNs see</li><li class="now"><span>3</span>Computer vision tasks</li><li><span>4</span>Object detection with YOLO</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 12 minutes, descriptive only: what each task outputs and where it is used. No new maths.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>One scene, five tasks</h2>
+  <div class="cols" id="task-demo" style="grid-template-columns: 1.35fr 1fr; gap: 30px">
+    <svg class="fig" viewBox="0 0 640 400" aria-label="A construction site with an excavator, two workers and traffic cones, annotated for the selected task"></svg>
+    <div class="stack">
+      <div class="btnrow vert" role="group" aria-label="Choose a task">
+        <button class="btn" type="button" data-task="cls" aria-pressed="true">Classification</button>
+        <button class="btn" type="button" data-task="loc" aria-pressed="false">Classification + localisation</button>
+        <button class="btn" type="button" data-task="det" aria-pressed="false">Object detection</button>
+        <button class="btn" type="button" data-task="sem" aria-pressed="false">Semantic segmentation</button>
+        <button class="btn" type="button" data-task="ins" aria-pressed="false">Instance segmentation</button>
+      </div>
+      <div class="box td-box" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Click through in order: each task asks for more detail than the last.</li><li>Semantic versus instance: semantic colours both workers the same ("person"); instance separates worker 1 from worker 2.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>The tasks side by side</h2>
+  <table class="tbl">
+    <thead><tr><th>Task</th><th>Question it answers</th><th>Output</th><th>Engineering example</th></tr></thead>
+    <tbody>
+      <tr><td>Classification</td><td>What is in this image?</td><td>one label, with probabilities</td><td>is this weld acceptable or defective?</td></tr>
+      <tr><td>Localisation</td><td>What is it, and where?</td><td>one label and one box</td><td>where on the part is the defect?</td></tr>
+      <tr><td>Object detection</td><td>What objects, and where is each?</td><td>a list of boxes, each with a label and a confidence</td><td>workers without helmets on a site camera</td></tr>
+      <tr><td>Semantic segmentation</td><td>Which class is each pixel?</td><td>a label for every pixel</td><td>crack area on a concrete surface; road versus pavement</td></tr>
+      <tr><td>Instance segmentation</td><td>Which object is each pixel?</td><td>a mask per object</td><td>measuring each corroded region separately</td></tr>
+    </tbody>
+  </table>
+  <div class="bottom-line"><p class="small">All five start from the same thing: a CNN that turns pixels into feature maps. They differ in the <strong>head</strong> on top, and in the labels you need to train it.</p></div>
+  <aside class="notes"><ul><li>Typical model families, if asked: classification ResNet or EfficientNet; detection YOLO, Faster R-CNN, RetinaNet, DETR; semantic segmentation U-Net, DeepLab; instance segmentation Mask R-CNN. Not examinable today.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>More detail needs more labelling</h2>
+  <div class="cols">
+    <div>
+      <svg class="fig" id="label-fig" viewBox="0 0 560 330" aria-label="Labelling effort grows from one click per image for classification, to a few boxes for detection, to traced outlines for segmentation"></svg>
+    </div>
+    <div class="stack">
+      <p class="small">The output's detail sets the cost of the training data. A class label takes a second; a box per object takes several; a pixel mask per object can take minutes per image.</p>
+      <p class="small"><strong>Choose the simplest task that answers the engineering question.</strong> If "is there a crack?" is enough, do not collect masks.</p>
+      <div class="box quiet">
+        <h3>Other tasks you will meet</h3>
+        <p class="small">Keypoint and pose estimation, depth estimation, tracking objects across video frames, and anomaly detection when defects are too rare to label.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Labelling cost is often the real constraint in engineering projects: specialists' time is expensive.</li><li>Pretrained models (Section 4) reduce how many labels you need.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 4 ===================== -->
+<section class="slide title divider" data-part="5">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 4</p>
+      <h1>Object detection with YOLO</h1>
+      <p class="sub">Classification and localisation, for every object, in one pass</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>From MLP to CNN</li><li class="done"><span>2</span>What CNNs see</li><li class="done"><span>3</span>Computer vision tasks</li><li class="now"><span>4</span>Object detection with YOLO</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 38 minutes: boxes and IoU, NMS, how YOLO works, how detectors are measured, then YOLOv8 in Keras.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Detection: classify and locate every object</h2>
+  <div class="cols">
+    <div class="stack">
+      <p>For each object in the image, a detector outputs:</p>
+      <ul>
+        <li>a <strong>class</strong>: what it is</li>
+        <li>a <strong>bounding box</strong>: where it is, as four numbers</li>
+        <li>a <strong>confidence</strong>: how sure the model is</li>
+      </ul>
+      <p class="small">The hard part is that the number of objects is not known in advance. A network has a fixed number of outputs, so detectors predict a large, fixed set of <em>candidate</em> boxes and then filter them.</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Why it is harder than classification</h3>
+        <ul class="small">
+          <li>zero, one or hundreds of objects per image</li>
+          <li>objects at very different sizes, from a distant cone to a nearby excavator</li>
+          <li>objects overlapping and partly hidden</li>
+          <li>the box must be accurate, not just the label</li>
+        </ul>
+      </div>
+      <p class="small muted">Two tools make it work: <strong>IoU</strong> to compare boxes, and <strong>NMS</strong> to remove duplicates.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Detection as "an advanced form of classification": a classifier per candidate region, plus a regressor for the box.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Bounding boxes and intersection over union</h2>
+  <div class="cols" id="iou-demo" style="grid-template-columns: 1.15fr 1fr">
+    <svg class="fig" viewBox="0 0 560 380" aria-label="A ground-truth box and a draggable predicted box, with their overlap shaded"></svg>
+    <div class="stack">
+      <p class="small">A box is four numbers. Common formats: corners <code>xyxy</code> \((x_1, y_1, x_2, y_2)\), or corner plus size <code>xywh</code>, or <code>center_xywh</code>. Always check which one a library expects.</p>
+      <p>\[ \mathrm{IoU} = \frac{\text{area of overlap}}{\text{area of union}} \]</p>
+      <div class="ctl" style="grid-template-columns: 70px 1fr 50px"><label for="iou-w">width</label><input id="iou-w" type="range" min="40" max="300" step="2" value="190"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 70px 1fr 50px"><label for="iou-h">height</label><input id="iou-h" type="range" min="40" max="300" step="2" value="150"><output></output></div>
+      <div class="readout" aria-live="polite"></div>
+      <p class="small muted">Drag the solid box. A detection usually counts as correct at IoU ≥ 0.5.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Drag until IoU just reaches 0.5: notice how much the boxes can disagree and still count. That is why COCO also averages over stricter thresholds up to 0.95.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Non-maximum suppression: one box per object</h2>
+  <div class="cols" id="nms-demo" style="grid-template-columns: 1.2fr 1fr">
+    <svg class="fig" viewBox="0 0 600 380" aria-label="Several overlapping candidate boxes around two objects, with their confidence scores"></svg>
+    <div class="stack">
+      <p class="small">A detector proposes many overlapping boxes for the same object. NMS keeps the best and removes the rest:</p>
+      <ol class="small">
+        <li>drop boxes below the confidence threshold</li>
+        <li>keep the highest-scoring box left</li>
+        <li>remove every box that overlaps it with IoU above the threshold</li>
+        <li>repeat until no boxes are left</li>
+      </ol>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="nms-c">confidence</label><input id="nms-c" type="range" min="0.05" max="0.95" step="0.05" value="0.3"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="nms-i">IoU threshold</label><input id="nms-i" type="range" min="0.1" max="0.9" step="0.05" value="0.5"><output></output></div>
+      <div class="btnrow"><button class="btn" type="button" data-act="step">Next step</button><button class="btn" type="button" data-act="run">Run to the end</button><button class="btn" type="button" data-act="reset">Reset</button></div>
+      <p class="small nms-read" aria-live="polite"></p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Step through once, then try an IoU threshold of 0.1 (too aggressive: the two overlapping workers merge into one) and 0.9 (too lenient: duplicates survive).</li><li>In KerasCV these are the iou_threshold and confidence_threshold of the NonMaxSuppression layer.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Two families of detectors</h2>
+  <div class="cols">
+    <div class="box">
+      <h3>Two-stage: propose, then classify</h3>
+      <p class="small">First find regions that might contain an object, then classify and refine each one. R-CNN (Girshick et al., 2014), Fast R-CNN (2015), Faster R-CNN (Ren et al., 2015).</p>
+      <p class="small"><strong>Strength:</strong> accurate, especially for small objects. <strong>Weakness:</strong> slower, more complex.</p>
+    </div>
+    <div class="box">
+      <h3>One-stage: predict everything at once</h3>
+      <p class="small">One network predicts classes and boxes for a dense grid of locations in a single forward pass. YOLO (Redmon et al., 2016), SSD (Liu et al., 2016), RetinaNet (Lin et al., 2017).</p>
+      <p class="small"><strong>Strength:</strong> fast enough for real-time video. Modern versions are also very accurate.</p>
+    </div>
+  </div>
+  <svg class="fig" id="fam-fig" viewBox="0 0 1160 150" aria-label="Two-stage pipeline with a region proposal step, versus a one-stage pipeline straight from features to boxes" style="margin-top:14px"></svg>
+  <p class="small muted">A third family uses transformers to predict a set of boxes directly, without NMS: DETR (Carion et al., 2020) and its real-time successors.</p>
+  <aside class="notes"><ul><li>Historical trade-off: two-stage accurate, one-stage fast. Since around 2020 the best one-stage detectors match two-stage accuracy at real-time speed, which is why YOLO dominates in practice.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>YOLO: you only look once</h2>
+  <div class="cols" id="yolo-demo" style="grid-template-columns: 1.2fr 1fr">
+    <svg class="fig" viewBox="0 0 640 400" aria-label="The scene divided into a 7 by 7 grid; the cell containing an object's centre predicts its box"></svg>
+    <div class="stack">
+      <p class="small">YOLO (Redmon et al., 2016) splits the image into an \(S \times S\) grid. The cell that contains an object's <strong>centre</strong> is responsible for it. Each cell predicts:</p>
+      <ul class="small">
+        <li>\(B\) boxes, each \((x, y, w, h)\) plus a confidence</li>
+        <li>\(C\) class probabilities</li>
+      </ul>
+      <p class="small">All cells in one forward pass: output \(S \times S \times (5B + C)\). The original: \(7 \times 7 \times 30\), with \(B = 2\) and the 20 Pascal VOC classes.</p>
+      <p class="small yd-read" aria-live="polite"></p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Click cells: a cell containing an object centre shows the box it predicts; other cells predict "nothing" with low confidence.</li><li>Then NMS removes duplicates from neighbouring cells. One pass, hence the speed: the 2016 paper ran at 45 frames per second.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Inside a modern YOLO</h2>
+  <svg class="fig" id="yolo-arch" viewBox="0 0 1160 280" aria-label="Backbone producing features at three scales, a neck merging them, and a detection head at each scale"></svg>
+  <div class="cols three" style="margin-top:10px">
+    <div class="box"><h3>Backbone</h3><p class="small">A CNN, exactly what Section 1 built, producing feature maps at strides 8, 16 and 32: fine maps for small objects, coarse maps for large ones.</p></div>
+    <div class="box"><h3>Neck</h3><p class="small">A feature pyramid that mixes the scales, so fine maps also get deep semantics. In KerasCV, <code>fpn_depth</code> sets its depth.</p></div>
+    <div class="box"><h3>Head</h3><p class="small">At every location of every scale: class scores and a box. For a 640 × 640 input that is 80² + 40² + 20² = 8,400 candidates, then NMS.</p></div>
+  </div>
+  <aside class="notes"><ul><li>YOLOv8 specifics: anchor-free (predicts box distances from each location directly), decoupled heads for class and box, trained with a classification loss plus a box loss (CIoU).</li><li>The grid of slide "YOLO: you only look once" survives as the per-location predictions, now at three scales.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>The YOLO family</h2>
+  <svg class="fig" id="yolo-time" viewBox="0 0 1160 300" aria-label="A timeline of YOLO versions from 2016 to 2024"></svg>
+  <div class="cols" style="margin-top:8px">
+    <p class="small">Versions come from different groups: the original authors (v1 to v3), academic groups (v4, v7, v9, v10, YOLOX), and the company Ultralytics (v5, v8, YOLO11). The ideas accumulate: anchors, multi-scale heads, then anchor-free heads and NMS-free training.</p>
+    <p class="small muted">Development continues with new releases; check the Ultralytics documentation for the current version. This module uses YOLOv8, which has a maintained Keras implementation.</p>
+  </div>
+  <aside class="notes"><ul><li>Not examinable: the point is that "YOLO" is a family and a design idea, not one model.</li><li>Ultralytics models do detection, segmentation, pose and classification with one API, but they are PyTorch-based.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Measuring a detector: precision, recall and mAP</h2>
+  <div class="cols" id="pr-demo" style="grid-template-columns: 1fr 1.05fr">
+    <div class="stack">
+      <p class="small">A detection is a <strong>true positive</strong> if its class is right and IoU ≥ 0.5 with an unmatched ground-truth box; otherwise it is a false positive. Missed objects are false negatives.</p>
+      <p>\[ \text{precision} = \frac{TP}{TP + FP} \qquad \text{recall} = \frac{TP}{TP + FN} \]</p>
+      <div class="ctl" style="grid-template-columns: 140px 1fr 50px"><label for="pr-t">confidence threshold</label><input id="pr-t" type="range" min="0.05" max="0.95" step="0.05" value="0.5"><output></output></div>
+      <div class="readout" aria-live="polite"></div>
+      <p class="small"><strong>AP</strong> is the area under the precision-recall curve for one class; <strong>mAP</strong> averages it over classes. Pascal VOC uses IoU 0.5; COCO averages over IoU thresholds 0.5 to 0.95.</p>
+    </div>
+    <svg class="fig" viewBox="0 0 520 380" aria-label="A precision-recall curve with the current threshold marked and the area under it shaded"></svg>
+  </div>
+  <aside class="notes"><ul><li>Toy data: 15 detections of one class, 10 objects in the images. Lower the threshold: recall rises, precision falls.</li><li>Always ask which mAP a paper reports: mAP@0.5 and COCO mAP@0.5:0.95 are very different numbers for the same model.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>YOLO in Keras: what is available</h2>
+  <table class="tbl">
+    <thead><tr><th>Option</th><th>What you get</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><strong>KerasCV</strong> <code>YOLOV8Detector</code></td><td>YOLOv8 detector pretrained on Pascal VOC (20 classes), and backbones pretrained on COCO for training your own</td><td>Runs on Keras 3 with the TensorFlow backend. No longer developed, but stable.</td></tr>
+      <tr><td><strong>KerasHub</strong> object detectors</td><td>RetinaNet and D-FINE, pretrained on COCO (80 classes)</td><td>The actively developed successor to KerasCV; it does not include YOLO.</td></tr>
+      <tr><td><strong>Ultralytics</strong> YOLO</td><td>The newest YOLO versions, for detection, segmentation and pose</td><td>Built on PyTorch, including torchvision. Can export trained models to TensorFlow formats.</td></tr>
+    </tbody>
+  </table>
+  <div class="bottom-line"><p>For this module: <strong>KerasCV's YOLOv8</strong>. It keeps everything in Keras, and avoids PyTorch and torchvision.</p></div>
+  <aside class="notes"><ul><li>Checked on KerasCV 0.9 with Keras 3.15 and TensorFlow 2.21: building, prediction with custom NMS and training all run. Pretrained weights download from Kaggle on first use.</li><li>pip install keras-cv; Colab already has TensorFlow.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Detect objects with a pretrained YOLOv8</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python"># pip install keras-cv     (needs TensorFlow; Colab has it)
+import numpy as np, keras, keras_cv
+
+model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc", bounding_box_format="xywh")
+
+image = np.array(keras.utils.load_img("site.jpg"))
+resize = keras_cv.layers.Resizing(
+    640, 640, pad_to_aspect_ratio=True,
+    bounding_box_format="xywh")
+batch = resize([image])
+
+model.prediction_decoder = keras_cv.layers.NonMaxSuppression(
+    bounding_box_format="xywh", from_logits=True,
+    iou_threshold=0.5, confidence_threshold=0.6)
+pred = model.predict(batch)    # boxes, classes, confidence
+
+keras_cv.visualization.plot_bounding_box_gallery(
+    batch, value_range=(0, 255), bounding_box_format="xywh",
+    y_pred=pred, class_mapping=dict(enumerate(VOC_CLASSES)),
+    rows=1, cols=1, scale=5)</code></pre></div>
+    <div class="stack">
+      <p class="small">About 26 million parameters; the model card reports an mAP of 0.45 on the Pascal VOC evaluation set.</p>
+      <p class="small"><code>pad_to_aspect_ratio=True</code> resizes without stretching the image, so boxes keep their shape.</p>
+      <p class="small">The 20 classes include <em>person</em>, <em>car</em>, <em>bus</em>, <em>bicycle</em> and <em>train</em>, but nothing engineering-specific: no helmet, no crack. For those you train your own.</p>
+      <p class="small muted"><code>VOC_CLASSES</code>: the 20 class names in alphabetical order, "aeroplane" to "tvmonitor". KerasCV needs the TensorFlow backend, which is Keras's default.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Full VOC list in order: aeroplane, bicycle, bird, boat, bottle, bus, car, cat, chair, cow, diningtable, dog, horse, motorbike, person, pottedplant, sheep, sofa, train, tvmonitor.</li><li>Raise confidence_threshold to see fewer, surer boxes.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Train YOLOv8 on your own data</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">backbone = keras_cv.models.YOLOV8Backbone.from_preset(
+    "yolo_v8_s_backbone_coco")       # features learned on COCO
+model = keras_cv.models.YOLOV8Detector(
+    num_classes=3,                   # e.g. person, helmet, vest
+    bounding_box_format="xywh",
+    backbone=backbone, fpn_depth=1)
+
+model.compile(
+    classification_loss="binary_crossentropy", box_loss="ciou",
+    optimizer=keras.optimizers.Adam(1e-3, global_clipnorm=10.0))
+
+# images: (N, 640, 640, 3); boxes padded per image
+labels = {"boxes": boxes,      # (N, max_boxes, 4), pixels, xywh
+          "classes": classes}  # (N, max_boxes), -1 = padding
+stop = keras.callbacks.EarlyStopping(
+    patience=5, restore_best_weights=True)
+model.fit(images, labels, epochs=100, batch_size=8,
+          validation_data=(val_images, val_labels),
+          callbacks=[stop])</code></pre></div>
+    <div class="stack">
+      <p class="small"><strong>Transfer learning:</strong> start from a backbone pretrained on COCO, so a few hundred labelled images can be enough.</p>
+      <p class="small"><strong>Augmentation must move the boxes too:</strong> KerasCV's <code>RandomFlip</code> and <code>JitteredResize</code> take a <code>bounding_box_format</code> and transform boxes with the image.</p>
+      <p class="small"><strong>Week 2 still applies:</strong> a validation set split by site or camera, early stopping, and one final test.</p>
+      <p class="small muted">Boxes are labelled with tools such as CVAT or Label Studio, and exported in a standard format.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The dictionary-of-labels format and the compile arguments follow KerasCV's own example; checked to run on Keras 3.</li><li>gradient clipping (global_clipnorm) matters: box losses can spike early in training.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Detection in engineering, and what goes wrong</h2>
+  <div class="cols">
+    <div class="stack">
+      <h3>Where it is used</h3>
+      <ul class="small">
+        <li>site safety: people, helmets and vests on camera feeds</li>
+        <li>inspection: cracks, spalling and corrosion from drone images of bridges and towers</li>
+        <li>manufacturing: missing or misplaced parts on a production line</li>
+        <li>traffic: counting and classifying vehicles at a junction</li>
+      </ul>
+    </div>
+    <div class="stack">
+      <h3>What goes wrong</h3>
+      <ul class="small">
+        <li><strong>small objects</strong> at the limit of the image resolution</li>
+        <li><strong>rare classes</strong>: few examples of the defect that matters most</li>
+        <li><strong>domain shift</strong>: new site, lighting, weather or camera</li>
+        <li><strong>inconsistent labels</strong>: where does a crack's box end?</li>
+        <li><strong>shortcuts</strong>, found with the Section 2 tools</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bottom-line"><p class="small">Report mAP <em>and</em> look at the detections, per class and per condition, before trusting a detector on site.</p></div>
+  <aside class="notes"><ul><li>Ask students which of these would hit their own project hardest.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Key takeaways</h2>
+  <div class="cols wl">
+    <ol>
+      <li><strong>Convolution</strong> slides one small kernel over the image: local connections and shared weights, so far fewer parameters and built-in respect for the grid.</li>
+      <li><strong>Pooling and depth</strong> grow the receptive field: edges, then shapes, then objects.</li>
+      <li><strong>Feature maps and Grad-CAM</strong> show what a CNN detects and where it looked. Use them to catch shortcuts before deployment.</li>
+      <li><strong>Vision tasks</strong> differ in their output and labels: one label, boxes, or pixel masks.</li>
+      <li><strong>YOLO</strong> predicts all boxes in one pass, then NMS; judge it with IoU-based precision, recall and mAP.</li>
+    </ol>
+    <div class="box quiet">
+      <h3>Next steps</h3>
+      <p class="small">Run the MNIST CNN and compare it with Week 2's MLP. Then run a pretrained YOLOv8 on a photo of your own, and try changing the NMS thresholds.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Recap one line per section; leave time for questions.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>References</h2>
+  <div class="cols refs">
+    <ul class="small">
+      <li>Chollet, F. (2021). <em>Deep Learning with Python</em>, 2nd edition. Manning. Chapters 8 and 9.</li>
+      <li>Girshick, R., Donahue, J., Darrell, T. and Malik, J. (2014). Rich feature hierarchies for accurate object detection and semantic segmentation. <em>CVPR</em>.</li>
+      <li>Hubel, D. H. and Wiesel, T. N. (1962). Receptive fields, binocular interaction and functional architecture in the cat's visual cortex. <em>Journal of Physiology</em>, 160, 106–154.</li>
+      <li>LeCun, Y., Bottou, L., Bengio, Y. and Haffner, P. (1998). Gradient-based learning applied to document recognition. <em>Proceedings of the IEEE</em>, 86(11), 2278–2324.</li>
+      <li>Redmon, J., Divvala, S., Girshick, R. and Farhadi, A. (2016). You only look once: unified, real-time object detection. <em>CVPR</em>.</li>
+      <li>Ren, S., He, K., Girshick, R. and Sun, J. (2015). Faster R-CNN: towards real-time object detection with region proposal networks. <em>NeurIPS</em>.</li>
+    </ul>
+    <ul class="small">
+      <li>Ribeiro, M. T., Singh, S. and Guestrin, C. (2016). "Why should I trust you?": explaining the predictions of any classifier. <em>KDD</em>.</li>
+      <li>Selvaraju, R. R. et al. (2017). Grad-CAM: visual explanations from deep networks via gradient-based localization. <em>ICCV</em>.</li>
+      <li>Zeiler, M. D. and Fergus, R. (2014). Visualizing and understanding convolutional networks. <em>ECCV</em>.</li>
+      <li>Liu, W. et al. (2016). SSD: single shot multibox detector. <em>ECCV</em>. &nbsp; Lin, T.-Y. et al. (2017). Focal loss for dense object detection. <em>ICCV</em>.</li>
+      <li>Carion, N. et al. (2020). End-to-end object detection with transformers. <em>ECCV</em>.</li>
+      <li>KerasCV documentation: keras.io/keras_cv &nbsp; Ultralytics documentation: docs.ultralytics.com</li>
+    </ul>
+  </div>
+  <aside class="notes"><ul><li>Please verify citation details before sharing; they were not checked against a database.</li></ul></aside>
+</section>
+
+<div class="tblock" id="tblock" data-part="1">
+  <div class="nav"><button id="prev" type="button" aria-label="Previous slide">‹</button><button id="next" type="button" aria-label="Next slide">›</button></div>
+  <div class="part"><i></i><span id="part-name"></span></div>
+  <div id="part-time"></div>
+  <div class="timer" id="timer" role="button" tabindex="0" title="Lecture timer: T to start or pause, R to reset"></div>
+  <div class="nbtn" id="notes-btn" role="button" tabindex="0" title="Open the lecture notes in a separate window (N)">N: notes</div>
+  <div class="count" id="count"></div>
+</div>
+
+<div class="help" id="help" hidden>
+  <h4>Keys</h4>
+  <kbd>→</kbd> <kbd>Space</kbd> <kbd>PgDn</kbd> next slide<br>
+  <kbd>←</kbd> <kbd>PgUp</kbd> previous slide<br>
+  <kbd>Home</kbd> <kbd>End</kbd> first or last slide<br>
+  <kbd>T</kbd> start or pause the lecture timer, <kbd>R</kbd> reset it<br>
+  <kbd>D</kbd> switch dark and light<br>
+  <kbd>H</kbd> handout view: all slides in one scrolling page<br>
+  <kbd>N</kbd> lecture notes in a separate window<br>
+  <kbd>F</kbd> full screen &nbsp; <kbd>Esc</kbd> close this
+  <p style="margin:8px 0 0;font-size:15px;color:var(--ink-2)">The timer turns red when you run past the planned end of the current section. Add <code>#12</code> to the address to open slide 12.</p>
+</div>
+
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<style>
+.mk-bad { fill: var(--bad); } .mk-good { fill: var(--good); }
+.sm-head { color: var(--ink-2); font-size: 15px !important; margin-bottom: 4px !important; }
+input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; padding: 4px 8px; width: 130px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var PARTS = {
+    1: ['Opening', 0, 5],
+    2: ['Section 1: From MLP to CNN', 5, 40],
+    3: ['Section 2: What CNNs see', 45, 25],
+    4: ['Section 3: Computer vision tasks', 70, 12],
+    5: ['Section 4: Object detection with YOLO', 82, 38]
+  };
+  var NPARTS = Object.keys(PARTS).length;
+  var NS = 'http://www.w3.org/2000/svg';
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* ---------- theme ---------- */
+  var savedTheme = store.get('l3-theme');
+  if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme);
+  function isDark() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t) return t === 'dark';
+    return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function toggleTheme() {
+    var next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    store.set('l3-theme', next);
+  }
+
+  /* ---------- slides ---------- */
+  var slides = $$('.slide');
+  var N = slides.length;
+  var stage = $('#stage');
+  var vp = $('.viewport');
+  var cur = 0;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmtSec(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+    return (h ? h + ':' + pad(m) : String(m)) + ':' + pad(s);
+  }
+  function fmtMin(min) { return Math.floor(min / 60) + ':' + pad(min % 60); }
+
+  function fit() {
+    if (document.body.classList.contains('doc')) { stage.style.transform = ''; return; }
+    var cs = getComputedStyle(vp);
+    var w = vp.clientWidth;
+    var h = vp.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var s = Math.min(w / 1280, h / 720);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+
+  function updateFooter() {
+    var p = slides[cur].getAttribute('data-part');
+    var info = PARTS[p];
+    $('#tblock').setAttribute('data-part', p);
+    $('#part-name').textContent = info[0];
+    $('#part-time').textContent = 'planned ' + fmtMin(info[1]) + '\u2013' + fmtMin(info[1] + info[2]);
+    $('#count').textContent = (cur + 1) + ' / ' + N;
+    renderTimer();
+  }
+
+  function go(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    slides[cur].classList.remove('active');
+    cur = i;
+    slides[cur].classList.add('active');
+    updateFooter();
+    renderNotes();
+    try { history.replaceState(null, '', '#' + (cur + 1)); } catch (e) {}
+  }
+
+  /* ---------- lecture notes window ---------- */
+  var notesWin = null;
+  var NOTES_CSS = "body{margin:0;font:18px/1.5 'Atkinson Hyperlegible','Segoe UI','Helvetica Neue',Arial,sans-serif;background:#F4F7F9;color:#16202A}" +
+    "header{position:sticky;top:0;display:flex;align-items:center;gap:10px;padding:10px 16px;background:#E8EDF1;border-bottom:1.5px solid #16202A;font:600 16px 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif}" +
+    "header .sp{flex:1}button{font:600 16px 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;padding:3px 12px;cursor:pointer;background:transparent;color:inherit;border:1.5px solid currentColor}" +
+    "#t{font:14px 'JetBrains Mono',monospace}main{padding:14px 22px 28px}h1{font:600 26px/1.15 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;margin:0 0 4px}" +
+    ".m{color:#55606C;margin:0 0 14px;font-size:15px}ul{padding-left:22px;margin:0}li{margin:0 0 10px}" +
+    ".nx{color:#55606C;border-top:1px solid #C9D2DA;margin-top:18px;padding-top:10px;font-size:15px}" +
+    "@media (prefers-color-scheme: dark){body{background:#12171D;color:#E3E8EE}header{background:#1B222A;border-color:#E3E8EE}.m,.nx{color:#9AA7B4}.nx{border-color:#34404C}}";
+  function plainTitle(s) {
+    var h = s.querySelector('h1, h2');
+    if (!h) return '';
+    return h.innerHTML.replace(/<br\s*\/?>/g, ' ').replace(/<span class="opt-tag">.*?<\/span>/g, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  }
+  function renderNotes() {
+    if (!notesWin || notesWin.closed) return;
+    var d = notesWin.document, s = slides[cur], info = PARTS[s.getAttribute('data-part')];
+    var aside = s.querySelector('aside.notes'), nxt = slides[cur + 1];
+    d.getElementById('pos').textContent = 'Slide ' + (cur + 1) + ' of ' + N;
+    d.getElementById('body').innerHTML = '<h1>' + plainTitle(s) + '</h1>' +
+      '<p class="m">' + info[0] + ', planned ' + fmtMin(info[1]) + '\u2013' + fmtMin(info[1] + info[2]) + '</p>' +
+      (aside ? aside.innerHTML : '<p>No notes for this slide.</p>') +
+      (nxt ? '<p class="nx">Next: ' + plainTitle(nxt) + '</p>' : '<p class="nx">Last slide.</p>');
+    renderTimer();
+  }
+  function openNotes() {
+    if (notesWin && !notesWin.closed) { notesWin.focus(); renderNotes(); return; }
+    notesWin = window.open('', 'lecture-notes', 'width=560,height=760');
+    if (!notesWin) { var h = $('#help'); h.hidden = false; return; }
+    var fonts = $('link[href*="fonts.googleapis"]');
+    var d = notesWin.document;
+    d.open();
+    d.write('<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>Lecture notes: Week 3</title>' +
+      (fonts ? '<link rel="stylesheet" href="' + fonts.href + '">' : '') + '<style>' + NOTES_CSS + '</style></head><body>' +
+      '<header><button id="pv" aria-label="Previous slide">\u2039</button><button id="nx" aria-label="Next slide">\u203a</button>' +
+      '<span id="pos"></span><span class="sp"></span><span id="t"></span></header><main id="body"></main></body></html>');
+    d.close();
+    d.getElementById('pv').addEventListener('click', function () { go(cur - 1); });
+    d.getElementById('nx').addEventListener('click', function () { go(cur + 1); });
+    d.addEventListener('keydown', function (e) {
+      var k = e.key;
+      if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(cur + 1); }
+      else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(cur - 1); }
+      else if (k === 't' || k === 'T') toggleTimer();
+    });
+    renderNotes();
+  }
+
+  /* ---------- timer ---------- */
+  var tRun = false, tStart = 0, tAcc = 0, tInt = null;
+  function elapsed() { return tAcc + (tRun ? (Date.now() - tStart) / 1000 : 0); }
+  function renderTimer() {
+    var el = $('#timer');
+    if (!tRun && tAcc === 0) { el.textContent = 'T: start timer'; el.className = 'timer'; if (notesWin && !notesWin.closed && notesWin.document.getElementById('t')) notesWin.document.getElementById('t').textContent = 'T: start timer'; return; }
+    var e = elapsed();
+    var info = PARTS[slides[cur].getAttribute('data-part')];
+    el.textContent = (tRun ? '' : 'paused ') + fmtSec(e);
+    el.className = 'timer' + (tRun ? ' run' : '') + (e > (info[1] + info[2]) * 60 ? ' late' : '');
+    if (notesWin && !notesWin.closed) { var nt = notesWin.document.getElementById('t'); if (nt) { nt.textContent = el.textContent; nt.style.color = /late/.test(el.className) ? '#C0392B' : ''; } }
+  }
+  function toggleTimer() {
+    if (tRun) { tAcc = elapsed(); tRun = false; clearInterval(tInt); }
+    else { tStart = Date.now(); tRun = true; tInt = setInterval(renderTimer, 1000); }
+    renderTimer();
+  }
+  function resetTimer() { tRun = false; tAcc = 0; clearInterval(tInt); renderTimer(); }
+
+  /* ---------- handout mode ---------- */
+  var docForced = null;
+  var narrow = window.matchMedia ? matchMedia('(max-width: 760px)') : null;
+  function setDoc(on) {
+    var was = document.body.classList.contains('doc');
+    document.body.classList.toggle('doc', on);
+    fit();
+    if (on && !was) requestAnimationFrame(function () { slides[cur].scrollIntoView(); });
+  }
+  function autoDoc() { setDoc(docForced !== null ? docForced : !!(narrow && narrow.matches)); }
+  if (narrow) {
+    if (narrow.addEventListener) narrow.addEventListener('change', autoDoc);
+    else if (narrow.addListener) narrow.addListener(autoDoc);
+  }
+  var docBeforePrint = false;
+  window.addEventListener('beforeprint', function () { docBeforePrint = document.body.classList.contains('doc'); setDoc(true); });
+  window.addEventListener('afterprint', function () { setDoc(docBeforePrint); });
+
+  /* ---------- input ---------- */
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target, k = e.key;
+    if (k === 'Escape') { $('#help').hidden = true; return; }
+    if (t && t.matches && t.matches('input[type=number], input[type=text], textarea, select')) return;
+    var navKey = /^(Arrow|Page|Home$|End$)/.test(k);
+    if (navKey && t && t.matches && t.matches('input[type=range], input[type=radio]')) return;
+    var isDoc = document.body.classList.contains('doc');
+    var onButton = t && t.matches && t.matches('button, [role=button]');
+    if (!isDoc && (k === 'ArrowRight' || k === 'PageDown' || k === 'ArrowDown' || (k === ' ' && !onButton))) { e.preventDefault(); go(cur + 1); }
+    else if (!isDoc && (k === 'ArrowLeft' || k === 'PageUp' || k === 'ArrowUp')) { e.preventDefault(); go(cur - 1); }
+    else if (!isDoc && k === 'Home') { e.preventDefault(); go(0); }
+    else if (!isDoc && k === 'End') { e.preventDefault(); go(N - 1); }
+    else if (k === 't' || k === 'T') toggleTimer();
+    else if (k === 'n' || k === 'N') openNotes();
+    else if (k === 'r' || k === 'R') resetTimer();
+    else if (k === 'd' || k === 'D') toggleTheme();
+    else if (k === 'h' || k === 'H') { docForced = !isDoc; setDoc(docForced); if (!docForced) go(cur); }
+    else if (k === '?') { var h = $('#help'); h.hidden = !h.hidden; }
+    else if (k === 'f' || k === 'F') {
+      try {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      } catch (err) {}
+    }
+  });
+  $('#prev').addEventListener('click', function () { go(cur - 1); });
+  $('#next').addEventListener('click', function () { go(cur + 1); });
+  $('#timer').addEventListener('click', toggleTimer);
+  $('#notes-btn').addEventListener('click', openNotes);
+  $('#notes-btn').addEventListener('keydown', function (e) { if (e.key === 'Enter') openNotes(); });
+  window.addEventListener('beforeunload', function () { try { if (notesWin && !notesWin.closed) notesWin.close(); } catch (e) {} });
+  $('#timer').addEventListener('keydown', function (e) { if (e.key === 'Enter') toggleTimer(); });
+  window.addEventListener('hashchange', function () {
+    var m = location.hash.match(/^#(\d+)$/);
+    if (m && +m[1] - 1 !== cur) go(+m[1] - 1);
+  });
+  window.addEventListener('resize', fit);
+  /* after a mouse drag, hand the arrow keys back to slide navigation */
+  document.addEventListener('pointerup', function (e) {
+    var t = e.target;
+    if (t && t.matches && t.matches('input[type=range], input[type=radio], input[type=checkbox], button') && e.pointerType === 'mouse') {
+      setTimeout(function () { t.blur(); }, 0);
+    }
+  });
+
+  var tx = null, ty = null;
+  stage.addEventListener('touchstart', function (e) {
+    if (e.target.closest('input, button, pre, .sm-rows, svg')) { tx = null; return; }
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (tx === null || document.body.classList.contains('doc')) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < 60) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, { passive: true });
+
+  /* ---------- code: highlight + copy ---------- */
+  try { if (window.Prism && Prism.highlightAll) Prism.highlightAll(); } catch (e) {}
+  $$('.code-wrap').forEach(function (wrap) {
+    var pre = $('pre', wrap);
+    if (!pre) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'copy'; b.textContent = 'Copy';
+    b.addEventListener('click', function () {
+      var text = pre.textContent;
+      function done(ok) { b.textContent = ok ? 'Copied' : 'Select the code to copy'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); done(ok);
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+        else fallback();
+      } catch (e) { fallback(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  $$('[data-reveal]').forEach(function (b) {
+    var showLabel = b.textContent, hideLabel = showLabel.replace(/^Show/, 'Hide');
+    b.addEventListener('click', function () {
+      var el = document.getElementById(b.getAttribute('data-reveal'));
+      el.hidden = !el.hidden;
+      b.setAttribute('aria-pressed', String(!el.hidden));
+      b.textContent = el.hidden ? showLabel : hideLabel;
+    });
+  });
+
+  /* ---------- svg helpers ---------- */
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, s, cls, anchor) {
+    var t = el('text', { x: x, y: y, 'class': cls || 'tick', 'text-anchor': anchor || 'middle' }, parent);
+    t.textContent = s;
+    return t;
+  }
+  var clipN = 0;
+  function makePlot(svg, o) {
+    var W = o.w || 300, H = o.h || 200, L = o.l != null ? o.l : 34, R = 10, T = 12, B = o.b != null ? o.b : (o.xl ? (o.xt ? 44 : 26) : 28);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    function sx(x) { return L + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - L - R); }
+    function sy(y) { return T + (1 - (y - o.y[0]) / (o.y[1] - o.y[0])) * (H - T - B); }
+    var id = 'clip' + (++clipN);
+    var cp = el('clipPath', { id: id }, el('defs', {}, svg));
+    el('rect', { x: L, y: T - 2, width: W - L - R, height: H - T - B + 2 }, cp);
+    if (o.x[0] < 0 && o.x[1] > 0) el('line', { x1: sx(0), x2: sx(0), y1: T, y2: H - B, 'class': 'ax-0' }, svg);
+    if (o.y[0] < 0 && o.y[1] > 0) el('line', { x1: L, x2: W - R, y1: sy(0), y2: sy(0), 'class': 'ax-0' }, svg);
+    el('path', { d: 'M' + L + ',' + T + ' V' + (H - B) + ' H' + (W - R), 'class': 'ax' }, svg);
+    (o.xt || []).forEach(function (v) { txt(svg, sx(v), H - B + 15, String(v)); });
+    (o.yt || []).forEach(function (v) { txt(svg, L - 6, sy(v) + 4, String(v), 'tick', 'end'); });
+    if (o.xl) txt(svg, (L + W - R) / 2, H - 6, o.xl, 'tick');
+    if (o.yl) txt(svg, L + 6, T + 10, o.yl, 'tick', 'start');
+    return {
+      sx: sx, sy: sy, svg: svg,
+      curve: function (f, cls, a, b) {
+        a = a != null ? a : o.x[0]; b = b != null ? b : o.x[1];
+        var d = '', n = 200;
+        for (var i = 0; i <= n; i++) {
+          var x = a + (b - a) * i / n, y = f(x);
+          if (!isFinite(y)) continue;
+          y = Math.max(o.y[0] - 1, Math.min(o.y[1] + 1, y));
+          d += (d ? 'L' : 'M') + sx(x).toFixed(2) + ',' + sy(y).toFixed(2);
+        }
+        return el('path', { d: d, 'class': cls, 'clip-path': 'url(#' + id + ')' }, svg);
+      }
+    };
+  }
+
+  /* ---------- shared helpers ---------- */
+  function slideOf(node) { return node.closest('.slide'); }
+  function isActive(node) { var s = slideOf(node); return !!s && s.classList.contains('active') && !document.body.classList.contains('doc'); }
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setPressed(btns, which) { btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b === which)); }); }
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+  function rect(p, x, y, w, h, cls, extra) { var a = { x: x, y: y, width: w, height: h }; if (cls) a['class'] = cls; for (var k in extra || {}) a[k] = extra[k]; return el('rect', a, p); }
+  function arrowDefs(svg, id) {
+    var mk = el('marker', { id: id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, el('defs', {}, svg));
+    el('path', { d: 'M0,0 L10,5 L0,10 z', 'class': 'pa-mkf' }, mk);
+    return 'url(#' + id + ')';
+  }
+  function arrow(svg, x1, y1, x2, y2, mk) { return el('path', { d: 'M' + x1 + ',' + y1 + ' L' + x2 + ',' + y2, 'class': 'pa-arrow', 'marker-end': mk }, svg); }
+  /* colours from the theme, for canvases */
+  function hexRGB(s) {
+    s = (s || '').trim();
+    var m = s.match(/^#([0-9a-f]{6})$/i);
+    if (m) { var v = parseInt(m[1], 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; }
+    m = s.match(/rgba?\(([^)]+)\)/);
+    if (m) return m[1].split(',').slice(0, 3).map(function (t) { return parseFloat(t); });
+    return [128, 128, 128];
+  }
+  function themeRGB(node, name) { return hexRGB(getComputedStyle(node).getPropertyValue(name)); }
+  var redrawers = [];
+  function onTheme(fn) { redrawers.push(fn); }
+  new MutationObserver(function () { redrawers.forEach(function (f) { f(); }); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { redrawers.forEach(function (f) { f(); }); }); } catch (e) {} }
+
+  /* ---------- a synthetic steel plate, and image operations on it ---------- */
+  var PN = 120;
+  var CRACK = [[20, 100], [36, 92], [50, 86], [63, 77], [78, 72], [94, 62]];
+  function segDist(px, py, a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], t = ((px - a[0]) * dx + (py - a[1]) * dy) / (dx * dx + dy * dy);
+    t = Math.max(0, Math.min(1, t));
+    var x = a[0] + t * dx - px, y = a[1] + t * dy - py;
+    return Math.sqrt(x * x + y * y);
+  }
+  var plateCache = {};
+  function plate(kind) {
+    if (plateCache[kind]) return plateCache[kind];
+    var a = new Float32Array(PN * PN), r = rng(7), crack = kind === 'crack' || kind === 'both', shadow = kind === 'shadow' || kind === 'both';
+    for (var y = 0; y < PN; y++) for (var x = 0; x < PN; x++) {
+      var v = 0.66 + 0.1 * x / PN - 0.05 * y / PN + 0.022 * Math.sin(y * 1.7 + 3 * Math.sin(x * 0.05)) + 0.035 * (r() - 0.5);
+      var dh = Math.hypot(x - 34, y - 36);
+      if (dh < 12) v = 0.12 + 0.03 * r(); else if (dh < 13.6) v = 0.9;
+      if (x >= 70 && x <= 104 && y >= 22 && y <= 34) v = 0.17 + 0.03 * r();
+      if (crack) {
+        var d = 9;
+        for (var i = 0; i < CRACK.length - 1; i++) d = Math.min(d, segDist(x, y, CRACK[i], CRACK[i + 1]));
+        if (d < 0.9) v *= 0.25; else if (d < 1.6) v *= 0.6;
+      }
+      if (shadow) { var ds = (x - 94) * (x - 94) + (y - 102) * (y - 102); v *= 1 - 0.5 * Math.exp(-ds / (2 * 121)); }
+      a[y * PN + x] = Math.max(0, Math.min(1, v));
+    }
+    plateCache[kind] = a;
+    return a;
+  }
+  function conv3(img, N, K) {          /* 3 x 3, "same" size, edges replicated */
+    var out = new Float32Array(N * N);
+    for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
+      var s = 0;
+      for (var m = 0; m < 3; m++) for (var n = 0; n < 3; n++) {
+        var yy = Math.min(N - 1, Math.max(0, y + m - 1)), xx = Math.min(N - 1, Math.max(0, x + n - 1));
+        s += K[m][n] * img[yy * N + xx];
+      }
+      out[y * N + x] = s;
+    }
+    return out;
+  }
+  function boxBlur(img, N, r) {        /* separable box filter of width 2r+1 */
+    var tmp = new Float32Array(N * N), out = new Float32Array(N * N), w = 2 * r + 1, x, y, k;
+    for (y = 0; y < N; y++) for (x = 0; x < N; x++) { var s = 0; for (k = -r; k <= r; k++) s += img[y * N + Math.min(N - 1, Math.max(0, x + k))]; tmp[y * N + x] = s / w; }
+    for (y = 0; y < N; y++) for (x = 0; x < N; x++) { var t = 0; for (k = -r; k <= r; k++) t += tmp[Math.min(N - 1, Math.max(0, y + k)) * N + x]; out[y * N + x] = t / w; }
+    return out;
+  }
+  function ridge(img, N) {             /* thin dark lines: darker than both sides, in any of 4 directions */
+    var out = new Float32Array(N * N), D = [[0, 2], [2, 0], [2, 2], [2, -2]];
+    for (var y = 2; y < N - 2; y++) for (var x = 2; x < N - 2; x++) {
+      var c = img[y * N + x], best = 0;
+      for (var i = 0; i < 4; i++) {
+        var a = img[(y + D[i][0]) * N + x + D[i][1]], b = img[(y - D[i][0]) * N + x - D[i][1]];
+        best = Math.max(best, Math.min(a, b) - c);
+      }
+      out[y * N + x] = best;
+    }
+    return out;
+  }
+  function pool2(img, N) {
+    var M = N >> 1, out = new Float32Array(M * M);
+    for (var y = 0; y < M; y++) for (var x = 0; x < M; x++)
+      out[y * M + x] = Math.max(img[2 * y * N + 2 * x], img[2 * y * N + 2 * x + 1], img[(2 * y + 1) * N + 2 * x], img[(2 * y + 1) * N + 2 * x + 1]);
+    return out;
+  }
+  function relu(a, t) { var o = new Float32Array(a.length); t = t || 0; for (var i = 0; i < a.length; i++) o[i] = Math.max(0, a[i] - t); return o; }
+  /* draw an array on a canvas: 'gray' (0..1), 'pos' (sequential), 'signed' (diverging) */
+  function paint(canvas, arr, N, mode, node) {
+    canvas.width = N; canvas.height = N;
+    var ctx = canvas.getContext('2d'), im = ctx.createImageData(N, N), d = im.data, i;
+    var paper = themeRGB(node, '--paper'), pos = themeRGB(node, '--sec'), neg = themeRGB(node, '--bad'), ink = themeRGB(node, '--ink');
+    var mx = 1e-9;
+    if (mode !== 'gray') for (i = 0; i < arr.length; i++) mx = Math.max(mx, Math.abs(arr[i]));
+    for (i = 0; i < arr.length; i++) {
+      var c;
+      if (mode === 'gray') { var g = Math.round(255 * arr[i]); c = [g, g, g]; }
+      else {
+        var t = arr[i] / mx, col = t >= 0 ? (mode === 'pos' ? ink : pos) : neg, u = Math.pow(Math.abs(t), 0.7);
+        if (mode === 'pos') col = pos;
+        c = [paper[0] + (col[0] - paper[0]) * u, paper[1] + (col[1] - paper[1]) * u, paper[2] + (col[2] - paper[2]) * u];
+      }
+      d[4 * i] = c[0]; d[4 * i + 1] = c[1]; d[4 * i + 2] = c[2]; d[4 * i + 3] = 255;
+    }
+    ctx.putImageData(im, 0, 0);
+  }
+
+  /* ---------- the convolution core used by the grid demos ---------- */
+  var KERNELS = {
+    vline: { k: [[-1, 1, -1], [-1, 1, -1], [-1, 1, -1]], name: 'vertical line' },
+    hline: { k: [[-1, -1, -1], [1, 1, 1], [-1, -1, -1]], name: 'horizontal line' },
+    diag: { k: [[1, -1, -1], [-1, 1, -1], [-1, -1, 1]], name: 'diagonal' },
+    plus: { k: [[-1, 1, -1], [1, 1, 1], [-1, 1, -1]], name: 'cross' },
+    edge: { k: [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]], name: 'vertical edge' }
+  };
+  function kmax(K) { var s = 0; K.forEach(function (r) { r.forEach(function (v) { if (v > 0) s += v; }); }); return s; }
+  function convGrid(G, K) {
+    var n = G.length, m = n - 2, out = [];
+    for (var i = 0; i < m; i++) { var row = []; for (var j = 0; j < m; j++) { var s = 0; for (var a = 0; a < 3; a++) for (var b = 0; b < 3; b++) s += K[a][b] * G[i + a][j + b]; row.push(s); } out.push(row); }
+    return out;
+  }
+  function oFill(v, mx, mn) {
+    if (v > 0) return 'color-mix(in srgb, var(--sec) ' + Math.round(18 + 70 * v / mx) + '%, var(--paper))';
+    if (v < 0) return 'color-mix(in srgb, var(--bad) ' + Math.round(8 + 22 * v / mn) + '%, var(--paper))';
+    return 'var(--paper)';
+  }
+  function fmt(v) { return v < 0 ? '\u2212' + (-v) : String(v); }
+
+  /* ---------- title: a kernel sliding over a small image ---------- */
+  (function () {
+    var svg = $('#hero-conv'); if (!svg) return;
+    var G = [], n = 8, i, j;
+    for (i = 0; i < n; i++) { G.push([]); for (j = 0; j < n; j++) G[i].push(0); }
+    [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [5, 1], [6, 2], [7, 3]].forEach(function (p) { G[p[0]][p[1]] = 1; });
+    var K = KERNELS.diag.k, O = convGrid(G, K), mx = 3, cs = 23, ox = 10, oy = 16, qs = 23, qx = 236, qy = 214;
+    for (i = 0; i < n; i++) for (j = 0; j < n; j++) rect(svg, ox + j * cs, oy + i * cs, cs, cs, 'g-cell' + (G[i][j] ? ' on' : ''));
+    var win = rect(svg, ox, oy, 3 * cs, 3 * cs, 'kwin');
+    var cells = [];
+    for (i = 0; i < 6; i++) for (j = 0; j < 6; j++) cells.push(rect(svg, qx + j * qs, qy + i * qs, qs, qs, 'o-cell', { style: 'fill: var(--paper)' }));
+    var tie = el('path', { d: '', 'class': 'tie' }, svg);
+    txt(svg, ox + 4 * cs, oy + n * cs + 20, 'image', 'tick');
+    txt(svg, qx + 3 * qs, qy + 6 * qs + 20, 'feature map', 'tick');
+    var k = 0;
+    function step() {
+      var r = Math.floor(k / 6), c = k % 6;
+      win.setAttribute('x', ox + c * cs); win.setAttribute('y', oy + r * cs);
+      for (var t = 0; t < 36; t++) {
+        var v = O[Math.floor(t / 6)][t % 6], shown = t <= k;
+        cells[t].setAttribute('style', 'fill: ' + (shown ? oFill(v, mx, -9) : 'var(--paper)'));
+        cells[t].setAttribute('class', 'o-cell' + (shown && v === mx ? ' match' : ''));
+      }
+      tie.setAttribute('d', 'M' + (ox + c * cs + 1.5 * cs) + ',' + (oy + r * cs + 1.5 * cs) + ' L' + (qx + c * qs + qs / 2) + ',' + (qy + r * qs + qs / 2));
+    }
+    var hold = 0;
+    step();
+    setInterval(function () {
+      if (!isActive(svg) || reduceMotion) return;
+      if (k < 35) { k++; step(); } else if (++hold > 5) { hold = 0; k = 0; step(); }
+    }, 420);
+  })();
+
+  /* ---------- plan strip ---------- */
+  (function () {
+    var svg = $('#plan-strip'); if (!svg) return;
+    var P = [[10, 10], [290, 10], [10, 210], [290, 210]], W = 260, H = 180, names = ['1  kernels on a grid', '2  what the network sees', '3  the tasks', '4  detection with YOLO'];
+    P.forEach(function (p, i) { rect(svg, p[0], p[1], W, H, 'cf-frame', { rx: 6 }); txt(svg, p[0] + 12, p[1] + H - 10, names[i], 'lbl-sec', 'start'); });
+    var i, j, r = rng(3);
+    for (i = 0; i < 6; i++) for (j = 0; j < 6; j++) rect(svg, 30 + j * 20, 24 + i * 20, 20, 20, 'g-cell' + ((i === j || i + 1 === j) ? ' on' : ''));
+    rect(svg, 50, 44, 60, 60, 'kwin');
+    for (i = 0; i < 3; i++) for (j = 0; j < 3; j++) { rect(svg, 180 + j * 22, 50 + i * 22, 22, 22, 'o-cell'); txt(svg, 191 + j * 22, 65 + i * 22, ['1', '\u22121', '\u22121'][(j - i + 3) % 3], 'tick'); }
+    for (i = 0; i < 12; i++) for (j = 0; j < 20; j++) { var v = Math.exp(-((j - 12) * (j - 12) + (i - 5) * (i - 5)) / 18) + 0.15 * r(); rect(svg, 310 + j * 11, 24 + i * 11, 11, 11, null, { style: 'fill: color-mix(in srgb, var(--sec) ' + Math.round(85 * Math.min(1, v)) + '%, var(--paper))' }); }
+    [[30, 'crack'], [110, ''], [190, '']].forEach(function (q, k) {
+      rect(svg, q[0], 230, 64, 64, 'cf-frame');
+      el('path', { d: 'M' + (q[0] + 8) + ',282 L' + (q[0] + 30) + ',262 L' + (q[0] + 56) + ',244', 'class': 'c-sec', style: 'stroke-width: 3' }, svg);
+      if (k === 0) txt(svg, q[0] + 32, 312, 'label', 'tick');
+      if (k === 1) { rect(svg, q[0] + 4, 238, 56, 50, 'det-box', { style: 'stroke: var(--sec)' }); txt(svg, q[0] + 32, 312, 'box', 'tick'); }
+      if (k === 2) { el('path', { d: 'M' + (q[0] + 8) + ',282 L' + (q[0] + 30) + ',262 L' + (q[0] + 56) + ',244', style: 'stroke: color-mix(in srgb, var(--sec) 45%, transparent); stroke-width: 9; fill: none; stroke-linecap: round' }, svg); txt(svg, q[0] + 32, 312, 'mask', 'tick'); }
+    });
+    [[318, 238, 70, 86, 'person 0.93'], [404, 250, 104, 70, 'excavator 0.88'], [512, 292, 26, 30, '']].forEach(function (b) {
+      rect(svg, b[0], b[1], b[2], b[3], 'det-box', { style: 'stroke: var(--sec)' });
+      if (b[4]) txt(svg, b[0] + 2, b[1] - 4, b[4], 'tick', 'start');
+    });
+  })();
+
+  /* ---------- the same pattern at two positions ---------- */
+  (function () {
+    var svg = $('#shift-fig'); if (!svg) return;
+    var n = 12, cs = 17, shape = [[2, 3], [2, 4], [2, 5], [2, 6], [2, 7], [3, 5], [4, 5], [5, 5], [6, 5], [7, 5]];
+    function grid(ox, dx, dy) {
+      var on = {};
+      shape.forEach(function (p) { on[(p[0] + dy) + ',' + (p[1] + dx)] = 1; });
+      for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) rect(svg, ox + j * cs, 20 + i * cs, cs, cs, 'g-cell' + (on[i + ',' + j] ? ' on' : ''));
+      return on;
+    }
+    var a = grid(10, 0, 0), b = grid(250, 4, 2), shared = 0;
+    for (var key in a) if (b[key]) shared++;
+    txt(svg, 10 + n * cs / 2, 20 + n * cs + 22, 'pattern here', 'tick');
+    txt(svg, 250 + n * cs / 2, 20 + n * cs + 22, 'moved 4 right, 2 down', 'tick');
+    txt(svg, 235, 288, 'active pixels in common: ' + shared + ' of ' + shape.length, 'lbl-sec');
+  })();
+
+  /* ---------- try it: slide the kernel ---------- */
+  (function () {
+    var root = $('#conv-demo'); if (!root) return;
+    var svg = $('svg.fig', root), read = $('.cd-read', root), kBtns = $$('[data-k]', root);
+    var bPlay = $('[data-act=play]', root);
+    var N = 12, M = 10, cs = 28, IX = 20, IY = 34, KX = 420, KY = 60, kc = 40, PX = 590, OX = 790, OY = 34, oc = 33.5;
+    var G = [], i, j;
+    for (i = 0; i < N; i++) { G.push([]); for (j = 0; j < N; j++) G[i].push(0); }
+    function setOn(list) { list.forEach(function (p) { G[p[0]][p[1]] = 1; }); }
+    function example() {
+      for (i = 0; i < N; i++) for (j = 0; j < N; j++) G[i][j] = 0;
+      setOn([[1, 2], [2, 2], [3, 2], [4, 2], [5, 2]]);
+      setOn([[1, 6], [2, 7], [3, 8], [4, 9], [5, 10]]);
+      setOn([[8, 1], [8, 2], [8, 3], [8, 4], [8, 5]]);
+      setOn([[8, 9], [9, 8], [9, 9], [9, 10], [10, 9]]);
+    }
+    example();
+    var kname = 'vline', pos = 0, playing = true;
+    /* static frame */
+    txt(svg, IX, 20, 'input image, 12 \u00d7 12 (click a cell to draw)', 'lbl', 'start');
+    txt(svg, KX, 44, 'kernel', 'lbl', 'start');
+    txt(svg, PX, 44, 'patch \u00d7 kernel', 'lbl', 'start');
+    txt(svg, OX, 20, 'feature map, 10 \u00d7 10', 'lbl', 'start');
+    var inCells = [], kCells = [], kTxt = [], pCells = [], pTxt = [], oCells = [], oTxt = [];
+    for (i = 0; i < N; i++) for (j = 0; j < N; j++) {
+      (function (a, b) {
+        var r = rect(svg, IX + b * cs, IY + a * cs, cs, cs, 'g-cell');
+        r.style.cursor = 'pointer';
+        r.addEventListener('click', function () { G[a][b] = 1 - G[a][b]; render(); });
+        inCells.push(r);
+      })(i, j);
+    }
+    var win = rect(svg, IX, IY, 3 * cs, 3 * cs, 'kwin', { 'pointer-events': 'none' });
+    for (i = 0; i < 3; i++) for (j = 0; j < 3; j++) {
+      kCells.push(rect(svg, KX + j * kc, KY + i * kc, kc, kc, 'k-cell'));
+      kTxt.push(txt(svg, KX + j * kc + kc / 2, KY + i * kc + kc / 2 + 6, '', 'k-txt'));
+      pCells.push(rect(svg, PX + j * kc, KY + i * kc, kc, kc, 'k-cell'));
+      pTxt.push(txt(svg, PX + j * kc + kc / 2, KY + i * kc + kc / 2 + 6, '', 'k-txt'));
+    }
+    var sumT = txt(svg, PX + 60, KY + 3 * kc + 34, '', 'sum-txt');
+    var maxT = txt(svg, KX, KY + 3 * kc + 34, '', 'tick', 'start');
+    var verdict = txt(svg, KX, KY + 3 * kc + 70, '', 'lbl-sec', 'start');
+    var verdict2 = txt(svg, KX, KY + 3 * kc + 90, '', 'tick', 'start');
+    txt(svg, KX, 390, 'bold cells: the image contains', 'tick', 'start');
+    txt(svg, KX, 406, 'exactly the kernel\u2019s pattern', 'tick', 'start');
+    for (i = 0; i < M; i++) for (j = 0; j < M; j++) {
+      oCells.push(rect(svg, OX + j * oc, OY + i * oc, oc, oc, 'o-cell'));
+      oTxt.push(txt(svg, OX + j * oc + oc / 2, OY + i * oc + oc / 2 + 4.5, '', 'o-txt'));
+    }
+    var tie = el('path', { d: '', 'class': 'tie' }, svg);
+    function render() {
+      var K = KERNELS[kname].k, mx = kmax(K), O = convGrid(G, K), mn = -1;
+      O.forEach(function (r) { r.forEach(function (v) { mn = Math.min(mn, v); }); });
+      var r0 = Math.floor(pos / M), c0 = pos % M;
+      for (var t = 0; t < N * N; t++) inCells[t].setAttribute('class', 'g-cell' + (G[Math.floor(t / N)][t % N] ? ' on' : ''));
+      win.setAttribute('x', IX + c0 * cs); win.setAttribute('y', IY + r0 * cs);
+      var s = 0;
+      for (var a = 0; a < 3; a++) for (var b = 0; b < 3; b++) {
+        var w = K[a][b], x = G[r0 + a][c0 + b], q = 3 * a + b, pr = w * x;
+        kTxt[q].textContent = fmt(w);
+        kCells[q].setAttribute('style', 'fill: ' + (w > 0 ? 'color-mix(in srgb, var(--sec) 30%, var(--paper))' : w < 0 ? 'color-mix(in srgb, var(--bad) 16%, var(--paper))' : 'var(--paper)'));
+        pTxt[q].textContent = x + '\u00d7' + fmt(w);
+        pCells[q].setAttribute('style', 'fill: ' + (pr > 0 ? 'color-mix(in srgb, var(--sec) 30%, var(--paper))' : pr < 0 ? 'color-mix(in srgb, var(--bad) 16%, var(--paper))' : 'var(--paper)'));
+        s += pr;
+      }
+      sumT.textContent = 'sum = ' + fmt(s);
+      maxT.textContent = 'largest possible sum: ' + mx;
+      verdict.textContent = s === mx ? 'perfect match: drawn bold' : s > 0 ? 'partial match' : s === 0 ? 'nothing to see here' : 'opposite of the pattern';
+      verdict2.textContent = 'window at row ' + r0 + ', column ' + c0;
+      for (var u = 0; u < M * M; u++) {
+        var v = O[Math.floor(u / M)][u % M], shown = u <= pos;
+        oCells[u].setAttribute('style', 'fill: ' + (shown ? oFill(v, mx, mn) : 'var(--paper)'));
+        oCells[u].setAttribute('class', 'o-cell' + (shown ? '' : ' hidden') + (shown && v === mx ? ' match' : '') + (u === pos ? ' now' : ''));
+        oTxt[u].textContent = shown ? fmt(v) : '';
+        oTxt[u].setAttribute('class', 'o-txt' + (shown && v === mx ? ' match' : ''));
+      }
+      tie.setAttribute('d', 'M' + (IX + c0 * cs + 3 * cs) + ',' + (IY + r0 * cs + 1.5 * cs) + ' L' + (OX + c0 * oc) + ',' + (OY + r0 * oc + oc / 2));
+      var matches = 0;
+      O.forEach(function (rr) { rr.forEach(function (v) { if (v === mx) matches++; }); });
+      read.textContent = 'Kernel: ' + KERNELS[kname].name + '. The full map has ' + matches + ' perfect match' + (matches === 1 ? '' : 'es') + '. Scan position ' + (pos + 1) + ' of ' + M * M + '.';
+    }
+    function setPlay(p) { playing = p; bPlay.textContent = p ? 'Pause' : 'Play'; bPlay.setAttribute('aria-pressed', String(p)); }
+    kBtns.forEach(function (b) { b.addEventListener('click', function () { kname = b.getAttribute('data-k'); setPressed(kBtns, b); render(); }); });
+    bPlay.addEventListener('click', function () { setPlay(!playing); });
+    $('[data-act=step]', root).addEventListener('click', function () { setPlay(false); pos = (pos + 1) % (M * M); render(); });
+    $('[data-act=all]', root).addEventListener('click', function () { setPlay(false); pos = M * M - 1; render(); });
+    $('[data-act=restart]', root).addEventListener('click', function () { example(); pos = 0; setPlay(true); render(); });
+    setInterval(function () { if (playing && isActive(root) && pos < M * M - 1) { pos++; render(); } }, reduceMotion ? 900 : 380);
+    render();
+  })();
+
+  /* ---------- real kernels on the plate ---------- */
+  (function () {
+    var root = $('#edge-demo'); if (!root) return;
+    var cin = $('[data-c=in]', root), cout = $('[data-c=out]', root), kBtns = $$('[data-k]', root), kBox = $('.ed-k', root), relu$ = $('#ed-relu'), cap = $('.ed-cap', root);
+    var KS = {
+      v: { k: [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]], name: 'vertical edges' },
+      h: { k: [[-1, -1, -1], [0, 0, 0], [1, 1, 1]], name: 'horizontal edges' },
+      d: { k: [[0, 1, 1], [-1, 0, 1], [-1, -1, 0]], name: 'diagonal edges' },
+      blur: { k: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], name: 'blur (each weight 1/9)', scale: 1 / 9 },
+      lap: { k: [[0, -1, 0], [-1, 4, -1], [0, -1, 0]], name: 'outline (Laplacian)' }
+    };
+    var kn = 'v', img = plate('crack');
+    function draw() {
+      var K = KS[kn], k = K.k.map(function (r) { return r.map(function (v) { return v * (K.scale || 1); }); });
+      var out = conv3(img, PN, k);
+      if (relu$.checked) out = relu(out);
+      paint(cin, img, PN, 'gray', root);
+      paint(cout, out, PN, kn === 'blur' ? 'pos' : 'signed', root);
+      cap.textContent = 'output: ' + K.name + (relu$.checked ? ', after ReLU' : '');
+      kBox.innerHTML = '<div class="mat-col"><div class="mat" style="grid-template-columns: repeat(3, auto)">' + K.k.map(function (r) { return r.map(function (v) { return '<span>' + fmt(v) + '</span>'; }).join(''); }).join('') + '</div><span class="mat-lbl">kernel' + (K.scale ? ' \u00d7 1/9' : '') + '</span></div>';
+    }
+    kBtns.forEach(function (b) { b.addEventListener('click', function () { kn = b.getAttribute('data-k'); setPressed(kBtns, b); draw(); }); });
+    relu$.addEventListener('change', draw);
+    onTheme(draw);
+    draw();
+  })();
+
+  /* ---------- stride and padding ---------- */
+  (function () {
+    var root = $('#sp-demo'); if (!root) return;
+    var svg = $('svg.fig', root), nI = $('#sp-n'), kI = $('#sp-k'), sI = $('#sp-s'), pBtns = $$('[data-pad]', root), out = $('.readout', root), pad = 'valid';
+    function draw() {
+      var n = +nI.value, k = +kI.value, s = +sI.value, p = pad === 'same' ? (k - 1) / 2 : 0;
+      nI.nextElementSibling.textContent = n; kI.nextElementSibling.textContent = k; sI.nextElementSibling.textContent = s;
+      var tot = n + 2 * p, cw = Math.min(34, 580 / tot), x0 = (600 - tot * cw) / 2, y0 = 92, no = Math.floor((n + 2 * p - k) / s) + 1, i;
+      clear(svg);
+      for (i = 0; i < tot; i++) {
+        var isPad = i < p || i >= p + n;
+        rect(svg, x0 + i * cw, y0, cw, cw, isPad ? 'g-cell pad' : 'g-cell');
+        if (!isPad && cw > 18) txt(svg, x0 + i * cw + cw / 2, y0 + cw / 2 + 5, String(i - p + 1), 'tick');
+        if (isPad && cw > 14) txt(svg, x0 + i * cw + cw / 2, y0 + cw / 2 + 5, '0', 'tick');
+      }
+      for (var o = 0; o < no; o++) {
+        var a = x0 + o * s * cw, lev = o % 3, yy = y0 - 12 - lev * 16;
+        el('path', { d: 'M' + (a + 2) + ',' + (yy + 8) + ' V' + yy + ' H' + (a + k * cw - 2) + ' V' + (yy + 8), 'class': 'kbr' }, svg);
+        el('circle', { cx: a + k * cw / 2, cy: y0 + cw + 26, r: Math.min(9, cw / 2.4), 'class': 'node' }, svg);
+      }
+      txt(svg, 8, y0 + cw / 2 + 5, 'input', 'tick', 'start');
+      txt(svg, 8, y0 + cw + 31, 'output', 'tick', 'start');
+      out.innerHTML = 'n<sub>out</sub> = \u230a(' + n + ' + 2\u00b7' + p + ' \u2212 ' + k + ') / ' + s + '\u230b + 1 = <b>' + no + '</b>' + (pad === 'same' && s === 1 ? ': the same size as the input.' : '.');
+    }
+    [nI, kI, sI].forEach(function (i) { i.addEventListener('input', draw); });
+    pBtns.forEach(function (b) { b.addEventListener('click', function () { pad = b.getAttribute('data-pad'); setPressed(pBtns, b); draw(); }); });
+    draw();
+  })();
+
+  /* ---------- channels and filters ---------- */
+  (function () {
+    var svg = $('#chan-fig'); if (!svg) return;
+    var mk = arrowDefs(svg, 'chan-mk');
+    function slab(x, y, w, h, n, dx, dy, cls) { for (var i = n - 1; i >= 0; i--) rect(svg, x + i * dx, y - i * dy, w, h, cls); }
+    slab(20, 120, 120, 120, 3, 10, 10, 'slab');
+    txt(svg, 100, 275, 'input: H \u00d7 W \u00d7 C', 'lbl');
+    slab(200, 150, 40, 40, 3, 8, 8, 'slab k');
+    txt(svg, 236, 220, 'one kernel', 'tick');
+    txt(svg, 236, 236, 'k \u00d7 k \u00d7 C', 'tick');
+    arrow(svg, 270, 165, 300, 165, mk);
+    rect(svg, 310, 110, 100, 100, 'slab one');
+    txt(svg, 360, 236, 'one feature map', 'tick');
+    arrow(svg, 420, 165, 444, 165, mk);
+    slab(450, 140, 70, 70, 6, 6, 6, 'slab one');
+    txt(svg, 500, 236, 'F kernels:', 'tick');
+    txt(svg, 500, 252, 'H\u2032 \u00d7 W\u2032 \u00d7 F', 'lbl');
+    txt(svg, 280, 310, 'every kernel spans all C input channels', 'tick');
+  })();
+
+  /* ---------- max pooling, the Lecture 5 example ---------- */
+  (function () {
+    var svg = $('#pool-fig'); if (!svg) return;
+    var X = [[1, 3, 2, 4], [2, 8, 7, 1], [0, 2, 3, 9], [1, 5, 6, 2]], cs = 46, cols = ['--p1', '--p4', '--p6', '--p5'];
+    var mk = arrowDefs(svg, 'pool-mk');
+    for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) {
+      var w = 2 * (i >> 1) + (j >> 1), big = X[i][j] === Math.max(X[i & 2][j & 2], X[i & 2][(j & 2) + 1], X[(i & 2) + 1][j & 2], X[(i & 2) + 1][(j & 2) + 1]);
+      rect(svg, 10 + j * cs, 20 + i * cs, cs, cs, 'o-cell', { style: 'fill: color-mix(in srgb, var(' + cols[w] + ') 22%, var(--paper))' });
+      txt(svg, 10 + j * cs + cs / 2, 20 + i * cs + cs / 2 + 6, String(X[i][j]), big ? 'o-txt match' : 'o-txt');
+    }
+    arrow(svg, 210, 112, 290, 112, mk);
+    txt(svg, 250, 100, '2 \u00d7 2 max', 'tick');
+    for (var q = 0; q < 4; q++) {
+      var a = q >> 1, b = q & 1, v = Math.max(X[2 * a][2 * b], X[2 * a][2 * b + 1], X[2 * a + 1][2 * b], X[2 * a + 1][2 * b + 1]);
+      rect(svg, 310 + b * 60, 50 + a * 60, 60, 60, 'o-cell', { style: 'fill: color-mix(in srgb, var(' + cols[q] + ') 30%, var(--paper))' });
+      txt(svg, 310 + b * 60 + 30, 50 + a * 60 + 38, String(v), 'o-txt match');
+    }
+    txt(svg, 102, 222, 'input 4 \u00d7 4', 'tick');
+    txt(svg, 370, 192, 'output 2 \u00d7 2', 'tick');
+  })();
+
+  /* ---------- pooling and small shifts ---------- */
+  (function () {
+    var root = $('#pool-shift'); if (!root) return;
+    var svg = $('svg.fig', root), read = $('.ps-read', root), r = rng(11), B = [], i, j, fy = 2, fx = 3, prev = null;
+    for (i = 0; i < 8; i++) { B.push([]); for (j = 0; j < 8; j++) B[i].push(Math.floor(r() * 3)); }
+    function draw() {
+      clear(svg);
+      var cs = 30, X = [], P = [];
+      for (i = 0; i < 8; i++) { X.push(B[i].slice()); }
+      X[fy][fx] = 9;
+      for (i = 0; i < 4; i++) { P.push([]); for (j = 0; j < 4; j++) P[i].push(Math.max(X[2 * i][2 * j], X[2 * i][2 * j + 1], X[2 * i + 1][2 * j], X[2 * i + 1][2 * j + 1])); }
+      for (i = 0; i < 8; i++) for (j = 0; j < 8; j++) {
+        rect(svg, 10 + j * cs, 10 + i * cs, cs, cs, 'o-cell', { style: 'fill: ' + (X[i][j] === 9 ? 'color-mix(in srgb, var(--sec) 80%, var(--paper))' : 'var(--paper)') });
+        txt(svg, 10 + j * cs + cs / 2, 10 + i * cs + cs / 2 + 5, String(X[i][j]), X[i][j] === 9 ? 'o-txt match' : 'o-txt');
+      }
+      for (i = 0; i <= 4; i++) {
+        el('line', { x1: 10, x2: 10 + 8 * cs, y1: 10 + 2 * i * cs, y2: 10 + 2 * i * cs, 'class': 'pool-grid' }, svg);
+        el('line', { y1: 10, y2: 10 + 8 * cs, x1: 10 + 2 * i * cs, x2: 10 + 2 * i * cs, 'class': 'pool-grid' }, svg);
+      }
+      var qs = 46, qx = 330, qy = 40;
+      for (i = 0; i < 4; i++) for (j = 0; j < 4; j++) {
+        rect(svg, qx + j * qs, qy + i * qs, qs, qs, 'o-cell', { style: 'fill: ' + (P[i][j] === 9 ? 'color-mix(in srgb, var(--sec) 80%, var(--paper))' : 'var(--paper)') });
+        txt(svg, qx + j * qs + qs / 2, qy + i * qs + qs / 2 + 6, String(P[i][j]), P[i][j] === 9 ? 'o-txt match' : 'o-txt');
+      }
+      txt(svg, 130, 268, 'feature map 8 \u00d7 8', 'tick');
+      txt(svg, qx + 2 * qs, qy + 4 * qs + 22, 'after 2 \u00d7 2 max pooling', 'tick');
+      var key = JSON.stringify(P);
+      if (prev === null) read.textContent = 'The strong response (9) sits in one 2 \u00d7 2 window, so it appears once in the pooled map.';
+      else read.textContent = key === prev ? 'Moved within its 2 \u00d7 2 window: the pooled map is unchanged.' : 'Moved into a different window: the pooled map changed.';
+      prev = key;
+    }
+    $$('[data-mv]', root).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = b.getAttribute('data-mv').split(',').map(Number);
+        fx = Math.max(0, Math.min(7, fx + d[0])); fy = Math.max(0, Math.min(7, fy + d[1])); draw();
+      });
+    });
+    draw();
+  })();
+
+  /* ---------- receptive field ---------- */
+  (function () {
+    var svg = $('#rf-fig'); if (!svg) return;
+    var n = 18, cs = 16, ox = 30, oy = 22, sizes = [[3, 'conv 1'], [4, 'pool 1'], [8, 'conv 2'], [10, 'pool 2'], [18, 'conv 3']], cols = ['--p1', '--p6', '--p5', '--p4', '--p2'];
+    for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) rect(svg, ox + j * cs, oy + i * cs, cs, cs, 'g-cell');
+    sizes.forEach(function (s, k) {
+      rect(svg, ox, oy + (n - s[0]) * cs, s[0] * cs, s[0] * cs, 'rf-box', { style: 'stroke: var(' + cols[k] + ')' });
+      txt(svg, ox + n * cs + 12, oy + (n - s[0]) * cs + 14, s[1] + ': ' + s[0] + ' \u00d7 ' + s[0], 'lbl', 'start').setAttribute('style', 'fill: var(' + cols[k] + ')');
+    });
+    txt(svg, ox + n * cs / 2, oy + n * cs + 22, 'input pixels seen by one unit', 'tick');
+  })();
+
+  /* ---------- the CNN architecture ---------- */
+  (function () {
+    var svg = $('#arch-fig'); if (!svg) return;
+    var L = [
+      ['input', 28, 1, '28\u00d728\u00d71', 'in'], ['conv 3\u00d73, 32', 26, 32, '26\u00d726\u00d732', 'conv'], ['max pool', 13, 32, '13\u00d713\u00d732', 'pool'],
+      ['conv 3\u00d73, 64', 11, 64, '11\u00d711\u00d764', 'conv'], ['max pool', 5, 64, '5\u00d75\u00d764', 'pool'], ['conv 3\u00d73, 128', 3, 128, '3\u00d73\u00d7128', 'conv'],
+      ['flatten', 0, 0, '1,152', 'flat'], ['dense, softmax', 0, 0, '10', 'dense']
+    ];
+    var x = 20, mk = arrowDefs(svg, 'arch-mk'), cy = 140;
+    L.forEach(function (l, i) {
+      var h, w;
+      if (l[4] === 'flat') { h = 200; w = 14; } else if (l[4] === 'dense') { h = 70; w = 14; }
+      else { h = 40 + l[1] * 5.6; w = 10 + Math.log2(l[2] + 1) * 9; }
+      rect(svg, x, cy - h / 2, w, h, 'blk ' + l[4], { rx: 3 });
+      txt(svg, x + w / 2, cy - h / 2 - 10, l[0], 'tick');
+      txt(svg, x + w / 2, cy + h / 2 + 20, l[3], 'lbl');
+      if (i < L.length - 1) arrow(svg, x + w + 8, cy, x + w + 82, cy, mk);
+      x += w + 90;
+    });
+  })();
+  /* ---------- feature maps of a toy two-layer network ---------- */
+  (function () {
+    var root = $('#fmap-demo'); if (!root) return;
+    var grid = $('.fmap-grid', root), btns = $$('[data-img]', root), kind = 'crack';
+    var TILES = [
+      ['input', 'the image'], ['layer 1', 'vertical edges'], ['layer 1', 'horizontal edges'], ['layer 1', 'diagonal edges'], ['layer 1', 'thin dark lines'],
+      ['layer 1', 'blurred'], ['layer 2', 'edges, pooled'], ['layer 2', 'corners, pooled'], ['layer 2', 'crack-like lines'], ['layer 2', 'dark regions']
+    ];
+    grid.innerHTML = TILES.map(function (t) { return '<figure><canvas class="px"></canvas><figcaption><b>' + t[0] + '</b> ' + t[1] + '</figcaption></figure>'; }).join('');
+    var cv = $$('canvas', grid);
+    function draw() {
+      var I = plate(kind);
+      var v = conv3(I, PN, [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]]), h = conv3(I, PN, [[-1, -1, -1], [0, 0, 0], [1, 1, 1]]);
+      var d = conv3(I, PN, [[0, 1, 1], [-1, 0, 1], [-1, -1, 0]]), rd = relu(ridge(I, PN), 0.1), bl = boxBlur(I, PN, 1);
+      var e = new Float32Array(PN * PN), c = new Float32Array(PN * PN), dk = relu(boxBlur(I, PN, 2).map(function (x) { return 0.5 - x; }));
+      for (var i = 0; i < e.length; i++) { e[i] = Math.abs(v[i]) + Math.abs(h[i]); c[i] = Math.max(0, Math.abs(v[i]) - 0.3) * Math.max(0, Math.abs(h[i]) - 0.3); }
+      var M = PN >> 1;
+      var maps = [[I, PN, 'gray'], [v, PN, 'signed'], [h, PN, 'signed'], [d, PN, 'signed'], [rd, PN, 'pos'],
+                  [bl, PN, 'gray'], [pool2(pool2(e, PN), M), M >> 1, 'pos'], [pool2(pool2(c, PN), M), M >> 1, 'pos'],
+                  [pool2(pool2(rd, PN), M), M >> 1, 'pos'], [pool2(pool2(dk, PN), M), M >> 1, 'pos']];
+      /* use a fixed scale for the crack map, so a missing crack looks empty, not amplified noise */
+      maps.forEach(function (m, k) {
+        var arr = m[0];
+        if (k === 4 || k === 8) { arr = new Float32Array(arr); arr[0] = Math.max(arr[0], 0.35); }
+        paint(cv[k], arr, m[1], m[2], root);
+      });
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { kind = b.getAttribute('data-img'); setPressed(btns, b); draw(); }); });
+    onTheme(draw);
+    draw();
+  })();
+
+  /* ---------- information distillation ---------- */
+  (function () {
+    var svg = $('#distil-fig'); if (!svg) return;
+    var mk = arrowDefs(svg, 'dist-mk'), names = ['raw pixels', 'edges and colours', 'textures and parts', 'object concepts', 'decision'], w = 190, gap = 50;
+    names.forEach(function (n, i) {
+      var x = 10 + i * (w + gap), h = 64 - i * 9;
+      rect(svg, x, 40 - h / 2 + 18, w, h, 'blk conv', { rx: 6, style: 'opacity: ' + (1 - i * 0.13) });
+      txt(svg, x + w / 2, 62, n, 'lbl');
+      if (i < names.length - 1) arrow(svg, x + w + 6, 58, x + w + gap - 6, 58, mk);
+    });
+    txt(svg, 10, 112, 'all the pixel information', 'tick', 'start');
+    txt(svg, 1150, 112, 'only what the task needs', 'tick', 'end');
+  })();
+
+  /* ---------- occlusion sensitivity ---------- */
+  (function () {
+    var root = $('#occ-demo'); if (!root) return;
+    var cImg = $('.occ-img', root), cHeat = $('.occ-heat', root), patch = $('.occ-patch', root), wrap = $('.occ-wrap', root), out = $('.readout', root);
+    var iBtns = $$('[data-img]', root), mBtns = $$('[data-model]', root), kind = 'both', model = 'good', P = 24, px = 60, py = 60, mapOn = false;
+    function feats(I) {
+      var rd = ridge(I, PN), c = 0, i;
+      for (i = 0; i < rd.length; i++) c += Math.max(0, rd[i] - 0.12);
+      var b = boxBlur(I, PN, 4), s = 0;
+      for (i = 0; i < b.length; i++) if (b[i] > 0.25 && b[i] < 0.52) s += 0.52 - b[i];
+      return [c, s];
+    }
+    var fClean = feats(plate('clean')), fCrack = feats(plate('crack')), fShadow = feats(plate('shadow'));
+    function score(f) {          /* the logit: Grad-CAM also works on the class score, before the sigmoid */
+      var c = (f[0] - fClean[0]) / (fCrack[0] - fClean[0]), s = (f[1] - fClean[1]) / (fShadow[1] - fClean[1]);
+      return model === 'good' ? 14 * c - 9 : 6 * c + 7 * s - 5;
+    }
+    function prob(f) { return 1 / (1 + Math.exp(-score(f))); }
+    function occluded(I, cx, cy) {
+      var J = new Float32Array(I), x0 = Math.round(cx - P / 2), y0 = Math.round(cy - P / 2);
+      for (var y = Math.max(0, y0); y < Math.min(PN, y0 + P); y++) for (var x = Math.max(0, x0); x < Math.min(PN, x0 + P); x++) J[y * PN + x] = 0.62;
+      return J;
+    }
+    function update() {
+      var I = plate(kind), f0 = feats(I), f1 = feats(occluded(I, px, py)), p0 = prob(f0), p1 = prob(f1), dz = score(f0) - score(f1);
+      var s = wrap.clientWidth / PN;
+      patch.style.width = patch.style.height = P * s + 'px';
+      patch.style.left = (px - P / 2) * s + 'px'; patch.style.top = (py - P / 2) * s + 'px';
+      out.innerHTML = 'P(defective), whole image: <b>' + p0.toFixed(2) + '</b><br>with the grey square: <b>' + p1.toFixed(2) + '</b>' +
+        (p0 - p1 > 0.1 || dz > 2 ? ' &nbsp;<span class="tag-bad">this region matters</span>' : '') +
+        '<br><span class="muted">' + (p0 > 0.5 ? 'Classified defective.' : 'Classified sound.') + '</span>';
+    }
+    function drawImg() { paint(cImg, plate(kind), PN, 'gray', root); }
+    function heat() {
+      var I = plate(kind), z0 = score(feats(I)), st = 6, n = Math.floor((PN - P) / st) + 1, H = [], mx = 1e-9, i, j;
+      for (i = 0; i < n; i++) for (j = 0; j < n; j++) { var dv = Math.max(0, z0 - score(feats(occluded(I, P / 2 + j * st, P / 2 + i * st)))); H.push(dv); mx = Math.max(mx, dv); }
+      var small = document.createElement('canvas'); small.width = n; small.height = n;
+      var sc = small.getContext('2d'), im = sc.createImageData(n, n);
+      for (i = 0; i < H.length; i++) { var t = H[i] / Math.max(mx, 1.5); im.data[4 * i] = 230; im.data[4 * i + 1] = Math.round(200 * (1 - t)); im.data[4 * i + 2] = 30; im.data[4 * i + 3] = Math.round(210 * Math.min(1, t)); }
+      sc.putImageData(im, 0, 0);
+      var ctx = cHeat.getContext('2d'); ctx.clearRect(0, 0, PN, PN); ctx.imageSmoothingEnabled = true;
+      var off = P / 2 - st / 2;
+      ctx.drawImage(small, off, off, n * st, n * st);
+      mapOn = true;
+    }
+    function clearHeat() { cHeat.getContext('2d').clearRect(0, 0, PN, PN); mapOn = false; }
+    var drag = false;
+    function at(e) { var r = wrap.getBoundingClientRect(), s = r.width / PN; px = Math.max(P / 2, Math.min(PN - P / 2, (e.clientX - r.left) / s)); py = Math.max(P / 2, Math.min(PN - P / 2, (e.clientY - r.top) / s)); update(); }
+    wrap.addEventListener('pointerdown', function (e) { drag = true; wrap.setPointerCapture(e.pointerId); at(e); });
+    wrap.addEventListener('pointermove', function (e) { if (drag) at(e); });
+    wrap.addEventListener('pointerup', function () { drag = false; });
+    iBtns.forEach(function (b) { b.addEventListener('click', function () { kind = b.getAttribute('data-img'); setPressed(iBtns, b); drawImg(); if (mapOn) heat(); update(); }); });
+    mBtns.forEach(function (b) { b.addEventListener('click', function () { model = b.getAttribute('data-model'); setPressed(mBtns, b); if (mapOn) heat(); update(); }); });
+    $('[data-act=map]', root).addEventListener('click', heat);
+    $('[data-act=clear]', root).addEventListener('click', clearHeat);
+    onTheme(drawImg);
+    window.addEventListener('resize', update);
+    drawImg(); update();
+    new MutationObserver(update).observe(slideOf(root), { attributes: true, attributeFilter: ['class'] });
+  })();
+
+  /* ---------- a construction-site scene, shared by several demos ---------- */
+  function drawScene(svg, o) {
+    o = o || {};
+    var objs = [];
+    function grp(cls, id, bbox, inst) { var g = el('g', { 'class': 'obj' }, svg); objs.push({ g: g, cls: cls, id: id, bbox: bbox, inst: inst }); return g; }
+    rect(svg, 0, 0, 640, 236, 'sc-sky');
+    rect(svg, 0, 236, 640, 164, 'sc-ground');
+    el('path', { d: 'M0,236 L640,236', 'class': 'sc-line' }, svg);
+    /* excavator */
+    var g = grp('excavator', 'excavator', [226, 146, 524, 330], 1);
+    rect(g, 326, 292, 196, 36, 'sc-track', { rx: 18 });
+    [346, 380, 414, 448, 482].forEach(function (x) { el('circle', { cx: x + 8, cy: 310, r: 9, 'class': 'sc-wheel' }, g); });
+    rect(g, 352, 226, 128, 66, 'sc-body', { rx: 6 });
+    rect(g, 440, 190, 52, 54, 'sc-body', { rx: 5 });
+    rect(g, 450, 198, 32, 24, 'sc-glass', { rx: 2 });
+    el('path', { d: 'M372,234 L302,160 L254,236', 'class': 'sc-arm' }, g);
+    el('path', { d: 'M232,226 L274,226 L268,262 L240,266 Z', 'class': 'sc-body' }, g);
+    /* workers */
+    function worker(cx, cy, id, inst) {
+      var w = grp('person', id, [cx - 18, cy - 30, cx + 18, cy + 76], inst);
+      el('path', { d: 'M' + (cx - 11) + ',' + (cy - 14) + ' A11,11 0 0 1 ' + (cx + 11) + ',' + (cy - 14) + ' Z', 'class': 'sc-helmet' }, w);
+      el('circle', { cx: cx, cy: cy - 8, r: 9, 'class': 'sc-skin' }, w);
+      rect(w, cx - 14, cy + 2, 28, 40, 'sc-vest', { rx: 5 });
+      el('path', { d: 'M' + (cx - 7) + ',' + (cy + 42) + ' L' + (cx - 9) + ',' + (cy + 76) + ' M' + (cx + 7) + ',' + (cy + 42) + ' L' + (cx + 9) + ',' + (cy + 76), 'class': 'sc-legs' }, w);
+    }
+    worker(120, 226, 'worker 1', 2);
+    worker(580, 232, 'worker 2', 3);
+    /* cones */
+    [[176, 336, 'cone 1', 4], [206, 346, 'cone 2', 5], [598, 350, 'cone 3', 6]].forEach(function (c) {
+      var k = grp('cone', c[2], [c[0] - 13, c[1] - 34, c[0] + 13, c[1] + 2], c[3]);
+      el('path', { d: 'M' + (c[0] - 12) + ',' + c[1] + ' L' + c[0] + ',' + (c[1] - 34) + ' L' + (c[0] + 12) + ',' + c[1] + ' Z', 'class': 'sc-cone' }, k);
+      rect(k, c[0] - 14, c[1] - 2, 28, 4, 'sc-cone');
+    });
+    return objs;
+  }
+  function boxLabel(svg, b, label, cls) {
+    rect(svg, b[0], b[1], b[2] - b[0], b[3] - b[1], 'det-box ' + cls);
+    if (label) {
+      var w = label.length * 7.2 + 10;
+      rect(svg, b[0] - 1, b[1] - 20, w, 20, 'det-chip ' + cls);
+      txt(svg, b[0] + 4, b[1] - 6, label, 'det-txt', 'start');
+    }
+  }
+
+  /* ---------- one scene, five tasks ---------- */
+  (function () {
+    var root = $('#task-demo'); if (!root) return;
+    var svg = $('svg.fig', root), box = $('.td-box', root), btns = $$('[data-task]', root);
+    var INFO = {
+      cls: ['Classification', 'One label for the whole image, with a probability for each class.', 'Sorting inspection photos; is this weld acceptable?', 'one label per image'],
+      loc: ['Classification and localisation', 'One label and one box: the main object only.', 'Where on this component is the defect?', 'one label and one box per image'],
+      det: ['Object detection', 'Every object: a box, a class and a confidence. Any number of objects.', 'Site safety: every person, machine and cone on camera.', 'a box and class for every object'],
+      sem: ['Semantic segmentation', 'A class for every pixel. Both workers are "person": they are not told apart.', 'Crack area on concrete; drivable road surface.', 'a class for every pixel'],
+      ins: ['Instance segmentation', 'A separate mask for every object, so the two workers are different instances.', 'Measuring each corroded region; counting overlapping parts.', 'an outline for every object']
+    };
+    var SEM = { person: '--p8', excavator: '--p10', cone: '--p6' }, INST = ['', '--p10', '--p8', '--p7', '--p6', '--p9', '--p2'];
+    function show(task) {
+      clear(svg);
+      var objs = drawScene(svg), masks = task === 'sem' || task === 'ins';
+      if (masks) {
+        $$('rect', svg).slice(0, 2).forEach(function (r, k) { r.setAttribute('style', 'fill: color-mix(in srgb, var(' + (k ? '--p11' : '--p1') + ') ' + (task === 'sem' ? 35 : 10) + '%, var(--paper))'); });
+        objs.forEach(function (o) {
+          var col = task === 'sem' ? SEM[o.cls] : INST[o.inst];
+          $$('*', o.g).forEach(function (n) {
+            var line = n.classList.contains('sc-arm') || n.classList.contains('sc-legs');
+            n.setAttribute('style', (line ? 'fill: none; ' : 'fill: var(' + col + '); ') + 'stroke: var(' + col + '); opacity: 0.88');
+          });
+        });
+        if (task === 'sem') [['person', '--p8'], ['excavator', '--p10'], ['cone', '--p6'], ['ground', '--p11'], ['sky', '--p1']].forEach(function (l, k) {
+          rect(svg, 12 + k * 104, 12, 14, 14, null, { style: 'fill: var(' + l[1] + ')' }); txt(svg, 32 + k * 104, 24, l[0], 'det-txt', 'start');
+        });
+      }
+      if (task === 'cls') {
+        rect(svg, 12, 12, 270, 76, 'det-chip plain', { rx: 6 });
+        [['construction site', '0.94'], ['road works', '0.04'], ['quarry', '0.01']].forEach(function (l, k) { txt(svg, 24, 34 + k * 20, l[0], k ? 'det-txt' : 'det-txt b', 'start'); txt(svg, 270, 34 + k * 20, l[1], k ? 'det-txt' : 'det-txt b', 'end'); });
+      }
+      if (task === 'loc') boxLabel(svg, objs[0].bbox, 'excavator', 'c0');
+      if (task === 'det') {
+        var conf = { excavator: '0.96', 'worker 1': '0.91', 'worker 2': '0.88', 'cone 1': '0.83', 'cone 2': '0.79', 'cone 3': '0.64' };
+        objs.forEach(function (o) { boxLabel(svg, o.bbox, (o.cls === 'excavator' ? 'excavator ' : o.cls + ' ') + conf[o.id], o.cls === 'person' ? 'c1' : o.cls === 'cone' ? 'c2' : 'c0'); });
+      }
+      var I = INFO[task];
+      box.innerHTML = '<h3>' + I[0] + '</h3><p class="small"><strong>Output:</strong> ' + I[1] + '</p><p class="small"><strong>Example:</strong> ' + I[2] + '</p><p class="small"><strong>Labels needed:</strong> ' + I[3] + '</p>';
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { setPressed(btns, b); show(b.getAttribute('data-task')); }); });
+    show('cls');
+  })();
+
+  /* ---------- labelling effort ---------- */
+  (function () {
+    var svg = $('#label-fig'); if (!svg) return;
+    var rows = [['classification', 'one label', 0.08, 'about a second'], ['detection', 'a box per object', 0.33, 'tens of seconds'], ['segmentation', 'an outline per object', 1, 'minutes']];
+    rows.forEach(function (r, k) {
+      var y = 30 + k * 100;
+      txt(svg, 10, y + 14, r[0], 'lbl-sec', 'start');
+      txt(svg, 10, y + 34, r[1], 'tick', 'start');
+      rect(svg, 190, y, 270 * r[2] + 6, 30, 'blk conv', { rx: 4 });
+      txt(svg, 190 + 270 * r[2] + 16, y + 20, r[3], 'tick', 'start');
+    });
+    txt(svg, 190, 322, 'labelling time per image (illustrative)', 'tick', 'start');
+  })();
+
+  /* ---------- intersection over union ---------- */
+  (function () {
+    var root = $('#iou-demo'); if (!root) return;
+    var svg = $('svg.fig', root), wI = $('#iou-w'), hI = $('#iou-h'), out = $('.readout', root);
+    var gt = [160, 110, 360, 280], pb = { x: 205, y: 150 }, drag = null;
+    function draw() {
+      var w = +wI.value, h = +hI.value;
+      wI.nextElementSibling.textContent = w; hI.nextElementSibling.textContent = h;
+      pb.x = Math.max(0, Math.min(560 - w, pb.x)); pb.y = Math.max(0, Math.min(380 - h, pb.y));
+      var p = [pb.x, pb.y, pb.x + w, pb.y + h];
+      var ix = Math.max(0, Math.min(gt[2], p[2]) - Math.max(gt[0], p[0])), iy = Math.max(0, Math.min(gt[3], p[3]) - Math.max(gt[1], p[1]));
+      var inter = ix * iy, uni = (gt[2] - gt[0]) * (gt[3] - gt[1]) + w * h - inter, iou = inter / uni;
+      clear(svg);
+      rect(svg, 0, 0, 560, 380, 'cf-frame');
+      if (inter > 0) rect(svg, Math.max(gt[0], p[0]), Math.max(gt[1], p[1]), ix, iy, 'iou-int');
+      rect(svg, gt[0], gt[1], gt[2] - gt[0], gt[3] - gt[1], 'gt-box');
+      txt(svg, gt[0] + 4, gt[1] - 6, 'ground truth', 'tick', 'start');
+      var pr = rect(svg, p[0], p[1], w, h, 'pr-box');
+      pr.style.cursor = 'move';
+      txt(svg, p[0] + 4, p[3] + 16, 'prediction (drag me)', 'lbl-sec', 'start');
+      out.innerHTML = 'overlap ' + Math.round(inter).toLocaleString('en-GB') + ' / union ' + Math.round(uni).toLocaleString('en-GB') + ' = <b>IoU ' + iou.toFixed(2) + '</b><br>' +
+        (iou >= 0.5 ? '<span class="tag-good">counts as a correct detection</span>' : '<span class="tag-bad">does not count: a false positive</span>');
+    }
+    function pt(e) { var m = svg.getScreenCTM().inverse(), q = svg.createSVGPoint(); q.x = e.clientX; q.y = e.clientY; return q.matrixTransform(m); }
+    svg.addEventListener('pointerdown', function (e) {
+      var q = pt(e), w = +wI.value, h = +hI.value;
+      if (q.x >= pb.x && q.x <= pb.x + w && q.y >= pb.y && q.y <= pb.y + h) { drag = { dx: q.x - pb.x, dy: q.y - pb.y }; svg.setPointerCapture(e.pointerId); }
+    });
+    svg.addEventListener('pointermove', function (e) { if (!drag) return; var q = pt(e); pb.x = q.x - drag.dx; pb.y = q.y - drag.dy; draw(); });
+    svg.addEventListener('pointerup', function () { drag = null; });
+    [wI, hI].forEach(function (i) { i.addEventListener('input', draw); });
+    draw();
+  })();
+
+  /* ---------- non-maximum suppression ---------- */
+  function iouBox(a, b) {
+    var ix = Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])), iy = Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+    var i = ix * iy; return i / ((a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - i);
+  }
+  (function () {
+    var root = $('#nms-demo'); if (!root) return;
+    var svg = $('svg.fig', root), cI = $('#nms-c'), iI = $('#nms-i'), read = $('.nms-read', root);
+    var C = [
+      [[178, 106, 266, 330], 0.92], [[170, 118, 262, 342], 0.85], [[190, 100, 280, 320], 0.71], [[160, 140, 250, 350], 0.4],
+      [[236, 116, 324, 336], 0.88], [[246, 108, 336, 326], 0.77], [[228, 130, 314, 352], 0.35],
+      [[436, 268, 500, 344], 0.66], [[428, 260, 492, 336], 0.52], [[446, 280, 512, 352], 0.2], [[60, 60, 150, 140], 0.15]
+    ].map(function (c, k) { return { b: c[0], s: c[1], id: k }; });
+    var state;
+    function reset() {
+      state = { phase: 0, status: C.map(function () { return 'pending'; }), msg: 'Press Next step: first, boxes below the confidence threshold are dropped.' };
+      draw();
+    }
+    function step() {
+      var ct = +cI.value, it = +iI.value, st = state.status;
+      if (state.phase === 0) {
+        var n = 0;
+        C.forEach(function (c, k) { if (c.s < ct) { st[k] = 'dropped'; n++; } });
+        state.phase = 1; state.msg = n + ' box' + (n === 1 ? '' : 'es') + ' below confidence ' + ct.toFixed(2) + ' dropped.';
+        return draw();
+      }
+      var best = -1;
+      C.forEach(function (c, k) { if (st[k] === 'pending' && (best < 0 || c.s > C[best].s)) best = k; });
+      if (best < 0) {
+        var nk = st.filter(function (s) { return s === 'kept'; }).length;
+        state.msg = 'Done: ' + nk + ' box' + (nk === 1 ? '' : 'es') + ' kept for 3 objects' + (nk === 3 ? ', one each.' : nk < 3 ? ': too aggressive, overlapping objects were merged.' : ': too lenient, duplicates survived.');
+        state.phase = 2; return draw();
+      }
+      st[best] = 'kept';
+      var removed = 0;
+      C.forEach(function (c, k) { if (st[k] === 'pending' && iouBox(c.b, C[best].b) > it) { st[k] = 'suppressed'; removed++; } });
+      state.msg = 'Kept the box with score ' + C[best].s.toFixed(2) + '; removed ' + removed + ' overlapping it by more than IoU ' + it.toFixed(2) + '.';
+      draw();
+    }
+    function draw() {
+      cI.nextElementSibling.textContent = (+cI.value).toFixed(2); iI.nextElementSibling.textContent = (+iI.value).toFixed(2);
+      clear(svg);
+      rect(svg, 0, 0, 600, 380, 'cf-frame');
+      [[222, 1], [280, 1]].forEach(function (w) {
+        var g = el('g', { 'class': 'ghost' }, svg), cx = w[0], cy = 140;
+        el('circle', { cx: cx, cy: cy, r: 18 }, g); rect(g, cx - 28, cy + 22, 56, 90, null, { rx: 10 });
+        el('path', { d: 'M' + (cx - 14) + ',' + (cy + 112) + ' L' + (cx - 18) + ',' + (cy + 186) + ' M' + (cx + 14) + ',' + (cy + 112) + ' L' + (cx + 18) + ',' + (cy + 186), style: 'stroke-width: 12; fill: none' }, g);
+      });
+      el('path', { d: 'M446,340 L470,276 L494,340 Z', 'class': 'ghost' }, svg);
+      C.forEach(function (c, k) {
+        var s = state.status[k];
+        if (s === 'dropped') return;
+        rect(svg, c.b[0], c.b[1], c.b[2] - c.b[0], c.b[3] - c.b[1], 'nms-box ' + s);
+        if (s !== 'suppressed') txt(svg, c.b[0] + 3, c.b[1] + 14, c.s.toFixed(2), s === 'kept' ? 'nms-txt kept' : 'nms-txt', 'start');
+      });
+      read.textContent = state.msg;
+    }
+    $('[data-act=step]', root).addEventListener('click', step);
+    $('[data-act=run]', root).addEventListener('click', function () { var g = 0; while (state.phase < 2 && g++ < 30) step(); });
+    $('[data-act=reset]', root).addEventListener('click', reset);
+    [cI, iI].forEach(function (i) { i.addEventListener('input', reset); });
+    reset();
+  })();
+
+  /* ---------- detector families ---------- */
+  (function () {
+    var svg = $('#fam-fig'); if (!svg) return;
+    var mk = arrowDefs(svg, 'fam-mk');
+    function row(y, items, label) {
+      txt(svg, 10, y + 24, label, 'lbl-sec', 'start');
+      var x = 170;
+      items.forEach(function (it, i) {
+        var w = it[1];
+        rect(svg, x, y, w, 40, 'blk ' + (it[2] || 'conv'), { rx: 5 });
+        txt(svg, x + w / 2, y + 25, it[0], 'lbl');
+        if (i < items.length - 1) arrow(svg, x + w + 4, y + 20, x + w + 36, y + 20, mk);
+        x += w + 40;
+      });
+    }
+    row(10, [['image', 90, 'in'], ['backbone CNN', 150], ['region proposals', 170, 'pool'], ['classify and refine each region', 260, 'dense'], ['boxes', 90, 'in']], 'two-stage');
+    row(90, [['image', 90, 'in'], ['backbone CNN', 150], ['class and box at every location', 300, 'dense'], ['NMS', 90, 'pool'], ['boxes', 90, 'in']], 'one-stage');
+  })();
+
+  /* ---------- YOLO grid ---------- */
+  (function () {
+    var root = $('#yolo-demo'); if (!root) return;
+    var svg = $('svg.fig', root), read = $('.yd-read', root), S = 7, cw = 640 / S, chv = 400 / S, sel = null;
+    function cellOf(b) { var cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2; return [Math.floor(cy / chv), Math.floor(cx / cw), cx, cy]; }
+    function draw() {
+      clear(svg);
+      var objs = drawScene(svg).filter(function (o) { return o.id === 'excavator' || o.id === 'worker 1' || o.id === 'cone 3'; });
+      $$('.obj', svg).forEach(function (g) { g.style.opacity = 0.55; });
+      var i, j, hit = null;
+      for (i = 0; i < S; i++) for (j = 0; j < S; j++) {
+        (function (a, b) {
+          var r = rect(svg, b * cw, a * chv, cw, chv, 'yg-cell' + (sel && sel[0] === a && sel[1] === b ? ' sel' : ''));
+          r.addEventListener('click', function () { sel = [a, b]; draw(); });
+        })(i, j);
+      }
+      objs.forEach(function (o) {
+        var c = cellOf(o.bbox);
+        el('circle', { cx: c[2], cy: c[3], r: 6, 'class': 'yc-dot' }, svg);
+        if (sel && c[0] === sel[0] && c[1] === sel[1]) hit = o;
+      });
+      if (hit) boxLabel(svg, hit.bbox, (hit.cls === 'person' ? 'person' : hit.cls) + ' 0.9', hit.cls === 'person' ? 'c1' : hit.cls === 'cone' ? 'c2' : 'c0');
+      if (!sel) read.innerHTML = 'Click any cell. Dots mark object centres.';
+      else if (hit) read.innerHTML = 'Cell (' + (sel[0] + 1) + ', ' + (sel[1] + 1) + ') contains the centre of the <b>' + hit.id + '</b>: it predicts that box, even though the box extends far beyond the cell.';
+      else read.innerHTML = 'Cell (' + (sel[0] + 1) + ', ' + (sel[1] + 1) + ') contains no object centre: its box confidences should be close to 0.';
+    }
+    var ex = [Math.floor(238 / chv), Math.floor(375 / cw)];
+    sel = ex;
+    draw();
+  })();
+
+  /* ---------- inside a modern YOLO ---------- */
+  (function () {
+    var svg = $('#yolo-arch'); if (!svg) return;
+    var mk = arrowDefs(svg, 'ya-mk');
+    rect(svg, 10, 70, 110, 110, 'blk in', { rx: 5 }); txt(svg, 65, 130, 'image', 'lbl'); txt(svg, 65, 200, '640 \u00d7 640', 'tick');
+    arrow(svg, 126, 125, 160, 125, mk);
+    [[170, 150, 'conv'], [250, 120, 'conv'], [330, 90, 'conv'], [410, 64, 'conv']].forEach(function (b, k) { rect(svg, b[0], 125 - b[1] / 2, 60, b[1], 'blk ' + b[2], { rx: 4 }); if (k) arrow(svg, b[0] - 18, 125, b[0] - 4, 125, mk); });
+    txt(svg, 300, 32, 'backbone', 'lbl-sec');
+    var P = [[250, 'P3: 80 \u00d7 80, stride 8'], [330, 'P4: 40 \u00d7 40, stride 16'], [410, 'P5: 20 \u00d7 20, stride 32']];
+    P.forEach(function (p, k) {
+      var y = 60 + k * 70;
+      el('path', { d: 'M' + (p[0] + 30) + ',' + (125 + (k - 1) * 30) + ' C' + 520 + ',' + (125 + (k - 1) * 30) + ' 520,' + (y + 18) + ' 600,' + (y + 18), 'class': 'pa-arrow', 'marker-end': mk }, svg);
+      rect(svg, 610, y, 150, 36, 'blk pool', { rx: 4 }); txt(svg, 685, y + 23, ['fine', 'medium', 'coarse'][k], 'lbl');
+      txt(svg, 685, y + 52, p[1], 'tick');
+      arrow(svg, 766, y + 18, 820, y + 18, mk);
+      rect(svg, 826, y, 110, 36, 'blk dense', { rx: 4 }); txt(svg, 881, y + 23, 'head', 'lbl');
+      el('path', { d: 'M942,' + (y + 18) + ' C980,' + (y + 18) + ' 980,125 1010,125', 'class': 'pa-arrow' }, svg);
+    });
+    txt(svg, 685, 32, 'neck: feature pyramid', 'lbl-sec');
+    el('path', { d: 'M655,96 V130 M715,130 V96 M655,166 V200 M715,200 V166', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    rect(svg, 1012, 92, 140, 66, 'blk in', { rx: 5 }); txt(svg, 1082, 120, '8,400 candidates', 'lbl'); txt(svg, 1082, 140, '\u2192 NMS \u2192 boxes', 'tick');
+  })();
+
+  /* ---------- the YOLO family timeline ---------- */
+  (function () {
+    var svg = $('#yolo-time'); if (!svg) return;
+    var x0 = 60, x1 = 1110, y = 150, Y = [2016, 2025];
+    function X(t) { return x0 + (t - Y[0]) / (Y[1] - Y[0]) * (x1 - x0); }
+    el('path', { d: 'M' + x0 + ',' + y + ' H' + x1, 'class': 'ax' }, svg);
+    for (var t = 2016; t <= 2025; t++) { el('line', { x1: X(t), x2: X(t), y1: y - 5, y2: y + 5, 'class': 'ax' }, svg); txt(svg, X(t), y + 24, String(t), 'tick'); }
+    var V = [
+      [2016.1, 'YOLOv1', 'one pass, 7 \u00d7 7 grid', -1, 1], [2017.0, 'YOLOv2', 'anchor boxes', 1, 1], [2018.3, 'YOLOv3', 'three scales', -1, 1],
+      [2020.3, 'YOLOv4', 'training improvements', 1, 1], [2020.5, 'YOLOv5', 'Ultralytics, PyTorch', -1, 2], [2021.6, 'YOLOX', 'anchor-free head', 1, 1],
+      [2022.5, 'YOLOv7', '', -1, 1], [2023.0, 'YOLOv8', 'Ultralytics; in KerasCV', 1, 2], [2024.1, 'YOLOv9', '', -1, 1],
+      [2024.4, 'YOLOv10', 'NMS-free training', 1, 1], [2024.75, 'YOLO11', 'Ultralytics', -1, 2]
+    ];
+    V.forEach(function (v) {
+      var x = X(v[0]), d = v[3], lev = v[4], yy = y + d * (28 + (lev - 1) * 30 + (d > 0 ? 18 : 0));
+      el('line', { x1: x, x2: x, y1: y, y2: yy - (d > 0 ? 14 : -6), 'class': 'tl-stem' }, svg);
+      el('circle', { cx: x, cy: y, r: 5, 'class': v[1] === 'YOLOv8' ? 'tl-dot hi' : 'tl-dot' }, svg);
+      txt(svg, x, yy, v[1], v[1] === 'YOLOv8' ? 'lbl-sec' : 'lbl');
+      if (v[2]) txt(svg, x, yy + 15, v[2], 'tick');
+    });
+  })();
+
+  /* ---------- precision, recall and AP ---------- */
+  (function () {
+    var root = $('#pr-demo'); if (!root) return;
+    var svg = $('svg.fig', root), tI = $('#pr-t'), out = $('.readout', root), NGT = 10;
+    var D = [[0.97, 1], [0.95, 1], [0.91, 1], [0.88, 0], [0.84, 1], [0.8, 1], [0.74, 1], [0.69, 0], [0.63, 1], [0.58, 0], [0.51, 1], [0.44, 0], [0.37, 1], [0.29, 0], [0.21, 0]];
+    var pts = [], tp = 0, fp = 0;
+    D.forEach(function (d) { if (d[1]) tp++; else fp++; pts.push([tp / NGT, tp / (tp + fp), d[0]]); });
+    var env = pts.map(function (p, i) { var m = 0; for (var j = i; j < pts.length; j++) m = Math.max(m, pts[j][1]); return [p[0], m]; });
+    var ap = 0, prevR = 0;
+    env.forEach(function (p) { ap += (p[0] - prevR) * p[1]; prevR = p[0]; });
+    function draw() {
+      var t = +tI.value; tI.nextElementSibling.textContent = t.toFixed(2);
+      var P = makePlot(svg, { w: 520, h: 380, l: 40, x: [0, 1], y: [0, 1.05], xt: [0, 0.5, 1], yt: [0, 0.5, 1], xl: 'recall', yl: 'precision' });
+      var d = 'M' + P.sx(0) + ',' + P.sy(env[0][1]), a = 'M' + P.sx(0) + ',' + P.sy(0) + ' L' + P.sx(0) + ',' + P.sy(env[0][1]);
+      env.forEach(function (p, i) { var nx = i + 1 < env.length ? env[i + 1] : null; d += ' L' + P.sx(p[0]) + ',' + P.sy(p[1]); a += ' L' + P.sx(p[0]) + ',' + P.sy(p[1]); if (nx) { d += ' L' + P.sx(p[0]) + ',' + P.sy(nx[1]); a += ' L' + P.sx(p[0]) + ',' + P.sy(nx[1]); } });
+      a += ' L' + P.sx(env[env.length - 1][0]) + ',' + P.sy(0) + ' Z';
+      el('path', { d: a, 'class': 'pr-area' }, svg);
+      el('path', { d: d, 'class': 'c-sec' }, svg);
+      pts.forEach(function (p) { el('circle', { cx: P.sx(p[0]), cy: P.sy(p[1]), r: 3.2, 'class': 'dot-val' }, svg); });
+      var k = -1; D.forEach(function (dd, i) { if (dd[0] >= t) k = i; });
+      var TP = k >= 0 ? D.slice(0, k + 1).filter(function (x) { return x[1]; }).length : 0, FP = k + 1 - TP, FN = NGT - TP;
+      var prec = k >= 0 ? TP / (TP + FP) : 1, rec = TP / NGT;
+      el('circle', { cx: P.sx(rec), cy: P.sy(prec), r: 8, 'class': 'dot-pt' }, svg);
+      txt(svg, 470, 40, 'AP = ' + ap.toFixed(2), 'lbl-sec', 'end');
+      out.innerHTML = 'Above the threshold: <b>' + TP + '</b> true positives, <b>' + FP + '</b> false positives; <b>' + FN + '</b> object' + (FN === 1 ? '' : 's') + ' missed.<br>precision <b>' + prec.toFixed(2) + '</b>, recall <b>' + rec.toFixed(2) + '</b>';
+    }
+    tI.addEventListener('input', draw);
+    draw();
+  })();
+  /* ---------- start ---------- */
+  var m = location.hash.match(/^#(\d+)$/);
+  var start = m ? Math.max(0, Math.min(N - 1, +m[1] - 1)) : 0;
+  slides[0].classList.remove('active');
+  cur = start;
+  slides[cur].classList.add('active');
+  updateFooter();
+  autoDoc();
+  fit();
+})();
+</script>
+</body>
+</html>
