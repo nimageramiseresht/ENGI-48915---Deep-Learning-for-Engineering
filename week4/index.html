@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 4: Segmentation, Recurrent Networks and Transfer Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+  };
+  window.Prism = { manual: true };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+<style>
+:root {
+  --frame: #D9E1E7;
+  --paper: #F4F7F9;
+  --grid: #E3E9EE;
+  --grid-major: #D6DFE6;
+  --ink: #18222D;
+  --ink-2: #4B5867;
+  --ink-3: #7A8794;
+  --rule: #C5D0D9;
+  --panel: #E8EEF2;
+  --code-bg: #EDF2F6;
+  --code-border: #C9D5DE;
+  --tok-kw: #7B2D8E;
+  --tok-str: #1E7A45;
+  --tok-num: #A4500A;
+  --tok-fn: #1D5BA6;
+  --tok-com: #687582;
+  --tok-builtin: #0D6E6A;
+  --p1: #1F5FA8; --p2: #0E7470; --p3: #3D4A5C; --p4: #B23A2B;
+  --p5: #8F5D00; --p6: #2E7A48; --p7: #6B3FA0; --p8: #9C2F62;
+  --p9: #5A6812; --p10: #3B48A6; --p11: #7A5C45;
+  --good: #2E7A48; --bad: #B23A2B;
+  --sec: var(--p1);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --frame: #070B0F; --paper: #111920; --grid: #172129; --grid-major: #1D2832;
+    --ink: #E4EAF0; --ink-2: #A8B4C0; --ink-3: #7D8A97; --rule: #2B3946;
+    --panel: #1A2530; --code-bg: #0C1319; --code-border: #24323E;
+    --tok-kw: #D19BEA; --tok-str: #7FD19E; --tok-num: #F0A867; --tok-fn: #82B4F2;
+    --tok-com: #8996A3; --tok-builtin: #6FD1C9;
+    --p1: #6FA3E8; --p2: #4DBDB5; --p3: #A3B2C4; --p4: #F07A6A;
+    --p5: #E0AA45; --p6: #6CC690; --p7: #B18BE6; --p8: #E58BB6;
+    --p9: #B5C55A; --p10: #98A2F2; --p11: #C9A68A;
+    --good: #6CC690; --bad: #F07A6A;
+  }
+}
+:root[data-theme="dark"] {
+  --frame: #070B0F; --paper: #111920; --grid: #172129; --grid-major: #1D2832;
+  --ink: #E4EAF0; --ink-2: #A8B4C0; --ink-3: #7D8A97; --rule: #2B3946;
+  --panel: #1A2530; --code-bg: #0C1319; --code-border: #24323E;
+  --tok-kw: #D19BEA; --tok-str: #7FD19E; --tok-num: #F0A867; --tok-fn: #82B4F2;
+  --tok-com: #8996A3; --tok-builtin: #6FD1C9;
+  --p1: #6FA3E8; --p2: #4DBDB5; --p3: #A3B2C4; --p4: #F07A6A;
+  --p5: #E0AA45; --p6: #6CC690; --p7: #B18BE6; --p8: #E58BB6;
+  --p9: #B5C55A; --p10: #98A2F2; --p11: #C9A68A;
+  --good: #6CC690; --bad: #F07A6A;
+}
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  height: 100%; margin: 0; background: var(--frame); color: var(--ink);
+  font-family: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+[data-part="1"] { --sec: var(--p1); } [data-part="2"] { --sec: var(--p2); }
+[data-part="3"] { --sec: var(--p3); } [data-part="4"] { --sec: var(--p4); }
+[data-part="5"] { --sec: var(--p5); } [data-part="6"] { --sec: var(--p6); }
+[data-part="7"] { --sec: var(--p7); } [data-part="8"] { --sec: var(--p8); }
+[data-part="9"] { --sec: var(--p9); } [data-part="10"] { --sec: var(--p10); }
+[data-part="11"] { --sec: var(--p11); }
+
+/* ---------- stage ---------- */
+.viewport {
+  position: fixed; top: 0; bottom: 0; left: 0; right: 0;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.stage {
+  width: 1280px; height: 720px; flex: none; position: relative; overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+.slide {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  padding: 38px 56px 62px; box-sizing: border-box;
+  display: flex; flex-direction: column;
+  visibility: hidden; opacity: 0; transition: opacity .22s ease;
+}
+.slide.active { visibility: visible; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .slide { transition: none; } }
+
+/* ---------- type ---------- */
+.slide h1, .slide h2, .slide h3, .slide h4, .tblock, .btn, .tbl th {
+  font-family: 'Barlow Semi Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+}
+.slide h2 {
+  font-weight: 600; font-size: 42px; line-height: 1.06; margin: 0 0 22px;
+  padding-left: 18px; border-left: 8px solid var(--sec); letter-spacing: -0.003em;
+}
+.slide h3 { font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 8px; color: var(--sec); }
+.slide h4 { font-weight: 600; font-size: 21px; margin: 0 0 4px; }
+.slide p, .slide li { font-size: 22px; line-height: 1.42; }
+.slide p { margin: 0 0 12px; }
+.slide ul, .slide ol { margin: 0 0 12px; padding-left: 26px; }
+.slide li { margin: 0 0 6px; }
+.slide li::marker { color: var(--sec); font-weight: 700; }
+.slide .small, .slide .small p, .slide .small li { font-size: 18.5px; }
+.muted { color: var(--ink-2); }
+.center { text-align: center; }
+code { font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace; font-size: .84em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+strong { font-weight: 700; }
+.opt-tag {
+  display: inline-block; vertical-align: middle; margin-left: 14px; padding: 2px 12px;
+  font: 600 16px 'Barlow Semi Condensed', sans-serif; color: var(--sec);
+  border: 1.5px solid var(--sec); border-radius: 999px; letter-spacing: .01em;
+}
+
+/* ---------- layout ---------- */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; min-height: 0; }
+.cols > * { min-width: 0; }
+.cols.wl { grid-template-columns: 1.45fr 1fr; }
+.cols.wr { grid-template-columns: 1fr 1.35fr; }
+.cols.code { grid-template-columns: 2fr 1fr; gap: 32px; }
+.cols.three { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.cols.four { grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.slide .stack > * + * { margin-top: 16px; }
+.grow { flex: 1; min-height: 0; }
+.box { border-left: 5px solid var(--sec); background: var(--panel); padding: 14px 20px; }
+.box > :last-child { margin-bottom: 0; }
+.box.quiet { border-left-color: var(--rule); }
+.ask { border: 1.5px dashed var(--sec); padding: 12px 18px; }
+.ask > :last-child { margin-bottom: 0; }
+.ask strong:first-child { color: var(--sec); }
+.bottom-line { margin-top: auto; font-size: 23px; padding-top: 12px; border-top: 1.5px solid var(--rule); }
+.bottom-line p { margin: 0; }
+
+/* tables */
+.tbl { border-collapse: collapse; width: 100%; font-size: 19px; line-height: 1.35; }
+.tbl th { text-align: left; font-weight: 600; font-size: 20px; border-bottom: 2px solid var(--ink); padding: 7px 10px; }
+.tbl td { border-bottom: 1px solid var(--rule); padding: 7px 10px; vertical-align: top; }
+.tbl td:first-child { font-weight: 700; }
+.tbl.compact td, .tbl.compact th { padding: 5px 8px; }
+.tbl .now td { background: color-mix(in srgb, var(--sec) 12%, transparent); }
+
+/* code */
+.code-wrap { position: relative; min-height: 0; }
+pre {
+  margin: 0; font: 16.5px/1.5 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  background: var(--code-bg); color: var(--ink); border: 1px solid var(--code-border);
+  border-left: 4px solid var(--sec); padding: 13px 16px; overflow: auto; tab-size: 4; max-height: 560px;
+}
+pre.dense { font-size: 16px; line-height: 1.45; }
+pre code { background: none; padding: 0; font-size: inherit; border-radius: 0; }
+.copy {
+  position: absolute; bottom: 7px; right: 8px; z-index: 2; cursor: pointer;
+  font: 600 14px 'Atkinson Hyperlegible', sans-serif; padding: 3px 10px;
+  color: var(--ink-2); background: var(--paper); border: 1px solid var(--code-border);
+}
+.copy:hover { color: var(--ink); border-color: var(--ink-3); }
+.token.comment { color: var(--tok-com); font-style: italic; }
+.token.keyword { color: var(--tok-kw); }
+.token.string, .token.triple-quoted-string { color: var(--tok-str); }
+.token.number, .token.boolean { color: var(--tok-num); }
+.token.function { color: var(--tok-fn); }
+.token.builtin { color: var(--tok-builtin); }
+.token.operator, .token.punctuation { color: var(--ink-2); }
+
+/* controls */
+.btn {
+  font-weight: 600; font-size: 17px; cursor: pointer; padding: 4px 13px;
+  color: var(--sec); background: transparent; border: 1.5px solid var(--sec);
+}
+.btn:hover, .btn[aria-pressed="true"] { background: var(--sec); color: var(--paper); }
+:focus-visible { outline: 3px solid var(--sec); outline-offset: 2px; }
+input[type=range] { accent-color: var(--sec); width: 100%; margin: 0; }
+input[type=checkbox], input[type=radio] { accent-color: var(--sec); width: 18px; height: 18px; }
+.ctl { display: grid; grid-template-columns: 40px 1fr 58px; align-items: center; gap: 10px; font-size: 18px; margin-bottom: 6px; }
+.ctl output, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.readout { font-size: 19px; line-height: 1.5; }
+.readout b { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 17px; }
+
+/* svg helpers */
+svg.fig { display: block; max-width: 100%; height: auto; }
+mjx-container[display="true"] { margin: 0.5em 0 !important; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+.ax { stroke: var(--ink-3); stroke-width: 1.2; fill: none; }
+.ax-0 { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.tick { fill: var(--ink-2); font: 11px 'Atkinson Hyperlegible', sans-serif; }
+.lbl { fill: var(--ink); font: 600 13px 'Barlow Semi Condensed', sans-serif; }
+.c-sec { stroke: var(--sec); stroke-width: 2.6; fill: none; }
+.c-alt { stroke: var(--ink-2); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-bad { stroke: var(--bad); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-good { stroke: var(--good); stroke-width: 2.6; fill: none; }
+.g-old { stroke: var(--ink-3); stroke-width: .6; opacity: .45; fill: none; }
+.g-line { stroke: var(--sec); stroke-width: 1.1; opacity: .5; fill: none; }
+.g-int { stroke: var(--sec); stroke-width: 1.6; opacity: .8; fill: none; }
+.g-sq { fill: var(--sec); fill-opacity: .16; stroke: var(--sec); stroke-width: 2; }
+.g-f { fill: var(--ink); fill-opacity: .85; stroke: none; }
+.g-arrow { stroke: var(--bad); stroke-width: 2.6; fill: none; }
+.g-arrow2 { stroke: var(--good); stroke-width: 2.6; fill: none; }
+.node { fill: var(--paper); stroke: var(--sec); stroke-width: 2; }
+.node.in { stroke: var(--ink-3); }
+.edge { stroke: var(--ink-3); stroke-width: .7; opacity: .35; }
+.dot-pt { fill: var(--sec); }
+
+/* softmax demo */
+.sm-row { display: grid; grid-template-columns: 140px 230px 56px 1fr 70px 34px; align-items: center; gap: 12px; font-size: 21px; margin-bottom: 12px; }
+.sm-bar { height: 32px; background: var(--panel); position: relative; border: 1px solid var(--rule); }
+.sm-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-3); transition: width .12s; }
+.sm-bar.top i { background: var(--sec); }
+
+/* pipeline + folds */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px 30px; margin-top: 10px; counter-reset: st; }
+.flow > div { position: relative; border: 1.5px solid var(--ink-3); background: var(--paper); padding: 16px 18px 18px; min-height: 150px; }
+.flow > div::before { counter-increment: st; content: counter(st); position: absolute; top: -13px; left: 10px; background: var(--sec); color: var(--paper); font: 700 15px 'Barlow Semi Condensed', sans-serif; padding: 1px 8px; }
+.flow > div:not(:nth-child(4n))::after { content: ''; position: absolute; right: -25px; top: 50%; border: 8px solid transparent; border-left: 12px solid var(--ink-3); transform: translateY(-50%); }
+.flow h4 { margin-top: 6px; font-size: 25px !important; }
+.slide .flow p { font-size: 19px; line-height: 1.4; margin: 0 0 4px; color: var(--ink-2); }
+.flow code { font-size: 15px; }
+.folds { margin-bottom: 10px; display: grid; grid-template-columns: 70px repeat(4, 1fr) 80px; gap: 8px; align-items: center; font-size: 18px; }
+.folds span.c { border: 1px solid var(--ink-3); text-align: center; padding: 8px 0; background: var(--paper); }
+.folds span.v { border: 2px solid var(--sec); background: color-mix(in srgb, var(--sec) 22%, var(--paper)); font-weight: 700; }
+.folds .s { color: var(--sec); font-weight: 700; }
+
+
+/* overfitting demos */
+.lab { display: grid; grid-template-columns: 1.12fr 1fr; gap: 34px; align-items: start; min-height: 0; }
+.lab > * { min-width: 0; }
+.lab .ctl, #sel-demo .ctl { grid-template-columns: 92px 1fr 64px; }
+#sel-demo .ctl { grid-template-columns: 150px 1fr 76px; }
+.lab .readout { margin-top: 6px; }
+.lab-plots > svg + svg { margin-top: 6px; }
+.slide .lab-key { font-size: 16.5px; line-height: 1.5; margin: 0 0 10px; }
+.k-dot, .k-ring { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: middle; }
+.k-dot { background: var(--sec); } .k-ring { border: 1.6px solid var(--ink-3); width: 9px; height: 9px; }
+.k-dash { color: var(--ink-2); }
+.chk { display: flex; gap: 10px; align-items: center; font-size: 18px; margin: 4px 0; }
+.dot-val { fill: none; stroke: var(--ink-3); stroke-width: 1.4; }
+.c-sec-d { stroke: var(--sec); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-bad-s { stroke: var(--bad); stroke-width: 2.6; fill: none; }
+.c-faint { opacity: .25; }
+.shade { fill: var(--ink-3); opacity: .1; }
+.mark-now { stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 2 3; }
+.lbl-sec, .lbl-alt, .lbl-bad { font: 600 13px 'Barlow Semi Condensed', sans-serif; }
+.lbl-sec { fill: var(--sec); } .lbl-alt { fill: var(--ink-2); } .lbl-bad { fill: var(--bad); }
+.edge.on { opacity: .55; }
+.node.off { stroke: var(--ink-3); stroke-dasharray: 3 3; opacity: .6; }
+.x-mark { stroke: var(--bad); stroke-width: 2; }
+
+
+/* animated and interactive slides, part 2 */
+.pa-card { fill: var(--panel); stroke: var(--ink-3); stroke-width: 1.2; }
+.pa-arrow { stroke: var(--ink-2); stroke-width: 1.6; fill: none; }
+.pa-mkf { fill: var(--ink-2); }
+.pa-big { fill: var(--ink); font: 700 34px 'Barlow Semi Condensed', sans-serif; }
+.slide.active .pa-step { animation: paIn .7s ease both; animation-delay: var(--d, 0s); }
+@keyframes paIn { from { opacity: 0; } to { opacity: 1; } }
+.slide.active .flow-e { stroke-dasharray: 3 7; animation: flowE 1.4s linear infinite; }
+@keyframes flowE { to { stroke-dashoffset: -20; } }
+.w-pos { stroke: var(--sec); } .w-neg { stroke: var(--bad); }
+.w-pos, .w-neg, .w-lbl { transition: opacity .25s; }
+.w-lbl { fill: var(--ink); font: 600 13px 'JetBrains Mono', monospace; text-anchor: middle; paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
+.pulse { fill: var(--sec); }
+.mat-eq { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px; }
+.mat-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mat { display: grid; gap: 1px 8px; padding: 3px 7px; border-left: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); border-radius: 7px; }
+.mat span { text-align: right; padding: 1px 3px; transition: background .2s; }
+.mat span.hl { background: color-mix(in srgb, var(--sec) 24%, transparent); }
+.mat-lbl { font: 600 15px 'Barlow Semi Condensed', sans-serif; color: var(--ink-2); }
+.mat-eq .op { color: var(--ink-2); font-size: 18px; }
+.cf-frame { fill: none; stroke: var(--rule); }
+.cf-eq { fill: var(--ink); font: 600 40px 'Barlow Semi Condensed', sans-serif; text-anchor: middle; }
+.contour { fill: none; stroke: var(--ink-3); stroke-width: 1; opacity: .7; }
+.min-pt { fill: var(--ink); }
+.bow-strip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; margin-top: 18px; }
+.bow-cell { text-align: center; min-width: 0; }
+.bow-cell .w { font-size: 14.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bow-cell .v { font: 600 22px 'JetBrains Mono', monospace; border: 1.5px solid var(--rule); padding: 7px 0; margin-top: 4px; background: var(--paper); transition: background .15s; }
+.bow-cell.on .v { border-color: var(--sec); background: color-mix(in srgb, var(--sec) 18%, var(--paper)); color: var(--sec); }
+#bow-text { width: 100%; box-sizing: border-box; font: 19px 'Atkinson Hyperlegible', sans-serif; padding: 7px 10px; border: 1.5px solid var(--ink-3); background: var(--paper); color: var(--ink); }
+.ep-s { transition: transform .6s ease; }
+.ep-s rect { fill: var(--panel); stroke: var(--ink-3); stroke-width: 1.2; transition: fill .2s, stroke .2s; }
+.ep-s.on rect { fill: color-mix(in srgb, var(--sec) 28%, var(--paper)); stroke: var(--sec); stroke-width: 2; }
+.ep-flow { stroke: var(--sec); stroke-width: 2.2; transition: opacity .2s; }
+.vr-bar { display: flex; height: 36px; border: 1.5px solid var(--ink-3); margin-top: 10px; font: 600 15px 'Barlow Semi Condensed', sans-serif; }
+.vr-bar > div { display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; transition: width .2s; }
+.vr-bar .tr { background: color-mix(in srgb, var(--sec) 28%, var(--paper)); }
+.vr-bar .va { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--sec) 45%, var(--paper)) 0 4px, var(--paper) 4px 9px); }
+.refs li { margin-bottom: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .slide.active .pa-step, .slide.active .flow-e { animation: none; }
+  .ep-s, .vr-bar > div, .mat span, .w-pos, .w-neg, .w-lbl { transition: none; }
+}
+body.doc .bow-strip { grid-template-columns: repeat(4, 1fr); }
+
+/* section title slides, outline, notes */
+.sec-no { font: 600 30px 'Barlow Semi Condensed', sans-serif; color: var(--sec); margin: 0 0 6px !important; }
+.slide.divider h1 { font-size: 72px; }
+.sec-map { list-style: none; margin: 0; padding: 0 0 0 4px; border-left: 2px solid var(--rule); }
+.slide .sec-map li { font-size: 19px; line-height: 1.3; margin: 0; padding: 7px 0 7px 18px; color: var(--ink-2); }
+.sec-map li span { display: inline-block; width: 24px; font: 600 18px 'Barlow Semi Condensed', sans-serif; }
+.slide .sec-map li.done { color: var(--ink-3); }
+.slide .sec-map li.now { color: var(--ink); font-weight: 700; border-left: 6px solid var(--sec); margin-left: -6px; }
+.sec-map li.now span { color: var(--sec); }
+.slide ol.outline li { margin-bottom: 7px; }
+aside.notes { display: none !important; }
+.tblock .nbtn { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.tblock .nbtn:hover { color: var(--ink); }
+
+/* ---------- week 3: grids, kernels, scenes ---------- */
+.g-cell { fill: var(--paper); stroke: var(--rule); stroke-width: 1; }
+.g-cell.on { fill: var(--ink); }
+.g-cell.pad { fill: var(--panel); stroke-dasharray: 3 3; }
+.kwin { fill: color-mix(in srgb, var(--sec) 10%, transparent); stroke: var(--sec); stroke-width: 3.5; }
+.k-cell { stroke: var(--rule); stroke-width: 1.2; }
+.k-txt { font: 600 15px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink); }
+.sum-txt { font: 700 22px 'JetBrains Mono', ui-monospace, monospace; fill: var(--sec); }
+.o-cell { stroke: var(--rule); stroke-width: 1; }
+.o-cell.hidden { stroke-dasharray: 2 3; }
+.o-cell.now { stroke: var(--sec); stroke-width: 3; }
+.o-cell.match { stroke: var(--ink); stroke-width: 3; }
+.o-txt { font: 500 12px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink-2); }
+.o-txt.match { font-weight: 800; font-size: 15px; fill: var(--ink); }
+.tie { stroke: var(--sec); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; opacity: .7; }
+.kbr { fill: none; stroke: var(--sec); stroke-width: 2; }
+.slab { fill: color-mix(in srgb, var(--sec) 14%, var(--paper)); stroke: var(--ink-3); }
+.slab.k { fill: color-mix(in srgb, var(--bad) 28%, var(--paper)); }
+.slab.one { fill: color-mix(in srgb, var(--sec) 38%, var(--paper)); }
+.pool-grid { stroke: var(--ink); stroke-width: 2; }
+.rf-box { fill: none; stroke-width: 3.5; }
+.blk { stroke: var(--ink-3); stroke-width: 1; }
+.blk.in { fill: var(--panel); }
+.blk.conv { fill: color-mix(in srgb, var(--sec) 35%, var(--paper)); }
+.blk.pool { fill: color-mix(in srgb, var(--p6) 30%, var(--paper)); }
+.blk.flat, .blk.dense { fill: color-mix(in srgb, var(--p5) 35%, var(--paper)); }
+.det-box { fill: none; stroke-width: 2.5; }
+.det-box.c0, .det-chip.c0 { stroke: var(--p10); } .det-box.c1, .det-chip.c1 { stroke: var(--p8); } .det-box.c2, .det-chip.c2 { stroke: var(--p6); }
+.det-chip { stroke-width: 1.5; }
+.det-chip.c0 { fill: color-mix(in srgb, var(--p10) 26%, var(--paper)); }
+.det-chip.c1 { fill: color-mix(in srgb, var(--p8) 26%, var(--paper)); }
+.det-chip.c2 { fill: color-mix(in srgb, var(--p6) 26%, var(--paper)); }
+.det-chip.plain { fill: var(--paper); stroke: var(--rule); }
+.det-txt { font: 600 12.5px 'Barlow Semi Condensed', sans-serif; fill: var(--ink); }
+.det-txt.b { font-weight: 700; font-size: 14px; }
+.sc-sky { fill: color-mix(in srgb, var(--p1) 14%, var(--paper)); }
+.sc-ground { fill: color-mix(in srgb, var(--p11) 24%, var(--paper)); }
+.sc-line { stroke: var(--ink-3); }
+.sc-track { fill: var(--ink-2); }
+.sc-wheel { fill: var(--ink-3); }
+.sc-body { fill: color-mix(in srgb, var(--p5) 70%, var(--paper)); stroke: var(--ink-2); stroke-width: 1.5; }
+.sc-glass { fill: color-mix(in srgb, var(--p1) 35%, var(--paper)); }
+.sc-arm { fill: none; stroke: color-mix(in srgb, var(--p5) 70%, var(--ink)); stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+.sc-helmet { fill: var(--p5); }
+.sc-skin { fill: #C99A76; }
+.sc-vest { fill: color-mix(in srgb, var(--p4) 75%, var(--paper)); }
+.sc-legs { stroke: var(--ink-2); stroke-width: 7; stroke-linecap: round; fill: none; }
+.sc-cone { fill: var(--p4); }
+.yg-cell { fill: transparent; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; cursor: pointer; }
+.yg-cell:hover { fill: color-mix(in srgb, var(--sec) 10%, transparent); }
+.yg-cell.sel { fill: color-mix(in srgb, var(--sec) 22%, transparent); stroke: var(--sec); stroke-width: 2.5; stroke-dasharray: none; }
+.yc-dot { fill: var(--bad); stroke: var(--paper); stroke-width: 2; }
+.gt-box { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 7 5; }
+.pr-box { fill: color-mix(in srgb, var(--sec) 10%, transparent); stroke: var(--sec); stroke-width: 3; }
+.iou-int { fill: color-mix(in srgb, var(--sec) 40%, transparent); }
+.tag-good { color: var(--good); font-weight: 700; } .tag-bad { color: var(--bad); font-weight: 700; }
+.ghost, .ghost * { fill: color-mix(in srgb, var(--ink-3) 25%, transparent); stroke: color-mix(in srgb, var(--ink-3) 25%, transparent); }
+.nms-box { fill: none; stroke-width: 1.8; }
+.nms-box.pending { stroke: var(--ink-3); }
+.nms-box.kept { stroke: var(--sec); stroke-width: 3.5; }
+.nms-box.suppressed { stroke: var(--bad); stroke-dasharray: 4 4; opacity: .45; }
+.nms-txt { font: 600 12px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink-2); }
+.nms-txt.kept { fill: var(--sec); font-size: 14px; }
+.tl-stem { stroke: var(--ink-3); }
+.tl-dot { fill: var(--ink-2); } .tl-dot.hi { fill: var(--sec); }
+.pr-area { fill: color-mix(in srgb, var(--sec) 16%, transparent); }
+.conv-eq { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+.conv-eq .mat span { font-size: 22px; padding: 4px 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.conv-eq .op { font-size: 24px; color: var(--ink-2); font-family: 'Barlow Semi Condensed', sans-serif; }
+.conv-eq .mat.out-1 { border-color: var(--sec); }
+.btnrow .sp { flex: 1; }
+.btnrow.vert { flex-direction: column; align-items: stretch; }
+.edge-pair { display: flex; gap: 24px; }
+.slide figure { margin: 0; }
+canvas.px { image-rendering: pixelated; width: 300px; height: 300px; border: 1px solid var(--rule); display: block; }
+.slide figcaption { font-size: 15.5px; color: var(--ink-2); margin-top: 6px; max-width: 300px; line-height: 1.3; }
+.sw { display: inline-block; width: 14px; height: 14px; vertical-align: middle; border-radius: 3px; }
+.sw.pos { background: var(--sec); } .sw.neg { background: var(--bad); }
+.fmap-grid { display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 10px 14px; margin: 12px 0 8px; }
+.fmap-grid canvas.px { width: 170px; height: 170px; }
+.fmap-grid figcaption { font-size: 14.5px; max-width: 170px; }
+.occ-wrap { position: relative; width: 420px; height: 420px; touch-action: none; cursor: crosshair; }
+.occ-wrap canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.occ-img { image-rendering: pixelated; border: 1px solid var(--rule); }
+.occ-patch { position: absolute; background: rgb(158, 158, 158); outline: 2px solid var(--ink); pointer-events: none; }
+body.doc .edge-pair { flex-wrap: wrap; }
+body.doc .fmap-grid { grid-template-columns: repeat(3, auto); }
+body.doc .occ-wrap { width: min(420px, 90vw); height: min(420px, 90vw); }
+
+/* ---------- revision 2 ---------- */
+.kframe { fill: none; stroke: var(--sec); }
+.kframe-in { stroke: var(--sec); stroke-width: 1.2; }
+.kwin-next { fill: none; stroke: var(--sec); stroke-width: 2; stroke-dasharray: 6 5; opacity: .7; }
+.kwin-dash { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 8 5; }
+.op-txt { font: 600 30px 'Barlow Semi Condensed', sans-serif; fill: var(--ink-2); }
+.k-count { font: 700 19px 'Barlow Semi Condensed', sans-serif; fill: var(--sec); }
+.blk.hl { stroke: var(--bad); stroke-width: 3; }
+.blk.alt { opacity: .55; stroke-dasharray: 4 3; }
+.pa-arrow.alt { stroke-dasharray: 5 4; opacity: .7; }
+.grad-arrow { fill: none; stroke: var(--bad); stroke-width: 2; stroke-dasharray: 6 4; }
+.enc-box { fill: none; stroke: var(--ink-3); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.c-line { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 4; }
+.rho-line { stroke: var(--bad); stroke-width: 2; }
+.neck-zone { fill: color-mix(in srgb, var(--p6) 7%, transparent); stroke: var(--rule); stroke-dasharray: 4 4; }
+.rf-tbl tr[data-rf] { cursor: pointer; }
+.rf-tbl tr.hi td { background: color-mix(in srgb, var(--sec) 14%, transparent); }
+/* ---------- week 4 ---------- */
+[data-part="3"] { --sec: var(--p7); }
+[data-part="4"] { --sec: var(--p5); }
+.skip-line { fill: none; stroke: var(--sec); stroke-width: 2; stroke-dasharray: 6 4; }
+.mm-gt { fill: color-mix(in srgb, var(--ink-3) 18%, transparent); stroke: var(--ink); stroke-width: 2; stroke-dasharray: 6 4; }
+.mm-pr { fill: color-mix(in srgb, var(--sec) 14%, transparent); stroke: var(--sec); stroke-width: 2.5; }
+.mm-int { fill: color-mix(in srgb, var(--sec) 50%, transparent); stroke: none; }
+.sam-mask { fill: color-mix(in srgb, var(--sec) 60%, transparent); stroke: var(--sec); stroke-width: 2; }
+.sam-mask.line { fill: none; stroke: color-mix(in srgb, var(--sec) 75%, transparent); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+.sam-pt { fill: var(--bad); stroke: var(--paper); stroke-width: 2.5; }
+.sam-box { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 7 4; }
+.sd-cands { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.win-band { fill: color-mix(in srgb, var(--sec) 12%, transparent); stroke: var(--sec); stroke-dasharray: 4 3; }
+.ok-band { fill: color-mix(in srgb, var(--ink-3) 14%, transparent); }
+.cell-line { stroke: var(--sec); stroke-width: 4; fill: none; }
+.op-node { fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.5; }
+.slide pre.narrow, .slide pre.narrow code { font-size: 13.5px !important; }
+
+/* reveal */
+.reveal[hidden] { display: none; }
+
+/* title slide */
+.slide.title { justify-content: center; }
+.slide.title h1 { font-weight: 700; font-size: 82px; line-height: .98; margin: 0 0 14px; letter-spacing: -0.01em; }
+.slide.title .sub { font-size: 30px; color: var(--ink-2); margin-bottom: 40px; }
+.slide.title .meta p { font-size: 21px; margin: 0 0 4px; }
+.slide .keys { font-size: 16px; color: var(--ink-2); margin-top: 34px; }
+.keys kbd, .help kbd { font-family: 'JetBrains Mono', monospace; font-size: 13px; border: 1px solid var(--rule); border-bottom-width: 2px; padding: 1px 6px; background: var(--paper); color: var(--ink); }
+
+/* title block footer */
+.tblock {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 40px; z-index: 5;
+  display: grid; grid-template-columns: auto 1fr auto auto auto auto; align-items: stretch;
+  border-top: 1.5px solid var(--ink); background: var(--paper); font-weight: 500; font-size: 16px;
+}
+.tblock > * { display: flex; align-items: center; padding: 0 14px; border-left: 1.5px solid var(--ink); white-space: nowrap; }
+.tblock > :first-child { border-left: 0; padding: 0; }
+.tblock .nav button { height: 100%; width: 42px; border: 0; background: transparent; color: var(--ink); font-size: 18px; cursor: pointer; }
+.tblock .nav button + button { border-left: 1.5px solid var(--ink); }
+.tblock .nav button:hover { background: var(--panel); }
+.tblock .part { gap: 10px; font-weight: 600; }
+.tblock .part i { width: 14px; height: 14px; background: var(--sec); display: inline-block; }
+.tblock .timer { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.tblock .timer.run { color: var(--ink); }
+.tblock .timer.late { color: var(--bad); font-weight: 600; }
+.tblock .count { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+/* help overlay */
+.help {
+  position: absolute; z-index: 10; right: 24px; bottom: 56px; width: 380px;
+  background: var(--paper); border: 1.5px solid var(--ink); padding: 18px 22px; font-size: 17px; line-height: 1.7;
+}
+.help[hidden] { display: none; }
+.help h4 { margin: 0 0 6px; font: 600 21px 'Barlow Semi Condensed', sans-serif; }
+
+/* ---------- handout / small-screen mode ---------- */
+body.doc { height: auto; background: var(--paper); }
+body.doc .viewport { position: static; display: block; padding: 0; overflow: visible; }
+body.doc .stage { width: auto; height: auto; transform: none !important; overflow: visible; box-shadow: none; }
+body.doc .slide {
+  position: relative; visibility: visible; opacity: 1; transition: none;
+  padding: 30px clamp(16px, 4vw, 56px) 34px; border-bottom: 2px solid var(--rule);
+}
+body.doc .tblock { display: none; }
+body.doc .help { position: fixed; bottom: 16px; right: 16px; max-width: calc(100% - 32px); }
+body.doc .slide h2 { font-size: clamp(26px, 4vw, 40px); }
+body.doc .slide p, body.doc .slide li { font-size: clamp(16px, 2.2vw, 21px); }
+body.doc .slide.title h1 { font-size: clamp(42px, 8vw, 78px); }
+body.doc .cols, body.doc .cols.wl, body.doc .cols.wr, body.doc .cols.code,
+body.doc .cols.three, body.doc .cols.four { grid-template-columns: 1fr !important; gap: 20px; }
+body.doc .ctl { grid-template-columns: auto 1fr auto !important; }
+body.doc #grid-demo > svg { max-width: 440px; }
+body.doc .flow { grid-template-columns: 1fr; }
+body.doc .lab { grid-template-columns: 1fr !important; gap: 20px; }
+body.doc .flow > div::after { display: none; }
+body.doc pre { font-size: 13px; max-height: none; }
+body.doc .sm-row { grid-template-columns: 26px 104px 1fr 52px; font-size: 16px; gap: 6px 8px; }
+body.doc .sm-row > :nth-child(6) { grid-row: 1; grid-column: 1; }
+body.doc .sm-row > :nth-child(1) { grid-row: 1; grid-column: 2; }
+body.doc .sm-row > :nth-child(2) { grid-row: 1; grid-column: 3; }
+body.doc .sm-row > :nth-child(3) { grid-row: 1; grid-column: 4; }
+body.doc .sm-row > :nth-child(4) { grid-row: 2; grid-column: 2 / 4; height: 22px; }
+body.doc .sm-row > :nth-child(5) { grid-row: 2; grid-column: 4; }
+body.doc .sm-head { display: none !important; }
+body.doc #softmax-demo .ctl > span { grid-column: 1 / -1; }
+body.doc .tbl { font-size: 15px; display: block; overflow-x: auto; }
+body.doc .tbl-wrap { overflow-x: auto; }
+@media print {
+  .copy, .btnrow, .help { display: none !important; }
+  body.doc .slide { break-after: page; border: 0; }
+}
+</style>
+</head>
+<body>
+<div class="viewport">
+<div class="stage" id="stage">
+
+<!-- ===================== OPENING ===================== -->
+<section class="slide title" data-part="1">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <h1 style="font-size:70px">Segmentation,<br>sequences and<br>transfer learning</h1>
+      <p class="sub">CNNs that label every pixel, networks with memory, and reusing what models already know</p>
+      <div class="meta">
+        <p><strong>Deep Learning for Engineering</strong>, Week 4</p>
+        <p class="muted">Durham University, Michaelmas Term 2026</p>
+      </div>
+      <p class="keys"><kbd>→</kbd> next &nbsp; <kbd>N</kbd> lecture notes &nbsp; <kbd>T</kbd> lecture timer &nbsp; <kbd>D</kbd> dark/light &nbsp; <kbd>H</kbd> handout view &nbsp; <kbd>?</kbd> all keys</p>
+    </div>
+    <div><svg class="fig" id="hero4" viewBox="0 0 400 400" aria-label="A segmentation mask above a time series flowing through a recurrent cell"></svg></div>
+  </div>
+  <aside class="notes"><ul><li>Three topics today: finishing CNNs with segmentation and SAM, then recurrent networks for time series and why LSTMs exist, then a short, mathematical look at transfer learning.</li><li>Keys: <b>N</b> notes, <b>T</b> timer.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="1">
+  <h2>Today's plan</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.05fr; gap: 34px">
+    <div>
+      <p class="small">Week 3 ended with boxes around objects. Today we go one step further, to a label for every pixel; then leave images behind for data that arrives in order over time; and finally ask how a model trained on one problem can start another.</p>
+      <h3>Outline</h3>
+      <ol class="small outline">
+        <li><strong>Image segmentation:</strong> encoder-decoder CNNs, transposed convolution, IoU and Dice, and the Segment Anything Model with Ultralytics</li>
+        <li><strong>Recurrent neural networks:</strong> time series, the recurrent cell, why gradients explode or vanish, and how LSTMs fix it</li>
+        <li><strong>Transfer learning:</strong> the maths of a warm start, feature extraction and fine-tuning</li>
+      </ol>
+    </div>
+    <svg class="fig" id="plan4" viewBox="0 0 560 400" aria-label="Three pictures: a pixel mask, a recurrent loop over a signal, and a pretrained network handing weights to a new task"></svg>
+  </div>
+  <aside class="notes"><ul><li>Roughly 40, 50 and 25 minutes.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 1 ===================== -->
+<section class="slide title divider" data-part="2">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 1</p>
+      <h1>Image segmentation</h1>
+      <p class="sub">CNNs that classify every pixel, and a model that can segment anything</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="now"><span>1</span>Image segmentation</li><li><span>2</span>Recurrent neural networks</li><li><span>3</span>Transfer learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 40 minutes. Goal: students can explain the encoder-decoder, upsampling with transposed convolution, mask metrics, and use SAM through Ultralytics.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>From boxes to pixels</h2>
+  <div class="cols" id="seg-types" style="grid-template-columns: 1.3fr 1fr; gap: 30px">
+    <svg class="fig" viewBox="0 0 640 400" aria-label="The construction-site scene segmented three ways"></svg>
+    <div class="stack">
+      <div class="btnrow vert" role="group" aria-label="Choose a type of segmentation">
+        <button class="btn" type="button" data-seg="sem" aria-pressed="true">Semantic</button>
+        <button class="btn" type="button" data-seg="ins" aria-pressed="false">Instance</button>
+        <button class="btn" type="button" data-seg="pan" aria-pressed="false">Panoptic</button>
+      </div>
+      <div class="box st-box" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Week 3 introduced semantic and instance segmentation. Panoptic is the union: every pixel gets a class, and countable "things" also get an instance number, while "stuff" such as sky and ground does not.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Segmentation is classification, at every pixel</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">A classifier outputs one probability vector per image. A segmentation network outputs one <strong>per pixel</strong>: a tensor of shape \(H \times W \times C\), with a softmax over the \(C\) classes at each location.</p>
+      <p class="small">The target is a <strong>mask</strong>: an image of the same size whose pixel values are class labels. The loss is the cross-entropy of Week 2, averaged over all pixels:</p>
+      <p>\[ \mathcal{L} = -\frac{1}{HW}\sum_{i=1}^{H}\sum_{j=1}^{W}\;\sum_{c=1}^{C} y_{ijc}\,\log \hat{y}_{ijc} \]</p>
+      <div class="box quiet"><p class="small">Example: the Oxford-IIIT Pets masks have 3 classes per pixel: pet, background, and the outline between them.</p></div>
+    </div>
+    <div>
+      <svg class="fig" id="pix-fig" viewBox="0 0 540 330" aria-label="An image, the network's per-pixel class probabilities, and the predicted mask"></svg>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Nothing new in the loss: it is the same categorical cross-entropy, applied H × W times.</li><li>The hard part is the architecture: the output must have the input's full resolution.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>The encoder-decoder architecture</h2>
+  <svg class="fig" id="encdec-fig" viewBox="0 0 1160 260" aria-label="Encoder layers shrinking the image to 25 by 25 by 256, and decoder layers growing it back to 200 by 200"></svg>
+  <div class="cols three" style="margin-top:10px">
+    <div class="box"><h3>Encoder: compress</h3><p class="small">Strided convolutions halve height and width three times while the channels grow: the network learns <em>what</em> is in the image.</p></div>
+    <div class="box"><h3>Decoder: expand</h3><p class="small">Transposed convolutions double height and width three times, turning features back into a full-resolution map: <em>where</em> each thing is.</p></div>
+    <div class="box"><h3>Symmetry</h3><p class="small">Each downsampling step has a matching upsampling step, so the output is exactly 200 × 200, one prediction per input pixel.</p></div>
+  </div>
+  <aside class="notes"><ul><li>The encoder is the CNN of Week 3 without the classification head; the decoder mirrors it.</li><li>The output has as many channels as classes: 3 for the pets example.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Why strided convolutions, not max pooling</h2>
+  <div class="cols" id="stride-loc" style="grid-template-columns: 1fr 1.15fr">
+    <div class="stack">
+      <p class="small">Both halve the size of a feature map. But max pooling only reports the <strong>largest</strong> value in each window, not where it was. For classification that is helpful; for segmentation, where location is the answer, it throws information away.</p>
+      <p class="small">A strided convolution computes a <strong>learned weighted sum</strong> instead. Its weights differ by position within the window, so the output still depends on where the feature was.</p>
+      <table class="tbl compact small">
+        <thead><tr><th></th><th>Max pooling</th><th>Strided convolution</th></tr></thead>
+        <tbody>
+          <tr><td>parameters</td><td>none</td><td>learned weights</td></tr>
+          <tr><td>operation</td><td>maximum</td><td>weighted sum</td></tr>
+          <tr><td>location in window</td><td>lost</td><td>kept</td></tr>
+          <tr><td>typical use</td><td>classification</td><td>segmentation</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 250" aria-label="A 4 by 4 map with one strong value, downsampled by max pooling and by a strided convolution"></svg>
+      <div class="btnrow">
+        <span class="small muted" style="align-self:center">move the feature:</span>
+        <button class="btn" type="button" data-mv="-1,0">←</button><button class="btn" type="button" data-mv="1,0">→</button>
+        <button class="btn" type="button" data-mv="0,-1">↑</button><button class="btn" type="button" data-mv="0,1">↓</button>
+      </div>
+      <p class="small sl-read" aria-live="polite"></p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Move the 9 within its top-left window: max pooling gives 9 every time; the strided convolution gives 9, 18, 27 or 36, so the next layer can still tell where it was.</li><li>The kernel weights 1, 2, 3, 4 are chosen to make the point; real ones are learned.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Upsampling with a transposed convolution</h2>
+  <div id="tconv-demo">
+    <svg class="fig" viewBox="0 0 1160 300" aria-label="A 2 by 2 map is stretched with zeros to 4 by 4, then a 3 by 3 filter slides over it to make a 4 by 4 output"></svg>
+    <div class="btnrow">
+      <button class="btn" type="button" data-act="prev">← previous position</button>
+      <button class="btn" type="button" data-act="next">next position →</button>
+      <span class="sp"></span>
+      <span class="small muted" style="align-self:center">filter:</span>
+      <button class="btn" type="button" data-w="lin" aria-pressed="true">smooth (bilinear)</button>
+      <button class="btn" type="button" data-w="rand" aria-pressed="false">a learned one</button>
+    </div>
+  </div>
+  <div class="cols" style="margin-top:8px">
+    <p class="small"><strong>Step 1</strong>, stretch: put a zero between every value (stride 2). <strong>Step 2</strong>, filter: slide a 3 × 3 kernel over the stretched map, exactly as in an ordinary convolution. The kernel decides how the gaps are filled.</p>
+    <p class="small">For example \(\text{out}[0,0] = w_5\,a\), \(\;\text{out}[0,1] = w_4\,a + w_6\,b\), \(\;\text{out}[1,1] = w_1 a + w_3 b + w_7 c + w_9 d\). With smooth weights this is bilinear interpolation; in training, the network learns its own.</p>
+  </div>
+  <aside class="notes"><ul><li>Step through the 16 positions: each output is a weighted sum of whichever original values the kernel covers.</li><li>Switch to "a learned one": same mechanics, different interpolation. Keras: Conv2DTranspose(filters, 3, strides=2, padding="same"). UpSampling2D is the fixed, parameter-free alternative.</li><li>Known side effect: transposed convolutions can leave checkerboard artefacts; resize-then-convolve avoids them (Odena et al., 2016).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>The segmentation model in Keras</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">def get_model(img_size=(200, 200), num_classes=3):
+    inputs = keras.Input(shape=img_size + (3,))
+    x = layers.Rescaling(1.0 / 255)(inputs)
+    for f in [64, 128, 256]:            # encoder: 200 -> 25
+        x = layers.Conv2D(f, 3, strides=2, padding="same",
+                          activation="relu")(x)
+        x = layers.Conv2D(f, 3, padding="same", activation="relu")(x)
+    for f in [256, 128, 64]:            # decoder: 25 -> 200
+        x = layers.Conv2DTranspose(f, 3, padding="same",
+                                   activation="relu")(x)
+        x = layers.Conv2DTranspose(f, 3, strides=2, padding="same",
+                                   activation="relu")(x)
+    outputs = layers.Conv2D(num_classes, 3, padding="same",
+                            activation="softmax")(x)   # per pixel
+    return keras.Model(inputs, outputs)
+
+model = get_model()
+model.compile(optimizer="rmsprop",
+              loss="sparse_categorical_crossentropy")</code></pre></div>
+    <div class="stack">
+      <p class="small"><code>padding="same"</code> keeps sizes exact: without it every 3 × 3 convolution trims 2 pixels and the decoder would not land back on 200 × 200.</p>
+      <p class="small"><code>strides=2</code> on every other layer does the halving and doubling.</p>
+      <p class="small">The output is 200 × 200 × 3. Masks hold integer labels, so the loss is <code>sparse_categorical_crossentropy</code>, applied at every pixel.</p>
+      <p class="small muted">About 2.9 million parameters. Checked: the shapes run 100, 50, 25, then 50, 100, 200.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>This is the Lecture 7 model written as two loops; the layers are identical.</li><li>Keras subtracts nothing from the masks; Oxford Pets labels are 1 to 3, so subtract 1 when loading them.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>U-Net: skip connections bring back the detail</h2>
+  <div class="cols">
+    <div>
+      <svg class="fig" id="unet-fig" viewBox="0 0 560 330" aria-label="A U-shaped network: the encoder on the left, the decoder on the right, and skip connections across"></svg>
+    </div>
+    <div class="stack">
+      <p class="small">The encoder's 25 × 25 bottleneck knows what is in the image, but fine detail, such as the exact edge of a crack, has been squeezed out. <strong>U-Net</strong> (Ronneberger et al., 2015) copies each encoder map across to the decoder layer of the same size and concatenates them.</p>
+      <div class="code-wrap"><pre class="dense narrow"><code class="language-python">e1 = layers.Conv2D(64, 3, strides=2, padding="same",
+        activation="relu")(inputs)          # 100x100
+...
+d1 = layers.Conv2DTranspose(64, 3, strides=2,  # 100x100
+        padding="same", activation="relu")(d2)
+d1 = layers.Concatenate()([d1, e1])   # 64 + 64 channels</code></pre></div>
+      <p class="small">The decoder then sees both: deep meaning from below, sharp detail from across. U-Net was designed for biomedical images and remains a standard in medical and inspection work.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>This answers the "additional challenge" of the Lecture 7 exercises: skip connections recover boundaries lost in downsampling.</li><li>Same fusion idea as YOLO's neck last week: concatenate channels, let a convolution mix them.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Measuring a mask: IoU and Dice</h2>
+  <div class="cols" id="mask-metric" style="grid-template-columns: 1fr 1.05fr">
+    <div class="stack">
+      <p>\[ \mathrm{IoU} = \frac{|A \cap B|}{|A \cup B|} \qquad \mathrm{Dice} = \frac{2\,|A \cap B|}{|A| + |B|} \]</p>
+      <p class="small">The same IoU as for boxes in Week 3, now counting <strong>pixels</strong>. Dice weights the overlap twice; the two are linked by \(\mathrm{Dice} = 2\,\mathrm{IoU} / (1 + \mathrm{IoU})\), so they rank models alike, but Dice reads higher.</p>
+      <div class="box"><h3>Avoid pixel accuracy</h3><p class="small">If 95% of the image is background, predicting "background" everywhere scores 95% pixel accuracy, and IoU 0 for the defect. Report IoU or Dice per class, and their mean.</p></div>
+      <p class="small muted">Dice is the usual choice in medical imaging, IoU in autonomous driving.</p>
+    </div>
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 520 280" aria-label="A ground-truth mask and a predicted mask overlapping"></svg>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="mm-dx">shift</label><input id="mm-dx" type="range" min="0" max="120" step="2" value="30"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="mm-r">predicted size</label><input id="mm-r" type="range" min="20" max="110" step="2" value="70"><output></output></div>
+      <div class="readout" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Move the prediction away: IoU and Dice fall together, Dice always above IoU (equal only at 0 and 1).</li><li>Class imbalance is the main segmentation pitfall; weighted losses or Dice-based losses help (Week 3's focal loss is another option).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Segment Anything: a foundation model for masks</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">The <strong>Segment Anything Model</strong> (SAM; Kirillov et al., 2023, Meta AI) is not trained for a fixed set of classes. You give it a <strong>prompt</strong>, a point or a box, and it returns the mask of whatever is there.</p>
+      <ul class="small">
+        <li>trained on SA-1B: 11 million images and 1.1 billion masks, about 100 per image</li>
+        <li>works on objects it has never seen, with no fine-tuning: <em>zero-shot</em></li>
+        <li>versions: SAM (2023), SAM 2 for images and video (2024), and the small MobileSAM</li>
+      </ul>
+      <div class="box quiet"><p class="small">The pattern behind it: a very large model, pretrained once, that adapts to new tasks through prompting rather than retraining. Section 3 returns to this idea.</p></div>
+    </div>
+    <div class="stack">
+      <table class="tbl compact small">
+        <thead><tr><th>Ultralytics checkpoint</th><th>Image encoder</th><th>Size</th></tr></thead>
+        <tbody>
+          <tr><td><code>sam_h.pt</code></td><td>ViT-H</td><td>about 640 million parameters</td></tr>
+          <tr><td><code>sam_b.pt</code></td><td>ViT-B</td><td>about 90 million</td></tr>
+          <tr><td><code>sam2.1_b.pt</code></td><td>SAM 2.1, Hiera-B+</td><td>about 80 million</td></tr>
+          <tr><td><code>mobile_sam.pt</code></td><td>TinyViT</td><td>about 10 million</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Sizes are approximate. Smaller models run on a laptop; the largest needs a GPU.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Correction to the Lecture 7 PDF: SAM's image encoder is a Vision Transformer (ViT), not an Xception-like CNN. "641 million parameters" refers to the largest, ViT-H, version.</li><li>Checkpoint names are those in Ultralytics' own model map.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Inside SAM</h2>
+  <svg class="fig" id="sam-arch" viewBox="0 0 1160 230" aria-label="Image encoder, prompt encoder and mask decoder, producing candidate masks with confidence scores"></svg>
+  <div class="cols three" style="margin-top:8px">
+    <div class="box"><h3>Image encoder</h3><p class="small">A Vision Transformer turns the 1024 × 1024 image into a 64 × 64 × 256 embedding. It is the heavy part, and it runs <strong>once</strong> per image.</p></div>
+    <div class="box"><h3>Prompt encoder</h3><p class="small">Turns each point (with label 1 for foreground, 0 for background) or box (two corners) into embedding vectors.</p></div>
+    <div class="box"><h3>Mask decoder</h3><p class="small">A light network that combines the two and outputs masks, each with a predicted IoU as its confidence. It takes milliseconds, so prompts feel interactive.</p></div>
+  </div>
+  <aside class="notes"><ul><li>Because the decoder is cheap, the same image embedding serves many prompts: this is what makes click-to-segment tools fast.</li><li>Training: random masks from SA-1B, prompts sampled from them (a point inside, or the box around), all three parts trained together end to end.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Try it: prompt the model</h2>
+  <div class="cols" id="sam-demo" style="grid-template-columns: 1.3fr 1fr; gap: 30px">
+    <svg class="fig" viewBox="0 0 640 400" aria-label="Click the scene to prompt with a point, or drag to prompt with a box"></svg>
+    <div class="stack">
+      <div class="btnrow" role="group" aria-label="Prompt type">
+        <button class="btn" type="button" data-mode="pt" aria-pressed="true">Point prompt</button>
+        <button class="btn" type="button" data-mode="box" aria-pressed="false">Box prompt</button>
+      </div>
+      <p class="small sd-help"></p>
+      <div class="sd-cands" role="group" aria-label="Candidate masks"></div>
+      <div class="readout small" aria-live="polite"></div>
+      <p class="small muted">A simulation of what SAM returns. One point is often ambiguous (part, object, or group?), so SAM can return several candidates, each with a score.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Click a worker's helmet: the candidates are the helmet, the worker, and both workers. Pick each one. Then try a box around the excavator: a box is less ambiguous, so one mask is usually enough.</li><li>In Ultralytics, multiple candidates are off by default; the predictor returns the best mask per prompt.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>SAM with Ultralytics</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python"># pip install ultralytics      (runs on PyTorch)
+from ultralytics import SAM
+
+model = SAM("sam2.1_b.pt")        # or "sam_b.pt", "mobile_sam.pt"
+model.info()                      # layers and parameter count
+
+# one foreground point (x, y) on the object
+results = model("site.jpg", points=[[580, 450]], labels=[1])
+
+# several points: 1 = foreground, 0 = background
+results = model("site.jpg", points=[[580, 450], [620, 300]],
+                labels=[1, 0])
+
+# a box: top-left and bottom-right corners (x1, y1, x2, y2)
+results = model("site.jpg", bboxes=[[230, 150, 520, 330]])
+
+# no prompt at all: segment everything in the image
+results = model("site.jpg")</code></pre></div>
+    <div class="stack">
+      <p class="small">Checkpoints download automatically on first use.</p>
+      <p class="small">Coordinates are in <strong>pixels of the original image</strong>, with \((0, 0)\) at the top left.</p>
+      <p class="small">A background point (label 0) tells SAM what to leave out: useful when the first mask spills over a neighbour.</p>
+      <div class="box quiet"><p class="small">Ultralytics is built on PyTorch, unlike the Keras code elsewhere in the module. Colab has everything installed.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>API checked against the Ultralytics source: SAM(model).predict / __call__ accept bboxes, points and labels.</li><li>"Segment everything" runs automatic mask generation over a grid of points: slower, and returns many masks.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>What SAM returns, and using it</h2>
+  <div class="cols">
+    <div>
+      <svg class="fig" id="sam-out" viewBox="0 0 560 300" aria-label="The Results object: masks with data, xy and xyn; boxes with xyxy; orig_shape; path"></svg>
+    </div>
+    <div class="stack">
+      <div class="code-wrap"><pre class="dense narrow"><code class="language-python">r = results[0]
+masks = r.masks.data.cpu().numpy()   # (N, H, W), 0 or 1
+outline = r.masks.xy[0]              # polygon, pixels
+box = r.boxes.xyxy[0].cpu().numpy()  # x1, y1, x2, y2
+
+area_px = masks[0].sum()             # pixels in mask 0
+mm_per_px = 0.12                     # from a calibration
+print(f"area: {area_px * mm_per_px**2:.1f} mm^2")</code></pre></div>
+      <p class="small"><code>masks.data</code> is a PyTorch tensor, often on the GPU: move it with <code>.cpu().numpy()</code> before using NumPy.</p>
+      <p class="small">Masks turn a picture into <strong>measurements</strong>: area, length, width, position. That is usually what an engineering client wants.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>results is a list, one entry per image. masks.xyn holds normalised polygons (0 to 1), handy for exporting labels.</li><li>The calibration value is an example: measure a known target in the same camera set-up.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Train your own, or use SAM?</h2>
+  <table class="tbl">
+    <thead><tr><th></th><th>Train a segmentation model</th><th>Use pretrained SAM</th></tr></thead>
+    <tbody>
+      <tr><td>best when</td><td>a fixed set of classes and plenty of labelled masks</td><td>few or no labels; varied or new objects; exploring</td></tr>
+      <tr><td>knows class names</td><td>yes: it outputs "crack", "corrosion"</td><td>no: it outputs a mask; something else must name it</td></tr>
+      <tr><td>speed and size</td><td>small and fast; can run on a device</td><td>large; the image encoder needs a GPU for real time</td></tr>
+      <tr><td>needs prompts</td><td>no</td><td>yes, or "segment everything"</td></tr>
+    </tbody>
+  </table>
+  <div class="bottom-line"><p class="small">A common combination: use SAM to <strong>label</strong> a dataset quickly, with a person checking each mask, then train a small, fast model on those masks for deployment. Or let a detector such as YOLO supply the box prompts.</p></div>
+  <aside class="notes"><ul><li>Detector plus SAM: YOLO names and boxes the objects, SAM turns each box into a precise mask. Ultralytics supports exactly this pipeline.</li><li>Applications: crack and spalling area on concrete, organ delineation, part inspection.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 2 ===================== -->
+<section class="slide title divider" data-part="3">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 2</p>
+      <h1>Recurrent neural networks</h1>
+      <p class="sub">Networks with memory for time series, why long memories break them, and the LSTM</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Image segmentation</li><li class="now"><span>2</span>Recurrent neural networks</li><li><span>3</span>Transfer learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 50 minutes. The core of the section is the gradient derivation: students should leave able to explain why |w| &gt; 1 explodes and |w| &lt; 1 vanishes over long sequences, and how the LSTM's cell state avoids it.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Time series in engineering</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">Much engineering data arrives as a sequence of measurements in time: vibration from a bearing, temperature in a building, strain on a bridge, power demand on a grid, traffic at a junction.</p>
+      <div class="box">
+        <h3>What makes sequences different</h3>
+        <ul class="small">
+          <li><strong>order matters:</strong> shuffle the readings and the meaning is gone</li>
+          <li><strong>context matters:</strong> today's value depends on what came before</li>
+          <li><strong>length varies:</strong> a recording may be 10 seconds or 10 hours</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <table class="tbl compact small">
+        <thead><tr><th>Model</th><th>How it treats a sequence</th></tr></thead>
+        <tbody>
+          <tr><td>MLP</td><td>a fixed-length window, flattened: no notion of order</td></tr>
+          <tr><td>1-D CNN</td><td>local patterns with a kernel sliding in time; limited reach</td></tr>
+          <tr><td><strong>RNN</strong></td><td>reads one step at a time and carries a <strong>memory</strong> forward</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Typical tasks: <strong>forecasting</strong> the next values (regression), <strong>classifying</strong> a whole sequence (fault or normal), and <strong>detecting anomalies</strong>.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Connect to Week 2: forecasting is regression, fault detection is classification. Only the input changes, from a vector to a sequence.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>From a signal to training examples</h2>
+  <div class="cols" id="win-demo" style="grid-template-columns: 1.2fr 1fr">
+    <div>
+      <svg class="fig" viewBox="0 0 600 300" aria-label="A sensor signal with a sliding window of past values and the next value to predict"></svg>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="wd-w">window</label><input id="wd-w" type="range" min="6" max="60" step="2" value="24"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="wd-p">position</label><input id="wd-p" type="range" min="0" max="100" step="1" value="30"><output></output></div>
+    </div>
+    <div class="stack">
+      <p class="small">Slide a window along the signal: the values inside are one input, the value just after it is the target. Every position gives one training example.</p>
+      <div class="code-wrap"><pre class="dense narrow"><code class="language-python">window = 24                     # past readings
+X = np.stack([signal[i:i + window]
+              for i in range(len(signal) - window)])
+y = signal[window:]             # the next reading
+X = X[..., None]                # add a feature axis
+print(X.shape)  # (samples, timesteps, features)</code></pre></div>
+      <p class="small">Recurrent layers expect inputs of shape <strong>(samples, timesteps, features)</strong>. With several sensors, features is the number of sensors.</p>
+      <p class="small muted">Split by time, never at random: train on the past, validate on the future (Week 2).</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Drag the position: the window and its target move together. A larger window gives the model more context, and the gradient problem later shows why that is not free.</li><li>keras.utils.timeseries_dataset_from_array builds the same windows without holding them all in memory.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>The recurrent cell</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.1fr">
+    <div class="stack">
+      <p class="small">At every time step the cell combines the new input \(\mathbf{x}_t\) with its own previous output, the <strong>hidden state</strong> \(\mathbf{h}_{t-1}\):</p>
+      <p>\[ \mathbf{h}_t = \tanh\big(W_x\,\mathbf{x}_t + W_h\,\mathbf{h}_{t-1} + \mathbf{b}\big) \]</p>
+      <p class="small">After the last step, a Dense layer reads the final state: \(\hat{y} = W_y\,\mathbf{h}_T + c\). The state starts at \(\mathbf{h}_0 = \mathbf{0}\).</p>
+      <div class="box"><h3>The same weights at every step</h3><p class="small">\(W_x\), \(W_h\) and \(\mathbf{b}\) are reused at every time step, just as a CNN reuses one kernel at every position. Sharing in <em>time</em> instead of in <em>space</em>, so the cell handles any sequence length.</p></div>
+    </div>
+    <div>
+      <svg class="fig" id="rnn-unroll" viewBox="0 0 560 330" aria-label="A recurrent cell with a loop, and the same cell unrolled over four time steps"></svg>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The loop on the left and the chain on the right are the same network: "unrolling" just draws one copy per time step.</li><li>h_t summarises everything seen so far; that is the memory.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Try it: run an RNN by hand</h2>
+  <div class="cols" id="rnn-step" style="grid-template-columns: 1.25fr 1fr">
+    <svg class="fig" viewBox="0 0 640 330" aria-label="A scalar RNN unrolled over five steps, with the input, hidden state and calculation at each step"></svg>
+    <div class="stack">
+      <p class="small">A one-unit RNN with \(w_x = 1\), \(w_h = 0.8\), \(b = 0\):</p>
+      <p>\[ h_t = \tanh(1 \cdot x_t + 0.8\, h_{t-1}) \]</p>
+      <div class="btnrow">
+        <button class="btn" type="button" data-act="step">Next time step</button>
+        <button class="btn" type="button" data-act="reset">Reset</button>
+      </div>
+      <div class="ctl" style="grid-template-columns: 70px 1fr 50px"><label for="rs-w">\(w_h\)</label><input id="rs-w" type="range" min="0" max="1.5" step="0.1" value="0.8"><output></output></div>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Step through: the first input is 1, the rest are small, yet h stays non-zero for several steps: the cell remembers the spike.</li><li>Set w_h to 0: no memory, h just follows x. Set it to 1.5: the memory lingers far longer. w_h is the knob that will cause trouble on the gradient slides.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>RNNs in Keras</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">window, n_features = 24, 1
+
+model = keras.Sequential([
+    keras.Input(shape=(window, n_features)),  # (timesteps, features)
+    layers.SimpleRNN(32),             # returns only the last state
+    layers.Dense(1),                  # forecast: one number
+])
+model.compile(optimizer="adam", loss="mse", metrics=["mae"])
+model.fit(X_train, y_train, epochs=20, batch_size=64,
+          validation_data=(X_val, y_val))
+
+# stacking: every layer but the last returns the whole sequence
+deep = keras.Sequential([
+    keras.Input(shape=(window, n_features)),
+    layers.SimpleRNN(32, return_sequences=True),   # (24, 32)
+    layers.SimpleRNN(32),                           # (32,)
+    layers.Dense(1),
+])</code></pre></div>
+    <div class="stack">
+      <p class="small"><strong>Parameters:</strong> \(W_x\) has \(n \cdot u\), \(W_h\) has \(u \cdot u\), and the bias \(u\):</p>
+      <p>\[ u\,(u + n + 1) \]</p>
+      <p class="small">For 32 units on one sensor: 32 × (32 + 1 + 1) = <strong>1,088</strong>, whatever the window length.</p>
+      <p class="small"><code>return_sequences=True</code> outputs \(\mathbf{h}_t\) at every step, shape (timesteps, units), so another recurrent layer can read it.</p>
+      <p class="small muted">Compare with the Week 2 baseline idea: "tomorrow = today" is the forecast to beat.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Parameter counts checked in Keras. The count does not grow with the window: same weights at every step.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Training: backpropagation through time</h2>
+  <div class="cols">
+    <div>
+      <svg class="fig" id="bptt-fig" viewBox="0 0 560 300" aria-label="The unrolled network with the gradient flowing backwards from the loss through every time step"></svg>
+    </div>
+    <div class="stack">
+      <p class="small">Unrolled, an RNN is just a deep network with one layer per time step, all sharing the same weights. Training is ordinary backpropagation on that unrolled graph: <strong>backpropagation through time</strong>.</p>
+      <p class="small">For the loss to learn from an early input \(\mathbf{x}_k\), its gradient must travel back through every later step. By the chain rule:</p>
+      <p>\[ \frac{\partial \mathcal{L}}{\partial \mathbf{h}_k} = \frac{\partial \mathcal{L}}{\partial \mathbf{h}_T}\;\prod_{t=k+1}^{T}\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-1}} \]</p>
+      <div class="box"><p class="small">A <strong>product of \(T - k\) factors</strong>, one per step. The longer the context, the more factors. Everything that follows comes from this product.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Ask: what happens to a product of 100 numbers that are each a bit bigger than 1? A bit smaller than 1? Then show the next slide.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Why long sequences break the gradient</h2>
+  <div class="cols" style="grid-template-columns: 1.05fr 1fr">
+    <div class="stack">
+      <p class="small">Take one unit, and for clarity a linear activation: \(h_t = w\,h_{t-1} + u\,x_t\). Each factor in the product is then the same number:</p>
+      <p>\[ \frac{\partial h_t}{\partial h_{t-1}} = w \quad\Rightarrow\quad \frac{\partial h_T}{\partial h_0} = \prod_{t=1}^{T} w = w^{T} \]</p>
+      <ul class="small">
+        <li>\(|w| &gt; 1\): \(|w|^T \to \infty\) as \(T\) grows: the gradient <strong>explodes</strong></li>
+        <li>\(|w| &lt; 1\): \(|w|^T \to 0\): the gradient <strong>vanishes</strong></li>
+        <li>only \(|w| = 1\) exactly is stable, and training will not keep it there</li>
+      </ul>
+      <p class="small">For <strong>any</strong> \(|w| &gt; 1\), however close to 1, a long enough context makes the gradient blow up: \(1.01^{1000} \approx 21{,}000\).</p>
+    </div>
+    <div class="stack">
+      <table class="tbl compact">
+        <thead><tr><th>\(w\)</th><th>\(T = 10\)</th><th>\(T = 100\)</th><th>\(T = 1000\)</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">1.1</td><td class="mono">2.6</td><td class="mono">13,781</td><td class="mono">2.5 × 10⁴¹</td></tr>
+          <tr><td class="mono">1.01</td><td class="mono">1.1</td><td class="mono">2.7</td><td class="mono">20,959</td></tr>
+          <tr><td class="mono">0.99</td><td class="mono">0.90</td><td class="mono">0.37</td><td class="mono">4.3 × 10⁻⁵</td></tr>
+          <tr><td class="mono">0.9</td><td class="mono">0.35</td><td class="mono">2.7 × 10⁻⁵</td><td class="mono">1.7 × 10⁻⁴⁶</td></tr>
+        </tbody>
+      </table>
+      <div class="box quiet"><p class="small"><strong>With tanh</strong>, each factor becomes \(w\,(1 - h_t^2)\). Since \(1 - h_t^2 \le 1\), tanh can only shrink the factors: vanishing gets even more likely, and explosion happens whenever the units stay in tanh's near-linear range.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Write w^T on the board and evaluate one entry live: 1.1^100 = e^(100 ln 1.1) = e^9.53 ≈ 13,800.</li><li>The point the slide must land: the problem is not the size of w but the length of the product. Long context alone is enough.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>The same result for real, many-unit RNNs</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">With a vector state, each factor is a matrix, the Jacobian of one step:</p>
+      <p>\[ \frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-1}} = \mathrm{diag}\big(\tanh'(\mathbf{a}_t)\big)\,W_h \]</p>
+      <p class="small">Ignore the tanh for a moment. The product is then \(W_h^{\,T}\). Write \(W_h = Q \Lambda Q^{-1}\) with eigenvalues \(\lambda_i\):</p>
+      <p>\[ W_h^{\,T} = Q\,\Lambda^{T} Q^{-1}, \qquad \Lambda^{T} = \mathrm{diag}\big(\lambda_1^{T}, \dots, \lambda_n^{T}\big) \]</p>
+      <p class="small">Every eigenvalue is raised to the power \(T\): exactly the scalar case, once per direction.</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>The rule</h3>
+        <ul class="small">
+          <li>largest \(|\lambda_i| &gt; 1\): some direction <strong>explodes</strong></li>
+          <li>all \(|\lambda_i| &lt; 1\): every direction <strong>vanishes</strong></li>
+        </ul>
+        <p class="small">With tanh included, \(\big\|\partial \mathbf{h}_T/\partial \mathbf{h}_k\big\| \le \big(\gamma\,\sigma_{\max}(W_h)\big)^{T-k}\), where \(\gamma \le 1\) bounds tanh's slope (Pascanu et al., 2013).</p>
+      </div>
+      <p class="small muted">First analysed by Hochreiter (1991) and Bengio et al. (1994).</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The eigen-decomposition makes the scalar argument general: in each eigen-direction the gradient is multiplied by lambda at every step.</li><li>σ_max is the largest singular value; for a symmetric W it equals the largest |λ|.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Try it: how far back does the gradient reach?</h2>
+  <div class="cols" id="grad-demo" style="grid-template-columns: 1.2fr 1fr">
+    <svg class="fig" viewBox="0 0 600 340" aria-label="The size of the gradient reaching back k steps, on a logarithmic scale"></svg>
+    <div class="stack">
+      <div class="ctl" style="grid-template-columns: 90px 1fr 54px"><label for="gd-w">\(w\)</label><input id="gd-w" type="range" min="0.80" max="1.20" step="0.01" value="1.05"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 90px 1fr 54px"><label for="gd-t">steps back</label><input id="gd-t" type="range" min="10" max="500" step="10" value="200"><output></output></div>
+      <div class="readout" aria-live="polite"></div>
+      <p class="small">The curve is \(|w|^{k}\): how strongly the loss at the end can "feel" an input \(k\) steps earlier. The grey band marks a usable range; outside it, training either diverges or learns nothing from the past.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Start at w = 1.05 and drag the steps: after about 300 steps the gradient passes a million. Then w = 0.95: below one millionth by about 270 steps.</li><li>Ask: what w would be safe for 500 steps? Only values extremely close to 1, which training cannot guarantee.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>What it means in practice</h2>
+  <div class="cols">
+    <div class="box">
+      <h3>Exploding gradients</h3>
+      <p class="small">Huge updates throw the weights far away: the loss jumps or becomes NaN.</p>
+      <p class="small"><strong>Fix:</strong> <em>gradient clipping</em>, rescaling the gradient whenever its norm exceeds a limit:</p>
+      <div class="code-wrap"><pre class="dense"><code class="language-python">keras.optimizers.Adam(1e-3, clipnorm=1.0)</code></pre></div>
+      <p class="small muted">Clipping treats the symptom: the direction is kept, the size capped.</p>
+    </div>
+    <div class="box">
+      <h3>Vanishing gradients</h3>
+      <p class="small">Training runs, but the early steps receive almost no gradient, so the model only learns from the last few readings. It cannot connect a cause to an effect many steps later.</p>
+      <p class="small"><strong>Fix:</strong> give the gradient a path that does <strong>not</strong> multiply by \(W_h\) at every step. That path is the LSTM's cell state.</p>
+    </div>
+  </div>
+  <div class="bottom-line"><p>Clipping handles explosion. Vanishing needs a different architecture: <strong>gated</strong> recurrent units, the LSTM and the GRU.</p></div>
+  <aside class="notes"><ul><li>Engineering example of a long dependency: a pump's temperature rise today caused by a valve change hours of readings ago.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>LSTM: a memory cell with gates</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.1fr">
+    <div class="stack">
+      <p class="small">Long short-term memory (Hochreiter and Schmidhuber, 1997) adds a <strong>cell state</strong> \(\mathbf{c}_t\), a conveyor belt running through time, and three sigmoid <strong>gates</strong> between 0 and 1 that decide what to forget, write and read:</p>
+      <p>\[ \begin{aligned} \mathbf{f}_t &amp;= \sigma(W_f[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f) &amp;&amp; \text{forget} \\ \mathbf{i}_t &amp;= \sigma(W_i[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i) &amp;&amp; \text{input} \\ \mathbf{o}_t &amp;= \sigma(W_o[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o) &amp;&amp; \text{output} \\ \tilde{\mathbf{c}}_t &amp;= \tanh(W_c[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_c) &amp;&amp; \text{candidate} \\ \mathbf{c}_t &amp;= \mathbf{f}_t \odot \mathbf{c}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{c}}_t \\ \mathbf{h}_t &amp;= \mathbf{o}_t \odot \tanh(\mathbf{c}_t) \end{aligned} \]</p>
+    </div>
+    <div>
+      <svg class="fig" id="lstm-fig" viewBox="0 0 560 340" aria-label="An LSTM cell: the cell state runs straight through, with forget, input and output gates acting on it"></svg>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Read the cell-state line: keep a fraction f of the old memory, add a fraction i of new information. Multiplication by gates, addition of new content.</li><li>[h, x] means the two vectors stacked; ⊙ is element-wise multiplication.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Why the LSTM gradient survives</h2>
+  <div class="cols" id="lstm-demo" style="grid-template-columns: 1fr 1.1fr">
+    <div class="stack">
+      <p class="small">Follow the gradient along the cell state. From \(\mathbf{c}_t = \mathbf{f}_t \odot \mathbf{c}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{c}}_t\):</p>
+      <p>\[ \frac{\partial \mathbf{c}_t}{\partial \mathbf{c}_{t-1}} = \mathrm{diag}(\mathbf{f}_t) \quad\Rightarrow\quad \frac{\partial \mathbf{c}_T}{\partial \mathbf{c}_k} = \prod_{t=k+1}^{T} \mathrm{diag}(\mathbf{f}_t) \]</p>
+      <ul class="small">
+        <li><strong>no \(W_h\)</strong> in the product: nothing gets raised to the power \(T\)</li>
+        <li>each factor is a forget gate in (0, 1), and the network <strong>learns</strong> to keep it near 1 for information worth remembering</li>
+        <li>it can never exceed 1, so this path cannot explode</li>
+      </ul>
+      <p class="small muted">Keras initialises the forget-gate bias to 1 (<code>unit_forget_bias=True</code>), so memories start out kept.</p>
+    </div>
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 540 280" aria-label="Gradient reaching back k steps: simple RNN versus LSTM cell state"></svg>
+      <div class="ctl" style="grid-template-columns: 130px 1fr 54px"><label for="ld-w">RNN \(w\)</label><input id="ld-w" type="range" min="0.80" max="0.99" step="0.01" value="0.90"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 130px 1fr 54px"><label for="ld-f">LSTM forget gate</label><input id="ld-f" type="range" min="0.90" max="1.00" step="0.005" value="0.99"><output></output></div>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Treating the gates as constants is a simplification (they depend on h), but it is the path that matters: Hochreiter and Schmidhuber called it the constant error carousel.</li><li>With w = 0.9 and f = 0.99, after 100 steps the RNN keeps 0.003% of the gradient, the LSTM 37%.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>LSTM and GRU in Keras</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">model = keras.Sequential([
+    keras.Input(shape=(window, n_features)),
+    layers.LSTM(32),              # drop-in replacement for SimpleRNN
+    layers.Dense(1),
+])
+model.compile(optimizer=keras.optimizers.Adam(1e-3, clipnorm=1.0),
+              loss="mse", metrics=["mae"])
+
+stop = keras.callbacks.EarlyStopping(patience=5,
+                                     restore_best_weights=True)
+model.fit(X_train, y_train, epochs=50, batch_size=64,
+          validation_data=(X_val, y_val), callbacks=[stop])
+
+# the lighter alternative: two gates instead of three
+layers.GRU(32)
+
+# regularising recurrent layers (Week 2, applied in time)
+layers.LSTM(32, dropout=0.2, recurrent_dropout=0.2)</code></pre></div>
+    <div class="stack">
+      <table class="tbl compact small">
+        <thead><tr><th>32 units, 1 sensor</th><th>Parameters</th></tr></thead>
+        <tbody>
+          <tr><td>SimpleRNN</td><td class="mono">1,088</td></tr>
+          <tr><td>GRU</td><td class="mono">3,360</td></tr>
+          <tr><td>LSTM: four weight sets, 4 × 1,088</td><td class="mono">4,352</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><strong>GRU</strong> (Cho et al., 2014) merges the forget and input gates and drops the separate cell state: fewer parameters, often similar accuracy.</p>
+      <p class="small">Always compare against a naive forecast first; on short, noisy signals it can be surprisingly hard to beat.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Parameter counts checked in Keras (the GRU count includes Keras's default reset_after biases).</li><li>Since around 2018 transformers have taken over long sequences in language, but LSTMs and GRUs remain common for sensor data: small, fast, and good with modest data.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 3 ===================== -->
+<section class="slide title divider" data-part="4">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 3</p>
+      <h1>Transfer learning</h1>
+      <p class="sub">Starting a new problem from what a model already knows</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Image segmentation</li><li class="done"><span>2</span>Recurrent neural networks</li><li class="now"><span>3</span>Transfer learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 25 minutes including the wrap-up. Brief and mathematical: definition, warm start, feature extraction versus fine-tuning, Keras code.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Why transfer learning?</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="box">
+        <h3>The data problem</h3>
+        <p class="small">Deep networks need many labelled examples; engineering datasets are often small, and labels cost specialists' time.</p>
+      </div>
+      <div class="box">
+        <h3>The compute problem</h3>
+        <p class="small">Training large models from scratch takes days of GPU time, with a real energy cost.</p>
+      </div>
+      <p class="small"><strong>Key idea:</strong> features learned on one task, such as edges, textures and shapes from millions of photos, are useful for many others.</p>
+    </div>
+    <div class="stack">
+      <div class="box quiet">
+        <h3>Definition (Pan and Yang, 2010)</h3>
+        <p class="small">Given a source domain \(\mathcal{D}_S\) with task \(\mathcal{T}_S\), and a target domain \(\mathcal{D}_T\) with task \(\mathcal{T}_T\), transfer learning improves the target function \(f_T(\cdot)\) using knowledge from \(\mathcal{D}_S\) and \(\mathcal{T}_S\), where \(\mathcal{D}_S \ne \mathcal{D}_T\) or \(\mathcal{T}_S \ne \mathcal{T}_T\).</p>
+      </div>
+      <p class="small">A <strong>domain</strong> is a feature space and its distribution, \(\mathcal{D} = \{\mathcal{X}, P(X)\}\). A <strong>task</strong> is a label space and a function, \(\mathcal{T} = \{\mathcal{Y}, f\}\) with \(f: \mathcal{X} \to \mathcal{Y}\).</p>
+      <p class="small muted">Example: source ImageNet photo classification; target cracks in concrete.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>You have already used it: YOLOv8 backbones pretrained on COCO (Week 3), SAM trained on SA-1B (today).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>The mathematics: a warm start</h2>
+  <div class="cols" style="grid-template-columns: 1.05fr 1fr">
+    <div class="stack">
+      <p class="small">Ordinary training minimises the empirical risk on the \(n_T\) target examples, starting from random weights:</p>
+      <p>\[ \min_{\theta_T}\; \frac{1}{n_T}\sum_{i=1}^{n_T} \mathcal{L}\big(f_{\theta_T}(\mathbf{x}_i^T),\, y_i^T\big) \]</p>
+      <p class="small">Transfer learning keeps the same objective but changes the <strong>starting point</strong>, to the weights \(\theta_S^*\) already learned on the source:</p>
+      <p>\[ \theta_T^{(0)} = \theta_S^*, \qquad \theta_T^{(t+1)} = \theta_T^{(t)} - \eta\,\nabla_{\theta_T}\mathcal{L} \]</p>
+      <p class="small">Gradient descent starts in a region that already captures useful features, so it needs far fewer examples and steps to reach a good minimum.</p>
+    </div>
+    <div>
+      <svg class="fig" id="warm-fig" viewBox="0 0 520 340" aria-label="Contours of the target loss, with one optimisation path from a random start and a shorter one from the pretrained weights"></svg>
+      <p class="small muted" style="margin-top:6px">Illustration: same number of steps, very different end points.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Same loss, same optimiser; only θ(0) changes. With little data, a random start overfits long before it reaches a good region; the warm start begins there.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Feature extraction or fine-tuning?</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="box">
+        <h3>Feature extraction</h3>
+        <p class="small">Freeze the pretrained layers, train only a new head:</p>
+        <p>\[ \theta_{\text{conv}} = \theta_S^* \;\text{(frozen)}, \qquad \min_{\theta_{\text{head}}} \mathcal{L}\big(f(\mathbf{x}^T), y^T\big) \]</p>
+      </div>
+      <div class="box">
+        <h3>Fine-tuning</h3>
+        <p class="small">Unfreeze some or all layers, with a much smaller learning rate, \(\eta_{\text{fine}} \ll \eta_{\text{scratch}}\), so the pretrained features are adjusted, not erased (<em>catastrophic forgetting</em>). Two refinements:</p>
+        <p>\[ \mathcal{L}_{\text{total}} = \mathcal{L} + \frac{\lambda}{2}\big\|\theta_T - \theta_S^*\big\|_2^2 \qquad \eta^{(\ell)} = \eta_{\text{base}}\,\alpha^{L-\ell} \]</p>
+        <p class="small muted">Left: L2 pull towards the source weights (L2-SP; Li et al., 2018). Right: smaller rates for earlier layers, \(\alpha \in (0, 1)\) (Howard and Ruder, 2018).</p>
+      </div>
+    </div>
+    <div class="stack">
+      <table class="tbl compact small">
+        <thead><tr><th>Target data</th><th>Similar domain</th><th>Different domain</th></tr></thead>
+        <tbody>
+          <tr><td><strong>small</strong></td><td>feature extraction</td><td>fine-tune the top layers</td></tr>
+          <tr><td><strong>large</strong></td><td>fine-tune all layers</td><td>fine-tune all, or train from scratch</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Why it works: early layers learn general edges and textures, deep layers task-specific concepts (Week 3, Section 2). The general layers transfer; the specific ones are retrained.</p>
+      <div class="box quiet"><p class="small"><strong>How far can you transfer?</strong> Ben-David et al. (2010): \(\epsilon_T(h) \le \epsilon_S(h) + \tfrac{1}{2}\,d_{\mathcal{H}\Delta\mathcal{H}}(\mathcal{D}_S, \mathcal{D}_T) + \lambda^*\). Target error is bounded by source error plus the <em>distance between the domains</em>.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>L2-SP: ordinary weight decay pulls towards 0; this pulls towards the pretrained weights instead.</li><li>Ben-David bound in words: transfer works when the domains are close; X-ray images are far from holiday photos, so expect to fine-tune more.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Transfer learning in Keras</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">base = keras.applications.ResNet50(include_top=False,
+    weights="imagenet", input_shape=(224, 224, 3), pooling="avg")
+
+# 1. feature extraction: freeze the backbone
+base.trainable = False
+inputs = keras.Input((224, 224, 3))
+x = keras.applications.resnet50.preprocess_input(inputs)
+x = base(x, training=False)          # keep BatchNorm in inference mode
+outputs = layers.Dense(1, activation="sigmoid")(x)   # cat or dog
+model = keras.Model(inputs, outputs)
+model.compile(keras.optimizers.Adam(1e-3), "binary_crossentropy",
+              metrics=["accuracy"])
+model.fit(train_ds, validation_data=val_ds, epochs=5)
+
+# 2. fine-tuning: unfreeze the last stage, tiny learning rate
+base.trainable = True
+for layer in base.layers:
+    if not layer.name.startswith("conv5"):
+        layer.trainable = False
+model.compile(keras.optimizers.Adam(1e-5), "binary_crossentropy",
+              metrics=["accuracy"])
+model.fit(train_ds, validation_data=val_ds, epochs=5)</code></pre></div>
+    <div class="stack">
+      <table class="tbl compact small">
+        <tbody>
+          <tr><td>backbone weights</td><td class="mono">23.6 M</td></tr>
+          <tr><td>trained in step 1</td><td class="mono">2,049</td></tr>
+          <tr><td>trained in step 2</td><td class="mono">≈ 15 M</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Step 1 trains just 2,048 weights and a bias on top of ImageNet features. Step 2 lets the last stage adapt.</p>
+      <p class="small"><strong>Recompile</strong> after changing <code>trainable</code>, or the change is ignored.</p>
+      <p class="small"><code>training=False</code> keeps BatchNorm's statistics from ImageNet; updating them on a small dataset damages the features.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Checked in Keras: ResNet50 without its top has 23,587,712 weights; the frozen model trains 2,049; unfreezing conv5 makes about 15 million trainable.</li><li>The Lecture 9 case study (Kaggle Dogs vs. Cats, 25,000 images) follows this recipe; its slides report about 96% after feature extraction and 98.5% after fine-tuning.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Key takeaways</h2>
+  <div class="cols wl">
+    <ol>
+      <li><strong>Segmentation</strong> is classification at every pixel: an encoder compresses, a decoder with transposed convolutions restores full resolution. Measure it with IoU or Dice, not pixel accuracy.</li>
+      <li><strong>SAM</strong> segments anything from a point or box prompt, with no training: use it through Ultralytics, or to label data for a smaller model.</li>
+      <li><strong>RNNs</strong> carry a hidden state through time, sharing weights across steps as CNNs share them across space.</li>
+      <li><strong>The gradient</strong> back through \(T\) steps is a product of \(T\) factors: \(|w|^T\) explodes for any \(|w| &gt; 1\) and vanishes for \(|w| &lt; 1\). Long context alone causes it. The LSTM's cell state replaces the product of weights with a product of forget gates.</li>
+      <li><strong>Transfer learning</strong> starts from \(\theta_S^*\): freeze and train a head, then fine-tune with a small learning rate.</li>
+    </ol>
+    <div class="box quiet">
+      <h3>Next steps</h3>
+      <p class="small">Segment a photo of your own with SAM, then forecast a sensor signal with SimpleRNN and LSTM and compare both with the naive baseline.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>One line per section; leave time for questions.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>References</h2>
+  <div class="cols refs">
+    <ul class="small">
+      <li>Ben-David, S. et al. (2010). A theory of learning from different domains. <em>Machine Learning</em>, 79, 151–175.</li>
+      <li>Bengio, Y., Simard, P. and Frasconi, P. (1994). Learning long-term dependencies with gradient descent is difficult. <em>IEEE Transactions on Neural Networks</em>, 5(2), 157–166.</li>
+      <li>Cho, K. et al. (2014). Learning phrase representations using RNN encoder-decoder for statistical machine translation. <em>EMNLP</em>.</li>
+      <li>Chollet, F. (2021). <em>Deep Learning with Python</em>, 2nd edition. Manning. Chapters 8, 9 and 10.</li>
+      <li>He, K., Zhang, X., Ren, S. and Sun, J. (2016). Deep residual learning for image recognition. <em>CVPR</em>.</li>
+      <li>Hochreiter, S. and Schmidhuber, J. (1997). Long short-term memory. <em>Neural Computation</em>, 9(8), 1735–1780.</li>
+      <li>Howard, J. and Ruder, S. (2018). Universal language model fine-tuning for text classification. <em>ACL</em>.</li>
+    </ul>
+    <ul class="small">
+      <li>Kirillov, A. et al. (2023). Segment anything. <em>ICCV</em>.</li>
+      <li>Li, X., Grandvalet, Y. and Davoine, F. (2018). Explicit inductive bias for transfer learning with convolutional networks. <em>ICML</em>.</li>
+      <li>Odena, A., Dumoulin, V. and Olah, C. (2016). Deconvolution and checkerboard artifacts. <em>Distill</em>.</li>
+      <li>Pan, S. J. and Yang, Q. (2010). A survey on transfer learning. <em>IEEE Transactions on Knowledge and Data Engineering</em>, 22(10), 1345–1359.</li>
+      <li>Pascanu, R., Mikolov, T. and Bengio, Y. (2013). On the difficulty of training recurrent neural networks. <em>ICML</em>.</li>
+      <li>Ronneberger, O., Fischer, P. and Brox, T. (2015). U-Net: convolutional networks for biomedical image segmentation. <em>MICCAI</em>.</li>
+      <li>Ultralytics SAM documentation: docs.ultralytics.com/models/sam</li>
+    </ul>
+  </div>
+  <aside class="notes"><ul><li>Please verify citation details before sharing; they were not checked against a database.</li></ul></aside>
+</section>
+
+<div class="tblock" id="tblock" data-part="1">
+  <div class="nav"><button id="prev" type="button" aria-label="Previous slide">‹</button><button id="next" type="button" aria-label="Next slide">›</button></div>
+  <div class="part"><i></i><span id="part-name"></span></div>
+  <div id="part-time"></div>
+  <div class="timer" id="timer" role="button" tabindex="0" title="Lecture timer: T to start or pause, R to reset"></div>
+  <div class="nbtn" id="notes-btn" role="button" tabindex="0" title="Open the lecture notes in a separate window (N)">N: notes</div>
+  <div class="count" id="count"></div>
+</div>
+
+<div class="help" id="help" hidden>
+  <h4>Keys</h4>
+  <kbd>→</kbd> <kbd>Space</kbd> <kbd>PgDn</kbd> next slide<br>
+  <kbd>←</kbd> <kbd>PgUp</kbd> previous slide<br>
+  <kbd>Home</kbd> <kbd>End</kbd> first or last slide<br>
+  <kbd>T</kbd> start or pause the lecture timer, <kbd>R</kbd> reset it<br>
+  <kbd>D</kbd> switch dark and light<br>
+  <kbd>H</kbd> handout view: all slides in one scrolling page<br>
+  <kbd>N</kbd> lecture notes in a separate window<br>
+  <kbd>F</kbd> full screen &nbsp; <kbd>Esc</kbd> close this
+  <p style="margin:8px 0 0;font-size:15px;color:var(--ink-2)">The timer turns red when you run past the planned end of the current section. Add <code>#12</code> to the address to open slide 12.</p>
+</div>
+
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<style>
+.mk-bad { fill: var(--bad); } .mk-good { fill: var(--good); }
+.sm-head { color: var(--ink-2); font-size: 15px !important; margin-bottom: 4px !important; }
+input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; padding: 4px 8px; width: 130px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var PARTS = {
+    1: ['Opening', 0, 5],
+    2: ['Section 1: Image segmentation', 5, 40],
+    3: ['Section 2: Recurrent neural networks', 45, 50],
+    4: ['Section 3: Transfer learning', 95, 25]
+  };
+  var NPARTS = Object.keys(PARTS).length;
+  var NS = 'http://www.w3.org/2000/svg';
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* ---------- theme ---------- */
+  var savedTheme = store.get('l3-theme');
+  if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme);
+  function isDark() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t) return t === 'dark';
+    return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function toggleTheme() {
+    var next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    store.set('l3-theme', next);
+  }
+
+  /* ---------- slides ---------- */
+  var slides = $$('.slide');
+  var N = slides.length;
+  var stage = $('#stage');
+  var vp = $('.viewport');
+  var cur = 0;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmtSec(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+    return (h ? h + ':' + pad(m) : String(m)) + ':' + pad(s);
+  }
+  function fmtMin(min) { return Math.floor(min / 60) + ':' + pad(min % 60); }
+
+  function fit() {
+    if (document.body.classList.contains('doc')) { stage.style.transform = ''; return; }
+    var cs = getComputedStyle(vp);
+    var w = vp.clientWidth;
+    var h = vp.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var s = Math.min(w / 1280, h / 720);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+
+  function updateFooter() {
+    var p = slides[cur].getAttribute('data-part');
+    var info = PARTS[p];
+    $('#tblock').setAttribute('data-part', p);
+    $('#part-name').textContent = info[0];
+    $('#part-time').textContent = 'planned ' + fmtMin(info[1]) + '\u2013' + fmtMin(info[1] + info[2]);
+    $('#count').textContent = (cur + 1) + ' / ' + N;
+    renderTimer();
+  }
+
+  function go(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    slides[cur].classList.remove('active');
+    cur = i;
+    slides[cur].classList.add('active');
+    updateFooter();
+    renderNotes();
+    try { history.replaceState(null, '', '#' + (cur + 1)); } catch (e) {}
+  }
+
+  /* ---------- lecture notes window ---------- */
+  var notesWin = null;
+  var NOTES_CSS = "body{margin:0;font:18px/1.5 'Atkinson Hyperlegible','Segoe UI','Helvetica Neue',Arial,sans-serif;background:#F4F7F9;color:#16202A}" +
+    "header{position:sticky;top:0;display:flex;align-items:center;gap:10px;padding:10px 16px;background:#E8EDF1;border-bottom:1.5px solid #16202A;font:600 16px 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif}" +
+    "header .sp{flex:1}button{font:600 16px 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;padding:3px 12px;cursor:pointer;background:transparent;color:inherit;border:1.5px solid currentColor}" +
+    "#t{font:14px 'JetBrains Mono',monospace}main{padding:14px 22px 28px}h1{font:600 26px/1.15 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;margin:0 0 4px}" +
+    ".m{color:#55606C;margin:0 0 14px;font-size:15px}ul{padding-left:22px;margin:0}li{margin:0 0 10px}" +
+    ".nx{color:#55606C;border-top:1px solid #C9D2DA;margin-top:18px;padding-top:10px;font-size:15px}" +
+    "@media (prefers-color-scheme: dark){body{background:#12171D;color:#E3E8EE}header{background:#1B222A;border-color:#E3E8EE}.m,.nx{color:#9AA7B4}.nx{border-color:#34404C}}";
+  function plainTitle(s) {
+    var h = s.querySelector('h1, h2');
+    if (!h) return '';
+    return h.innerHTML.replace(/<br\s*\/?>/g, ' ').replace(/<span class="opt-tag">.*?<\/span>/g, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  }
+  function renderNotes() {
+    if (!notesWin || notesWin.closed) return;
+    var d = notesWin.document, s = slides[cur], info = PARTS[s.getAttribute('data-part')];
+    var aside = s.querySelector('aside.notes'), nxt = slides[cur + 1];
+    d.getElementById('pos').textContent = 'Slide ' + (cur + 1) + ' of ' + N;
+    d.getElementById('body').innerHTML = '<h1>' + plainTitle(s) + '</h1>' +
+      '<p class="m">' + info[0] + ', planned ' + fmtMin(info[1]) + '\u2013' + fmtMin(info[1] + info[2]) + '</p>' +
+      (aside ? aside.innerHTML : '<p>No notes for this slide.</p>') +
+      (nxt ? '<p class="nx">Next: ' + plainTitle(nxt) + '</p>' : '<p class="nx">Last slide.</p>');
+    renderTimer();
+  }
+  function openNotes() {
+    if (notesWin && !notesWin.closed) { notesWin.focus(); renderNotes(); return; }
+    notesWin = window.open('', 'lecture-notes', 'width=560,height=760');
+    if (!notesWin) { var h = $('#help'); h.hidden = false; return; }
+    var fonts = $('link[href*="fonts.googleapis"]');
+    var d = notesWin.document;
+    d.open();
+    d.write('<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>Lecture notes: Week 4</title>' +
+      (fonts ? '<link rel="stylesheet" href="' + fonts.href + '">' : '') + '<style>' + NOTES_CSS + '</style></head><body>' +
+      '<header><button id="pv" aria-label="Previous slide">\u2039</button><button id="nx" aria-label="Next slide">\u203a</button>' +
+      '<span id="pos"></span><span class="sp"></span><span id="t"></span></header><main id="body"></main></body></html>');
+    d.close();
+    d.getElementById('pv').addEventListener('click', function () { go(cur - 1); });
+    d.getElementById('nx').addEventListener('click', function () { go(cur + 1); });
+    d.addEventListener('keydown', function (e) {
+      var k = e.key;
+      if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(cur + 1); }
+      else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(cur - 1); }
+      else if (k === 't' || k === 'T') toggleTimer();
+    });
+    renderNotes();
+  }
+
+  /* ---------- timer ---------- */
+  var tRun = false, tStart = 0, tAcc = 0, tInt = null;
+  function elapsed() { return tAcc + (tRun ? (Date.now() - tStart) / 1000 : 0); }
+  function renderTimer() {
+    var el = $('#timer');
+    if (!tRun && tAcc === 0) { el.textContent = 'T: start timer'; el.className = 'timer'; if (notesWin && !notesWin.closed && notesWin.document.getElementById('t')) notesWin.document.getElementById('t').textContent = 'T: start timer'; return; }
+    var e = elapsed();
+    var info = PARTS[slides[cur].getAttribute('data-part')];
+    el.textContent = (tRun ? '' : 'paused ') + fmtSec(e);
+    el.className = 'timer' + (tRun ? ' run' : '') + (e > (info[1] + info[2]) * 60 ? ' late' : '');
+    if (notesWin && !notesWin.closed) { var nt = notesWin.document.getElementById('t'); if (nt) { nt.textContent = el.textContent; nt.style.color = /late/.test(el.className) ? '#C0392B' : ''; } }
+  }
+  function toggleTimer() {
+    if (tRun) { tAcc = elapsed(); tRun = false; clearInterval(tInt); }
+    else { tStart = Date.now(); tRun = true; tInt = setInterval(renderTimer, 1000); }
+    renderTimer();
+  }
+  function resetTimer() { tRun = false; tAcc = 0; clearInterval(tInt); renderTimer(); }
+
+  /* ---------- handout mode ---------- */
+  var docForced = null;
+  var narrow = window.matchMedia ? matchMedia('(max-width: 760px)') : null;
+  function setDoc(on) {
+    var was = document.body.classList.contains('doc');
+    document.body.classList.toggle('doc', on);
+    fit();
+    if (on && !was) requestAnimationFrame(function () { slides[cur].scrollIntoView(); });
+  }
+  function autoDoc() { setDoc(docForced !== null ? docForced : !!(narrow && narrow.matches)); }
+  if (narrow) {
+    if (narrow.addEventListener) narrow.addEventListener('change', autoDoc);
+    else if (narrow.addListener) narrow.addListener(autoDoc);
+  }
+  var docBeforePrint = false;
+  window.addEventListener('beforeprint', function () { docBeforePrint = document.body.classList.contains('doc'); setDoc(true); });
+  window.addEventListener('afterprint', function () { setDoc(docBeforePrint); });
+
+  /* ---------- input ---------- */
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target, k = e.key;
+    if (k === 'Escape') { $('#help').hidden = true; return; }
+    if (t && t.matches && t.matches('input[type=number], input[type=text], textarea, select')) return;
+    var navKey = /^(Arrow|Page|Home$|End$)/.test(k);
+    if (navKey && t && t.matches && t.matches('input[type=range], input[type=radio]')) return;
+    var isDoc = document.body.classList.contains('doc');
+    var onButton = t && t.matches && t.matches('button, [role=button]');
+    if (!isDoc && (k === 'ArrowRight' || k === 'PageDown' || k === 'ArrowDown' || (k === ' ' && !onButton))) { e.preventDefault(); go(cur + 1); }
+    else if (!isDoc && (k === 'ArrowLeft' || k === 'PageUp' || k === 'ArrowUp')) { e.preventDefault(); go(cur - 1); }
+    else if (!isDoc && k === 'Home') { e.preventDefault(); go(0); }
+    else if (!isDoc && k === 'End') { e.preventDefault(); go(N - 1); }
+    else if (k === 't' || k === 'T') toggleTimer();
+    else if (k === 'n' || k === 'N') openNotes();
+    else if (k === 'r' || k === 'R') resetTimer();
+    else if (k === 'd' || k === 'D') toggleTheme();
+    else if (k === 'h' || k === 'H') { docForced = !isDoc; setDoc(docForced); if (!docForced) go(cur); }
+    else if (k === '?') { var h = $('#help'); h.hidden = !h.hidden; }
+    else if (k === 'f' || k === 'F') {
+      try {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      } catch (err) {}
+    }
+  });
+  $('#prev').addEventListener('click', function () { go(cur - 1); });
+  $('#next').addEventListener('click', function () { go(cur + 1); });
+  $('#timer').addEventListener('click', toggleTimer);
+  $('#notes-btn').addEventListener('click', openNotes);
+  $('#notes-btn').addEventListener('keydown', function (e) { if (e.key === 'Enter') openNotes(); });
+  window.addEventListener('beforeunload', function () { try { if (notesWin && !notesWin.closed) notesWin.close(); } catch (e) {} });
+  $('#timer').addEventListener('keydown', function (e) { if (e.key === 'Enter') toggleTimer(); });
+  window.addEventListener('hashchange', function () {
+    var m = location.hash.match(/^#(\d+)$/);
+    if (m && +m[1] - 1 !== cur) go(+m[1] - 1);
+  });
+  window.addEventListener('resize', fit);
+  /* after a mouse drag, hand the arrow keys back to slide navigation */
+  document.addEventListener('pointerup', function (e) {
+    var t = e.target;
+    if (t && t.matches && t.matches('input[type=range], input[type=radio], input[type=checkbox], button') && e.pointerType === 'mouse') {
+      setTimeout(function () { t.blur(); }, 0);
+    }
+  });
+
+  var tx = null, ty = null;
+  stage.addEventListener('touchstart', function (e) {
+    if (e.target.closest('input, button, pre, .sm-rows, svg')) { tx = null; return; }
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (tx === null || document.body.classList.contains('doc')) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < 60) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, { passive: true });
+
+  /* ---------- code: highlight + copy ---------- */
+  try { if (window.Prism && Prism.highlightAll) Prism.highlightAll(); } catch (e) {}
+  $$('.code-wrap').forEach(function (wrap) {
+    var pre = $('pre', wrap);
+    if (!pre) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'copy'; b.textContent = 'Copy';
+    b.addEventListener('click', function () {
+      var text = pre.textContent;
+      function done(ok) { b.textContent = ok ? 'Copied' : 'Select the code to copy'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); done(ok);
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+        else fallback();
+      } catch (e) { fallback(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  $$('[data-reveal]').forEach(function (b) {
+    var showLabel = b.textContent, hideLabel = showLabel.replace(/^Show/, 'Hide');
+    b.addEventListener('click', function () {
+      var el = document.getElementById(b.getAttribute('data-reveal'));
+      el.hidden = !el.hidden;
+      b.setAttribute('aria-pressed', String(!el.hidden));
+      b.textContent = el.hidden ? showLabel : hideLabel;
+    });
+  });
+
+  /* ---------- svg helpers ---------- */
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, s, cls, anchor) {
+    var t = el('text', { x: x, y: y, 'class': cls || 'tick', 'text-anchor': anchor || 'middle' }, parent);
+    t.textContent = s;
+    return t;
+  }
+  var clipN = 0;
+  function makePlot(svg, o) {
+    var W = o.w || 300, H = o.h || 200, L = o.l != null ? o.l : 34, R = 10, T = 12, B = o.b != null ? o.b : (o.xl ? (o.xt ? 44 : 26) : 28);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    function sx(x) { return L + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - L - R); }
+    function sy(y) { return T + (1 - (y - o.y[0]) / (o.y[1] - o.y[0])) * (H - T - B); }
+    var id = 'clip' + (++clipN);
+    var cp = el('clipPath', { id: id }, el('defs', {}, svg));
+    el('rect', { x: L, y: T - 2, width: W - L - R, height: H - T - B + 2 }, cp);
+    if (o.x[0] < 0 && o.x[1] > 0) el('line', { x1: sx(0), x2: sx(0), y1: T, y2: H - B, 'class': 'ax-0' }, svg);
+    if (o.y[0] < 0 && o.y[1] > 0) el('line', { x1: L, x2: W - R, y1: sy(0), y2: sy(0), 'class': 'ax-0' }, svg);
+    el('path', { d: 'M' + L + ',' + T + ' V' + (H - B) + ' H' + (W - R), 'class': 'ax' }, svg);
+    (o.xt || []).forEach(function (v) { txt(svg, sx(v), H - B + 15, String(v)); });
+    (o.yt || []).forEach(function (v) { txt(svg, L - 6, sy(v) + 4, String(v), 'tick', 'end'); });
+    if (o.xl) txt(svg, (L + W - R) / 2, H - 6, o.xl, 'tick');
+    if (o.yl) txt(svg, L + 6, T + 10, o.yl, 'tick', 'start');
+    return {
+      sx: sx, sy: sy, svg: svg,
+      curve: function (f, cls, a, b) {
+        a = a != null ? a : o.x[0]; b = b != null ? b : o.x[1];
+        var d = '', n = 200;
+        for (var i = 0; i <= n; i++) {
+          var x = a + (b - a) * i / n, y = f(x);
+          if (!isFinite(y)) continue;
+          y = Math.max(o.y[0] - 1, Math.min(o.y[1] + 1, y));
+          d += (d ? 'L' : 'M') + sx(x).toFixed(2) + ',' + sy(y).toFixed(2);
+        }
+        return el('path', { d: d, 'class': cls, 'clip-path': 'url(#' + id + ')' }, svg);
+      }
+    };
+  }
+
+  /* ---------- shared helpers ---------- */
+  function slideOf(node) { return node.closest('.slide'); }
+  function isActive(node) { var s = slideOf(node); return !!s && s.classList.contains('active') && !document.body.classList.contains('doc'); }
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setPressed(btns, which) { btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b === which)); }); }
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+  function rect(p, x, y, w, h, cls, extra) { var a = { x: x, y: y, width: w, height: h }; if (cls) a['class'] = cls; for (var k in extra || {}) a[k] = extra[k]; return el('rect', a, p); }
+  function arrowDefs(svg, id) {
+    var mk = el('marker', { id: id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, el('defs', {}, svg));
+    el('path', { d: 'M0,0 L10,5 L0,10 z', 'class': 'pa-mkf' }, mk);
+    return 'url(#' + id + ')';
+  }
+  function arrow(svg, x1, y1, x2, y2, mk) { return el('path', { d: 'M' + x1 + ',' + y1 + ' L' + x2 + ',' + y2, 'class': 'pa-arrow', 'marker-end': mk }, svg); }
+  /* colours from the theme, for canvases */
+  function hexRGB(s) {
+    s = (s || '').trim();
+    var m = s.match(/^#([0-9a-f]{6})$/i);
+    if (m) { var v = parseInt(m[1], 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; }
+    m = s.match(/rgba?\(([^)]+)\)/);
+    if (m) return m[1].split(',').slice(0, 3).map(function (t) { return parseFloat(t); });
+    return [128, 128, 128];
+  }
+  function themeRGB(node, name) { return hexRGB(getComputedStyle(node).getPropertyValue(name)); }
+  var redrawers = [];
+  function onTheme(fn) { redrawers.push(fn); }
+  new MutationObserver(function () { redrawers.forEach(function (f) { f(); }); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { redrawers.forEach(function (f) { f(); }); }); } catch (e) {} }
+
+  /* ---------- a construction-site scene, shared by several demos ---------- */
+  function drawScene(svg, o) {
+    o = o || {};
+    var objs = [];
+    function grp(cls, id, bbox, inst) { var g = el('g', { 'class': 'obj' }, svg); objs.push({ g: g, cls: cls, id: id, bbox: bbox, inst: inst }); return g; }
+    rect(svg, 0, 0, 640, 236, 'sc-sky');
+    rect(svg, 0, 236, 640, 164, 'sc-ground');
+    el('path', { d: 'M0,236 L640,236', 'class': 'sc-line' }, svg);
+    /* excavator */
+    var g = grp('excavator', 'excavator', [226, 146, 524, 330], 1);
+    rect(g, 326, 292, 196, 36, 'sc-track', { rx: 18 });
+    [346, 380, 414, 448, 482].forEach(function (x) { el('circle', { cx: x + 8, cy: 310, r: 9, 'class': 'sc-wheel' }, g); });
+    rect(g, 352, 226, 128, 66, 'sc-body', { rx: 6 });
+    rect(g, 440, 190, 52, 54, 'sc-body', { rx: 5 });
+    rect(g, 450, 198, 32, 24, 'sc-glass', { rx: 2 });
+    el('path', { d: 'M372,234 L302,160 L254,236', 'class': 'sc-arm' }, g);
+    el('path', { d: 'M232,226 L274,226 L268,262 L240,266 Z', 'class': 'sc-body' }, g);
+    /* workers */
+    function worker(cx, cy, id, inst) {
+      var w = grp('person', id, [cx - 18, cy - 30, cx + 18, cy + 76], inst);
+      el('path', { d: 'M' + (cx - 11) + ',' + (cy - 14) + ' A11,11 0 0 1 ' + (cx + 11) + ',' + (cy - 14) + ' Z', 'class': 'sc-helmet' }, w);
+      el('circle', { cx: cx, cy: cy - 8, r: 9, 'class': 'sc-skin' }, w);
+      rect(w, cx - 14, cy + 2, 28, 40, 'sc-vest', { rx: 5 });
+      el('path', { d: 'M' + (cx - 7) + ',' + (cy + 42) + ' L' + (cx - 9) + ',' + (cy + 76) + ' M' + (cx + 7) + ',' + (cy + 42) + ' L' + (cx + 9) + ',' + (cy + 76), 'class': 'sc-legs' }, w);
+    }
+    worker(120, 226, 'worker 1', 2);
+    worker(580, 232, 'worker 2', 3);
+    /* cones */
+    [[176, 336, 'cone 1', 4], [206, 346, 'cone 2', 5], [598, 350, 'cone 3', 6]].forEach(function (c) {
+      var k = grp('cone', c[2], [c[0] - 13, c[1] - 34, c[0] + 13, c[1] + 2], c[3]);
+      el('path', { d: 'M' + (c[0] - 12) + ',' + c[1] + ' L' + c[0] + ',' + (c[1] - 34) + ' L' + (c[0] + 12) + ',' + c[1] + ' Z', 'class': 'sc-cone' }, k);
+      rect(k, c[0] - 14, c[1] - 2, 28, 4, 'sc-cone');
+    });
+    return objs;
+  }
+  function boxLabel(svg, b, label, cls) {
+    rect(svg, b[0], b[1], b[2] - b[0], b[3] - b[1], 'det-box ' + cls);
+    if (label) {
+      var w = label.length * 7.2 + 10;
+      rect(svg, b[0] - 1, b[1] - 20, w, 20, 'det-chip ' + cls);
+      txt(svg, b[0] + 4, b[1] - 6, label, 'det-txt', 'start');
+    }
+  }
+
+  /* ---------- week 4: small helpers ---------- */
+  function mixFill(v, a) { return 'fill: color-mix(in srgb, var(' + v + ') ' + a + '%, var(--paper))'; }
+  function logTicks(svg, P, lo, hi, step, x) {
+    for (var e = lo; e <= hi; e += step) txt(svg, x, P.sy(e) + 4, e === 0 ? '1' : '10' + String(e).replace('-', '\u207b').replace(/[0-9]/g, function (d) { return '\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'[+d]; }), 'tick', 'end');
+  }
+
+  /* ---------- title ---------- */
+  (function () {
+    var svg = $('#hero4'); if (!svg) return;
+    var i, j, cs = 24;
+    for (i = 0; i < 7; i++) for (j = 0; j < 14; j++) {
+      var d = Math.pow((j - 7) / 4.2, 2) + Math.pow((i - 3.2) / 2.4, 2);
+      rect(svg, 30 + j * cs, 20 + i * cs, cs, cs, null, { style: d < 1 ? mixFill('--p8', 70) : d < 1.35 ? mixFill('--p6', 55) : mixFill('--p1', 14) + '; stroke: var(--rule)' });
+    }
+    txt(svg, 198, 206, 'a label for every pixel', 'tick');
+    var pts = [];
+    for (i = 0; i <= 60; i++) { var x = 30 + i * 5.6, y = 300 + 36 * Math.sin(i / 6) + 12 * Math.sin(i / 2.1); pts.push([x, y]); }
+    el('path', { d: 'M' + pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' L'), 'class': 'c-sec' }, svg);
+    var dot = el('circle', { r: 7, 'class': 'dot-pt' }, svg);
+    txt(svg, 198, 380, 'a memory carried through time', 'tick');
+    var k = 0;
+    function place() { dot.setAttribute('cx', pts[k][0]); dot.setAttribute('cy', pts[k][1]); }
+    place();
+    setInterval(function () { if (isActive(svg) && !reduceMotion) { k = (k + 1) % pts.length; place(); } }, 120);
+  })();
+
+  /* ---------- plan strip ---------- */
+  (function () {
+    var svg = $('#plan4'); if (!svg) return;
+    var mk = arrowDefs(svg, 'p4-mk');
+    [[10, 10, '1  segmentation'], [290, 10, '2  recurrent networks'], [10, 210, '3  transfer learning']].forEach(function (p) {
+      rect(svg, p[0], p[1], 260, 180, 'cf-frame', { rx: 6 }); txt(svg, p[0] + 12, p[1] + 170, p[2], 'lbl-sec', 'start');
+    });
+    for (var i = 0; i < 6; i++) for (var j = 0; j < 9; j++) {
+      var d = Math.pow((j - 4) / 3, 2) + Math.pow((i - 2.5) / 2, 2);
+      rect(svg, 30 + j * 24, 22 + i * 22, 24, 22, null, { style: d < 1 ? mixFill('--p8', 65) : mixFill('--p1', 12) + '; stroke: var(--rule)' });
+    }
+    el('circle', { cx: 420, cy: 80, r: 30, 'class': 'node' }, svg); txt(svg, 420, 86, 'h', 'lbl');
+    el('path', { d: 'M440,58 C470,20 490,60 452,72', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    var d2 = 'M310,150';
+    for (var t = 0; t <= 40; t++) d2 += ' L' + (310 + t * 5.5) + ',' + (140 + 14 * Math.sin(t / 3)).toFixed(1);
+    el('path', { d: d2, 'class': 'c-alt' }, svg);
+    arrow(svg, 420, 128, 420, 114, mk);
+    rect(svg, 30, 240, 80, 100, 'blk conv', { rx: 4 }); txt(svg, 70, 294, '\u03b8\u209b*', 'lbl');
+    arrow(svg, 116, 290, 156, 290, mk); txt(svg, 136, 280, 'start from', 'tick');
+    rect(svg, 162, 240, 80, 100, 'blk pool', { rx: 4 }); txt(svg, 202, 294, '\u03b8\u209c', 'lbl');
+    rect(svg, 290, 210, 260, 180, 'cf-frame', { rx: 6 });
+    txt(svg, 420, 290, 'SAM \u2022 LSTM \u2022 ResNet50', 'tick'); txt(svg, 420, 310, 'with Keras and Ultralytics', 'tick');
+  })();
+
+  /* ---------- semantic, instance and panoptic ---------- */
+  (function () {
+    var root = $('#seg-types'); if (!root) return;
+    var svg = $('svg.fig', root), box = $('.st-box', root), btns = $$('[data-seg]', root);
+    var SEM = { person: '--p8', excavator: '--p10', cone: '--p6' }, INST = ['', '--p10', '--p8', '--p7', '--p6', '--p9', '--p2'];
+    var INFO = {
+      sem: ['Semantic', 'Every pixel gets a class. Both workers are simply "person", and the sky and ground are classes too.'],
+      ins: ['Instance', 'Every countable object gets its own mask and number: worker 1, worker 2, cone 1. Sky and ground are left unlabelled.'],
+      pan: ['Panoptic', 'Both at once: every pixel has a class, and countable "things" also have an instance number. Uncountable "stuff", such as sky and ground, has a class only.']
+    };
+    function show(m) {
+      clear(svg);
+      var objs = drawScene(svg), bg = $$('rect', svg).slice(0, 2);
+      bg.forEach(function (r, k) { r.setAttribute('style', m === 'ins' ? '' : 'fill: color-mix(in srgb, var(' + (k ? '--p11' : '--p1') + ') 45%, var(--paper))'); });
+      objs.forEach(function (o) {
+        var col = m === 'sem' ? SEM[o.cls] : INST[o.inst];
+        $$('*', o.g).forEach(function (n) {
+          var line = n.classList.contains('sc-arm') || n.classList.contains('sc-legs');
+          n.setAttribute('style', (line ? 'fill: none; ' : 'fill: var(' + col + '); ') + 'stroke: var(' + col + '); opacity: 0.9');
+        });
+        if (m !== 'sem') txt(svg, (o.bbox[0] + o.bbox[2]) / 2, o.bbox[1] - 6, o.id, 'det-txt b');
+      });
+      box.innerHTML = '<h3>' + INFO[m][0] + ' segmentation</h3><p class="small">' + INFO[m][1] + '</p>';
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { setPressed(btns, b); show(b.getAttribute('data-seg')); }); });
+    show('sem');
+  })();
+
+  /* ---------- one probability vector per pixel ---------- */
+  (function () {
+    var svg = $('#pix-fig'); if (!svg) return;
+    var n = 10, cs = 16, mk = arrowDefs(svg, 'pix-mk'), i, j, r = rng(4);
+    function cls(i, j) { var d = Math.pow((j - 4.6) / 3.2, 2) + Math.pow((i - 5) / 3.6, 2); return d < 0.75 ? 0 : d < 1.05 ? 2 : 1; }
+    for (i = 0; i < n; i++) for (j = 0; j < n; j++) {
+      var c = cls(i, j), v = c === 0 ? 70 + 40 * r() : c === 2 ? 140 : 200 + 30 * r();
+      rect(svg, 10 + j * cs, 40 + i * cs, cs, cs, null, { style: 'fill: rgb(' + [v, v * 0.92, v * 0.8].map(Math.round).join(',') + ')' });
+    }
+    txt(svg, 90, 26, 'image, H \u00d7 W \u00d7 3', 'lbl');
+    arrow(svg, 180, 120, 214, 120, mk);
+    var COL = ['--p8', '--p1', '--p6'];
+    for (i = 0; i < n; i++) for (j = 0; j < n; j++) rect(svg, 220 + j * cs, 40 + i * cs, cs, cs, null, { style: mixFill(COL[cls(i, j)], 60) + '; stroke: var(--paper)' });
+    txt(svg, 300, 26, 'mask: a class per pixel', 'lbl');
+    rect(svg, 220 + 4 * cs, 40 + 5 * cs, cs, cs, 'kwin');
+    el('path', { d: 'M' + (220 + 5 * cs) + ',' + (40 + 5.5 * cs) + ' L410,120', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    [['pet', 0.91, '--p8'], ['background', 0.06, '--p1'], ['outline', 0.03, '--p6']].forEach(function (b, k) {
+      var y = 100 + k * 34;
+      txt(svg, 420, y + 15, b[0], 'tick', 'start');
+      rect(svg, 480, y, 26 * b[1] / 0.91, 20, null, { style: mixFill(b[2], 70) });
+      txt(svg, 482 + 26 * b[1] / 0.91 + 4, y + 15, b[1].toFixed(2), 'tick', 'start');
+    });
+    txt(svg, 470, 86, 'one pixel: softmax', 'lbl');
+    txt(svg, 270, 230, 'network output: H \u00d7 W \u00d7 C probabilities', 'tick');
+    [['pet', '--p8'], ['background', '--p1'], ['outline', '--p6']].forEach(function (l, k) { rect(svg, 220 + k * 100, 250, 14, 14, null, { style: mixFill(l[1], 70) }); txt(svg, 240 + k * 100, 262, l[0], 'tick', 'start'); });
+  })();
+
+  /* ---------- encoder-decoder ---------- */
+  (function () {
+    var svg = $('#encdec-fig'); if (!svg) return;
+    var L = [[200, 3, 'input', 'in'], [100, 64, 'conv, stride 2', 'conv'], [50, 128, 'conv, stride 2', 'conv'], [25, 256, 'conv, stride 2', 'conv'],
+             [50, 256, 'transposed conv \u00d72', 'pool'], [100, 128, 'transposed conv \u00d72', 'pool'], [200, 64, 'transposed conv \u00d72', 'pool'], [200, 3, 'softmax per pixel', 'dense']];
+    var x = 16, cy = 128, mk = arrowDefs(svg, 'ed-mk');
+    L.forEach(function (l, i) {
+      var h = 24 + l[0] * 0.7, w = 10 + Math.log2(l[1] + 1) * 7;
+      rect(svg, x, cy - h / 2, w, h, 'blk ' + l[3], { rx: 3 });
+      txt(svg, x + w / 2, cy + h / 2 + 18, l[0] + '\u00d7' + l[0] + '\u00d7' + l[1], 'lbl');
+      txt(svg, x + w / 2, cy - h / 2 - 8, l[2], 'tick');
+      if (i < L.length - 1) arrow(svg, x + w + 5, cy, x + w + 68, cy, mk);
+      x += w + 76;
+    });
+    txt(svg, 250, 248, 'encoder: what is in the image', 'lbl-sec');
+    txt(svg, 820, 248, 'decoder: where each thing is', 'lbl-sec');
+  })();
+
+  /* ---------- strided convolution keeps location ---------- */
+  (function () {
+    var root = $('#stride-loc'); if (!root) return;
+    var svg = $('svg.fig', root), read = $('.sl-read', root), fx = 0, fy = 0, K = [[1, 2], [3, 4]];
+    function draw() {
+      clear(svg);
+      var X = [], i, j, cs = 44;
+      for (i = 0; i < 4; i++) { X.push([0, 0, 0, 0]); }
+      X[fy][fx] = 9;
+      for (i = 0; i < 4; i++) for (j = 0; j < 4; j++) {
+        rect(svg, 10 + j * cs, 34 + i * cs, cs, cs, 'o-cell', { style: X[i][j] ? mixFill('--sec', 75) : 'fill: var(--paper)' });
+        txt(svg, 10 + j * cs + cs / 2, 34 + i * cs + cs / 2 + 6, String(X[i][j]), X[i][j] ? 'o-txt match' : 'o-txt');
+      }
+      for (i = 0; i <= 2; i++) { el('line', { x1: 10, x2: 10 + 4 * cs, y1: 34 + 2 * i * cs, y2: 34 + 2 * i * cs, 'class': 'pool-grid' }, svg); el('line', { y1: 34, y2: 34 + 4 * cs, x1: 10 + 2 * i * cs, x2: 10 + 2 * i * cs, 'class': 'pool-grid' }, svg); }
+      txt(svg, 98, 22, 'feature map 4 \u00d7 4', 'lbl');
+      function out(x0, title, f) {
+        txt(svg, x0 + 50, 22, title, 'lbl');
+        for (var a = 0; a < 2; a++) for (var b = 0; b < 2; b++) {
+          var v = f(a, b);
+          rect(svg, x0 + b * 50, 60 + a * 50, 50, 50, 'o-cell', { style: v ? mixFill('--sec', 60) : 'fill: var(--paper)' });
+          txt(svg, x0 + b * 50 + 25, 60 + a * 50 + 31, String(v), v ? 'o-txt match' : 'o-txt');
+        }
+      }
+      out(230, 'max pooling', function (a, b) { return Math.max(X[2 * a][2 * b], X[2 * a][2 * b + 1], X[2 * a + 1][2 * b], X[2 * a + 1][2 * b + 1]); });
+      out(400, 'strided conv', function (a, b) { return K[0][0] * X[2 * a][2 * b] + K[0][1] * X[2 * a][2 * b + 1] + K[1][0] * X[2 * a + 1][2 * b] + K[1][1] * X[2 * a + 1][2 * b + 1]; });
+      txt(svg, 450, 190, 'kernel weights', 'tick');
+      for (var a = 0; a < 2; a++) for (var b = 0; b < 2; b++) { rect(svg, 420 + b * 30, 198 + a * 22, 30, 22, 'k-cell'); txt(svg, 435 + b * 30, 214 + a * 22, String(K[a][b]), 'o-txt'); }
+      var w = K[fy % 2][fx % 2];
+      read.innerHTML = 'Max pooling outputs <b>9</b> wherever the 9 sits inside its window. The strided convolution outputs 9 \u00d7 ' + w + ' = <b>' + 9 * w + '</b>: a different value for each position, so the location survives.';
+    }
+    $$('[data-mv]', root).forEach(function (b) { b.addEventListener('click', function () { var d = b.getAttribute('data-mv').split(',').map(Number); fx = Math.max(0, Math.min(3, fx + d[0])); fy = Math.max(0, Math.min(3, fy + d[1])); draw(); }); });
+    draw();
+  })();
+
+  /* ---------- transposed convolution, step by step ---------- */
+  (function () {
+    var root = $('#tconv-demo'); if (!root) return;
+    var svg = $('svg.fig', root), wBtns = $$('[data-w]', root), pos = 0;
+    var V = { a: 1, b: 2, c: 3, d: 4 }, KS = { lin: [[0.25, 0.5, 0.25], [0.5, 1, 0.5], [0.25, 0.5, 0.25]], rand: [[0.1, 0.6, -0.2], [0.4, 0.9, 0.3], [-0.1, 0.5, 0.2]] }, kn = 'lin';
+    var S = [['a', 0, 'b', 0], [0, 0, 0, 0], ['c', 0, 'd', 0], [0, 0, 0, 0]];
+    function Sv(i, j) { if (i < 0 || j < 0 || i > 3 || j > 3) return null; var s = S[i][j]; return s === 0 ? 0 : s; }
+    function outAt(i, j) {
+      var K = KS[kn], s = 0, terms = [];
+      for (var m = 0; m < 3; m++) for (var n = 0; n < 3; n++) {
+        var v = Sv(i + m - 1, j + n - 1);
+        if (v && v !== 0) { s += K[m][n] * V[v]; terms.push('w' + (3 * m + n + 1) + '\u00b7' + v); }
+      }
+      return { s: s, terms: terms };
+    }
+    function f2(v) { return (Math.round(v * 100) / 100).toString().replace('-', '\u2212'); }
+    function draw() {
+      clear(svg);
+      var cs = 44, y0 = 40, i, j, r0 = Math.floor(pos / 4), c0 = pos % 4, mk = arrowDefs(svg, 'tc-mk');
+      txt(svg, 10, 24, 'input 2 \u00d7 2', 'lbl', 'start');
+      [['a', 'b'], ['c', 'd']].forEach(function (row, a) { row.forEach(function (s, b) { rect(svg, 10 + b * cs, y0 + 44 + a * cs, cs, cs, 'o-cell', { style: mixFill('--sec', 30) }); txt(svg, 10 + b * cs + cs / 2, y0 + 44 + a * cs + 28, s + '=' + V[s], 'k-txt'); }); });
+      arrow(svg, 112, y0 + 88, 166, y0 + 88, mk); txt(svg, 139, y0 + 78, 'stretch', 'tick');
+      txt(svg, 176, 24, 'stretched, with zeros (and padding)', 'lbl', 'start');
+      for (i = -1; i <= 4; i++) for (j = -1; j <= 4; j++) {
+        var v = Sv(i, j), x = 176 + (j + 1) * cs * 0.8, y = y0 + (i + 1) * cs * 0.8, pad = v === null;
+        rect(svg, x, y, cs * 0.8, cs * 0.8, pad ? 'g-cell pad' : 'o-cell', { style: v && v !== 0 ? mixFill('--sec', 30) : 'fill: var(--paper)' });
+        txt(svg, x + cs * 0.4, y + cs * 0.4 + 5, pad ? '' : String(v), 'o-txt');
+      }
+      rect(svg, 176 + c0 * cs * 0.8, y0 + r0 * cs * 0.8, 3 * cs * 0.8, 3 * cs * 0.8, 'kwin');
+      var K = KS[kn];
+      txt(svg, 470, 24, 'filter (3 \u00d7 3)', 'lbl', 'start');
+      for (i = 0; i < 3; i++) for (j = 0; j < 3; j++) {
+        rect(svg, 470 + j * cs, y0 + 22 + i * cs, cs, cs, 'k-cell', { style: mixFill('--p5', Math.round(10 + 40 * Math.abs(K[i][j]))) });
+        txt(svg, 470 + j * cs + cs / 2, y0 + 22 + i * cs + 19, 'w' + (3 * i + j + 1), 'tick');
+        txt(svg, 470 + j * cs + cs / 2, y0 + 22 + i * cs + 34, f2(K[i][j]), 'o-txt');
+      }
+      arrow(svg, 610, y0 + 88, 660, y0 + 88, mk);
+      txt(svg, 680, 24, 'output 4 \u00d7 4', 'lbl', 'start');
+      for (var q = 0; q < 16; q++) {
+        var qr = Math.floor(q / 4), qc = q % 4, shown = q <= pos, o = outAt(qr, qc);
+        rect(svg, 680 + qc * cs, y0 + qr * cs, cs, cs, 'o-cell' + (q === pos ? ' now' : '') + (shown ? '' : ' hidden'), { style: shown ? mixFill('--sec', Math.round(10 + 14 * Math.min(4, Math.abs(o.s)))) : 'fill: var(--paper)' });
+        if (shown) txt(svg, 680 + qc * cs + cs / 2, y0 + qr * cs + cs / 2 + 5, f2(o.s), 'o-txt');
+      }
+      var cur = outAt(r0, c0);
+      txt(svg, 680, y0 + 4 * cs + 26, 'out[' + r0 + ',' + c0 + '] = ' + cur.terms.join(' + ') + ' = ' + f2(cur.s), 'lbl-sec', 'start');
+      txt(svg, 680, y0 + 4 * cs + 46, 'position ' + (pos + 1) + ' of 16', 'tick', 'start');
+    }
+    $('[data-act=next]', root).addEventListener('click', function () { pos = Math.min(15, pos + 1); draw(); });
+    $('[data-act=prev]', root).addEventListener('click', function () { pos = Math.max(0, pos - 1); draw(); });
+    wBtns.forEach(function (b) { b.addEventListener('click', function () { kn = b.getAttribute('data-w'); setPressed(wBtns, b); draw(); }); });
+    draw();
+  })();
+
+  /* ---------- U-Net ---------- */
+  (function () {
+    var svg = $('#unet-fig'); if (!svg) return;
+    var mk = arrowDefs(svg, 'un-mk'), lv = [[200, 30], [100, 100], [50, 170], [25, 240]], i;
+    lv.forEach(function (l, k) {
+      var w = 70 - k * 10;
+      rect(svg, 40 + k * 40, l[1], w, 46, 'blk conv', { rx: 4 }); txt(svg, 40 + k * 40 + w / 2, l[1] + 28, l[0] + '\u00d7' + l[0], 'tick');
+      if (k < 3) {
+        rect(svg, 450 - k * 40 - w, l[1], w, 46, 'blk pool', { rx: 4 }); txt(svg, 450 - k * 40 - w / 2, l[1] + 28, l[0] + '\u00d7' + l[0], 'tick');
+        el('path', { d: 'M' + (40 + k * 40 + w + 6) + ',' + (l[1] + 23) + ' H' + (450 - k * 40 - w - 8), 'class': 'skip-line', 'marker-end': mk }, svg);
+        txt(svg, 245, l[1] + 16, 'copy and concatenate', 'tick');
+        arrow(svg, 40 + k * 40 + 20, l[1] + 50, 40 + (k + 1) * 40 + 16, lv[k + 1][1] - 4, mk);
+        arrow(svg, 450 - (k + 1) * 40 - 20, lv[k + 1][1] - 4, 450 - k * 40 - w + 14, l[1] + 50, mk);
+      }
+    });
+    txt(svg, 90, 310, 'encoder: down', 'lbl-sec'); txt(svg, 400, 310, 'decoder: up', 'lbl-sec'); txt(svg, 205, 300, 'bottleneck', 'tick');
+  })();
+
+  /* ---------- IoU and Dice for masks ---------- */
+  (function () {
+    var root = $('#mask-metric'); if (!root) return;
+    var svg = $('svg.fig', root), dI = $('#mm-dx'), rI = $('#mm-r'), out = $('.readout', root), R = 80, cx = 170, cy = 140;
+    function inter(d, r1, r2) {
+      if (d >= r1 + r2) return 0;
+      if (d <= Math.abs(r1 - r2)) return Math.PI * Math.pow(Math.min(r1, r2), 2);
+      var a = r1 * r1 * Math.acos((d * d + r1 * r1 - r2 * r2) / (2 * d * r1)), b = r2 * r2 * Math.acos((d * d + r2 * r2 - r1 * r1) / (2 * d * r2));
+      return a + b - 0.5 * Math.sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2));
+    }
+    var defs = el('defs', {}, svg), cp = el('clipPath', { id: 'mm-clip' }, defs), cpc = el('circle', { cx: cx, cy: cy, r: R }, cp);
+    function draw() {
+      var dx = +dI.value, r = +rI.value; dI.nextElementSibling.textContent = dx; rI.nextElementSibling.textContent = r;
+      $$('.mm-dyn', svg).forEach(function (n) { n.parentNode.removeChild(n); });
+      function c(x, y, rr, cls, extra) { var e = el('circle', { cx: x, cy: y, r: rr, 'class': 'mm-dyn ' + cls }, svg); for (var k in extra || {}) e.setAttribute(k, extra[k]); return e; }
+      c(cx, cy, R, 'mm-gt');
+      c(cx + dx, cy, r, 'mm-pr');
+      c(cx + dx, cy, r, 'mm-int', { 'clip-path': 'url(#mm-clip)' });
+      var t1 = txt(svg, cx - R + 6, cy - R - 6, 'ground truth A', 'tick', 'start'); t1.classList.add('mm-dyn');
+      var t2 = txt(svg, Math.min(500, cx + dx + r), cy + r + 18, 'prediction B', 'lbl-sec', 'end'); t2.classList.add('mm-dyn');
+      var I = inter(dx, R, r), A = Math.PI * R * R, B = Math.PI * r * r, iou = I / (A + B - I), dice = 2 * I / (A + B);
+      out.innerHTML = 'IoU <b>' + iou.toFixed(2) + '</b> &nbsp; Dice <b>' + dice.toFixed(2) + '</b> &nbsp; <span class="muted">check: 2 \u00d7 IoU / (1 + IoU) = ' + (2 * iou / (1 + iou)).toFixed(2) + '</span>';
+    }
+    [dI, rI].forEach(function (i) { i.addEventListener('input', draw); });
+    draw();
+  })();
+
+  /* ---------- SAM architecture ---------- */
+  (function () {
+    var svg = $('#sam-arch'); if (!svg) return;
+    var mk = arrowDefs(svg, 'sa-mk');
+    rect(svg, 10, 40, 110, 110, 'blk in', { rx: 5 }); txt(svg, 65, 100, 'image', 'lbl'); txt(svg, 65, 168, '1024 \u00d7 1024', 'tick');
+    arrow(svg, 126, 95, 166, 95, mk);
+    rect(svg, 172, 30, 210, 130, 'blk conv', { rx: 6 }); txt(svg, 277, 88, 'image encoder', 'lbl'); txt(svg, 277, 108, 'Vision Transformer', 'tick');
+    txt(svg, 277, 180, 'heavy: once per image', 'lbl-sec');
+    arrow(svg, 388, 95, 448, 95, mk); txt(svg, 418, 84, 'embedding', 'tick'); txt(svg, 418, 120, '64\u00d764\u00d7256', 'tick');
+    rect(svg, 172, 196, 210, 30, 'blk pool', { rx: 5 }); txt(svg, 277, 216, 'prompt encoder: points, boxes', 'tick');
+    el('path', { d: 'M388,211 C430,211 440,150 470,140', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    txt(svg, 60, 216, 'prompt \u2192', 'tick');
+    rect(svg, 454, 50, 170, 100, 'blk dense', { rx: 6 }); txt(svg, 539, 96, 'mask decoder', 'lbl'); txt(svg, 539, 116, 'light: milliseconds', 'tick');
+    arrow(svg, 630, 100, 680, 100, mk);
+    [[0.95, 'object'], [0.81, 'part'], [0.62, 'group']].forEach(function (m, k) {
+      var x = 690 + k * 150;
+      rect(svg, x, 36, 130, 100, 'cf-frame', { rx: 4 });
+      el('ellipse', { cx: x + 65, cy: 86, rx: [44, 22, 58][k], ry: [34, 18, 40][k], style: mixFill('--sec', 55) }, svg);
+      txt(svg, x + 65, 156, m[1] + ', IoU score ' + m[0].toFixed(2), 'tick');
+    });
+    txt(svg, 915, 186, 'candidate masks, each with a predicted IoU as its confidence', 'lbl-sec');
+  })();
+
+  /* ---------- prompting SAM (simulated) ---------- */
+  (function () {
+    var root = $('#sam-demo'); if (!root) return;
+    var svg = $('svg.fig', root), help = $('.sd-help', root), cands = $('.sd-cands', root), out = $('.readout', root), mBtns = $$('[data-mode]', root), mode = 'pt';
+    var objs = drawScene(svg), layer = el('g', { 'pointer-events': 'none' }, svg), list = [], drag = null;
+    var PART = { 'sc-helmet': 'helmet', 'sc-skin': 'head', 'sc-vest': 'vest', 'sc-legs': 'legs', 'sc-body': 'body panel', 'sc-glass': 'cab window', 'sc-arm': 'arm', 'sc-track': 'track', 'sc-wheel': 'wheel', 'sc-cone': 'cone' };
+    function objOf(node) { for (var i = 0; i < objs.length; i++) if (objs[i].g.contains(node)) return objs[i]; return null; }
+    function partName(n) { for (var k in PART) if (n.classList.contains(k)) return PART[k]; return 'part'; }
+    function paint(nodes) {
+      while (layer.firstChild) layer.removeChild(layer.firstChild);
+      nodes.forEach(function (n) {
+        var c = n.cloneNode(true), line = n.classList.contains('sc-arm') || n.classList.contains('sc-legs');
+        c.setAttribute('class', 'sam-mask' + (line ? ' line' : ''));
+        c.removeAttribute('style'); layer.appendChild(c);
+      });
+    }
+    function setList(l, pt, bx) {
+      list = l;
+      cands.innerHTML = l.map(function (c, k) { return '<button class="btn" type="button" data-c="' + k + '" aria-pressed="' + (k === 0) + '">' + (k + 1) + '. ' + c.name + ' (' + c.score.toFixed(2) + ')</button>'; }).join('');
+      var bs = $$('[data-c]', cands);
+      bs.forEach(function (b) { b.addEventListener('click', function () { setPressed(bs, b); choose(+b.getAttribute('data-c'), pt, bx); }); });
+      choose(0, pt, bx);
+    }
+    function choose(k, pt, bx) {
+      paint(list[k].nodes);
+      if (pt) { el('circle', { cx: pt[0], cy: pt[1], r: 7, 'class': 'sam-pt' }, layer); }
+      if (bx) rect(layer, bx[0], bx[1], bx[2] - bx[0], bx[3] - bx[1], 'sam-box');
+      var px = 0;
+      out.innerHTML = 'Showing candidate ' + (k + 1) + ': <b>' + list[k].name + '</b>, predicted IoU ' + list[k].score.toFixed(2) + '.' + (list.length > 1 ? ' Click the others to compare.' : '');
+    }
+    function pointPrompt(e) {
+      var q = pt(e), t = e.target, o = objOf(t);
+      if (!o) {
+        var bg = t.classList.contains('sc-sky') ? 'sky' : 'ground';
+        setList([{ name: bg, score: 0.9, nodes: [t] }], [q.x, q.y]);
+        return;
+      }
+      var l = [{ name: o.id, score: 0.95, nodes: $$('*', o.g) }];
+      var part = $$('*', o.g).filter(function (n) { return n === t; });
+      if ($$('*', o.g).length > 2 && part.length) l.push({ name: o.id + ': ' + partName(t), score: 0.81, nodes: [t] });
+      var same = objs.filter(function (p) { return p.cls === o.cls; });
+      if (same.length > 1) l.push({ name: 'all ' + (o.cls === 'person' ? 'workers' : o.cls + 's'), score: 0.62, nodes: [].concat.apply([], same.map(function (p) { return $$('*', p.g); })) });
+      setList(l, [q.x, q.y]);
+    }
+    function iouB(a, b) { var ix = Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])), iy = Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1])), i = ix * iy; return i / ((a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - i); }
+    function pt(e) { var m = svg.getScreenCTM().inverse(), p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(m); }
+    var live = null;
+    svg.addEventListener('pointerdown', function (e) {
+      if (mode === 'pt') { pointPrompt(e); return; }
+      var q = pt(e); drag = [q.x, q.y]; svg.setPointerCapture(e.pointerId);
+      live = rect(svg, q.x, q.y, 1, 1, 'sam-box');
+    });
+    svg.addEventListener('pointermove', function (e) {
+      if (!drag || !live) return; var q = pt(e);
+      live.setAttribute('x', Math.min(drag[0], q.x)); live.setAttribute('y', Math.min(drag[1], q.y));
+      live.setAttribute('width', Math.abs(q.x - drag[0])); live.setAttribute('height', Math.abs(q.y - drag[1]));
+    });
+    svg.addEventListener('pointerup', function (e) {
+      if (!drag) return; var q = pt(e), b = [Math.min(drag[0], q.x), Math.min(drag[1], q.y), Math.max(drag[0], q.x), Math.max(drag[1], q.y)];
+      drag = null; if (live) { live.parentNode.removeChild(live); live = null; }
+      if (b[2] - b[0] < 8 || b[3] - b[1] < 8) return;
+      var best = null, bi = 0;
+      objs.forEach(function (o) { var v = iouB(b, o.bbox); if (v > bi) { bi = v; best = o; } });
+      if (!best || bi < 0.1) { cands.innerHTML = ''; paint([]); rect(layer, b[0], b[1], b[2] - b[0], b[3] - b[1], 'sam-box'); out.innerHTML = 'The box does not frame any object well: try drawing it around one object.'; return; }
+      setList([{ name: best.id, score: Math.min(0.98, 0.7 + 0.3 * bi), nodes: $$('*', best.g) }], null, b);
+    });
+    function setMode(m) {
+      mode = m; help.innerHTML = m === 'pt' ? '<strong>Click</strong> anywhere in the scene: one foreground point.' : '<strong>Drag</strong> a rectangle around an object: a box prompt.';
+      svg.style.cursor = m === 'pt' ? 'crosshair' : 'cell';
+    }
+    mBtns.forEach(function (b) { b.addEventListener('click', function () { setPressed(mBtns, b); setMode(b.getAttribute('data-mode')); }); });
+    setMode('pt');
+    out.innerHTML = 'No prompt yet.';
+  })();
+
+  /* ---------- the Results object ---------- */
+  (function () {
+    var svg = $('#sam-out'); if (!svg) return;
+    function nodeB(x, y, w, a, b, cls) { rect(svg, x, y, w, 40, 'blk ' + (cls || 'in'), { rx: 5 }); txt(svg, x + w / 2, y + (b ? 17 : 25), a, 'lbl'); if (b) txt(svg, x + w / 2, y + 33, b, 'tick'); }
+    function link(x1, y1, x2, y2) { el('path', { d: 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + (y1 + 24) + ' ' + x2 + ',' + (y2 - 24) + ' ' + x2 + ',' + y2, 'class': 'pa-arrow' }, svg); }
+    nodeB(200, 10, 160, 'results[0]', 'Results object', 'conv');
+    var kids = [[10, '.masks', '', 'pool'], [150, '.boxes', '', 'pool'], [290, '.orig_shape', '(height, width)'], [425, '.path', 'image file']];
+    kids.forEach(function (k) { nodeB(k[0], 96, 120, k[1], k[2], k[3]); link(280, 50, k[0] + 60, 96); });
+    [[0, '.data', '(N, H, W) tensor'], [135, '.xy', 'polygons, pixels'], [270, '.xyn', 'polygons, 0 to 1']].forEach(function (k) { nodeB(k[0], 200, 125, k[1], k[2]); link(70, 136, k[0] + 62, 200); });
+    nodeB(410, 200, 140, '.xyxy', 'box corners, pixels'); link(210, 136, 480, 200);
+    txt(svg, 280, 284, 'one mask per prompt, N masks in total', 'tick');
+  })();
+
+  /* ---------- windowing a signal ---------- */
+  var SIG = (function () { var r = rng(31), s = []; for (var t = 0; t < 160; t++) s.push(Math.sin(2 * Math.PI * t / 40) + 0.35 * Math.sin(2 * Math.PI * t / 9) + 0.15 * (r() - 0.5) * 2); return s; })();
+  (function () {
+    var root = $('#win-demo'); if (!root) return;
+    var svg = $('svg.fig', root), wI = $('#wd-w'), pI = $('#wd-p');
+    function draw() {
+      var w = +wI.value, N = SIG.length, start = Math.round(+pI.value / 100 * (N - w - 1));
+      wI.nextElementSibling.textContent = w; pI.nextElementSibling.textContent = start;
+      var P = makePlot(svg, { w: 600, h: 300, l: 34, b: 38, x: [0, N], y: [-1.8, 1.8], xt: [0, 40, 80, 120, 160], yt: [-1, 0, 1], xl: 'time step', yl: 'reading' });
+      rect(svg, P.sx(start - 0.5), P.sy(1.8), P.sx(start + w - 0.5) - P.sx(start - 0.5), P.sy(-1.8) - P.sy(1.8), 'win-band');
+      var d = '';
+      SIG.forEach(function (v, t) { d += (t ? 'L' : 'M') + P.sx(t).toFixed(1) + ',' + P.sy(v).toFixed(1); });
+      el('path', { d: d, 'class': 'c-alt' }, svg);
+      for (var t = start; t < start + w; t++) el('circle', { cx: P.sx(t), cy: P.sy(SIG[t]), r: 2.8, 'class': 'dot-pt' }, svg);
+      el('circle', { cx: P.sx(start + w), cy: P.sy(SIG[start + w]), r: 6, 'class': 'yc-dot' }, svg);
+      txt(svg, P.sx(start + w / 2), P.sy(1.8) + 16, 'input X: ' + w + ' readings', 'lbl-sec');
+      txt(svg, P.sx(start + w) + 8, P.sy(SIG[start + w]) - 8, 'target y', 'lbl-bad', 'start');
+      txt(svg, 590, 290, 'X shape: (' + (N - w) + ', ' + w + ', 1)', 'tick', 'end');
+    }
+    [wI, pI].forEach(function (i) { i.addEventListener('input', draw); });
+    draw();
+  })();
+
+  /* ---------- RNN unrolled ---------- */
+  function drawChain(svg, n, x0, y0, gap, opts) {
+    opts = opts || {}; var mk = arrowDefs(svg, 'ch-mk-' + svg.id + n), cells = [];
+    for (var t = 0; t < n; t++) {
+      var x = x0 + t * gap;
+      rect(svg, x, y0, 64, 50, 'blk conv', { rx: 6 }); cells.push(x);
+      var lab = txt(svg, x + 32, y0 + 30, opts.cellLabel ? opts.cellLabel(t) : 'cell', 'lbl');
+      arrow(svg, x + 32, y0 + 104, x + 32, y0 + 56, mk);
+      txt(svg, x + 32, y0 + 122, opts.xLabel ? opts.xLabel(t) : 'x' + '\u2081\u2082\u2083\u2084\u2085\u2086'[t], 'lbl');
+      if (t > 0) { arrow(svg, x - gap + 70, y0 + 25, x - 6, y0 + 25, mk); if (opts.wh) txt(svg, x - gap / 2 + 32, y0 + 18, opts.wh, 'tick'); }
+    }
+    return { cells: cells, mk: mk };
+  }
+  (function () {
+    var svg = $('#rnn-unroll'); if (!svg) return;
+    var mk = arrowDefs(svg, 'ru-mk');
+    rect(svg, 30, 120, 70, 54, 'blk conv', { rx: 6 }); txt(svg, 65, 152, 'cell', 'lbl');
+    el('path', { d: 'M100,135 C140,110 140,60 65,70 C20,76 30,110 52,118', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    txt(svg, 132, 74, 'h\u209c\u208b\u2081', 'tick');
+    arrow(svg, 65, 228, 65, 180, mk); txt(svg, 65, 246, 'x\u209c', 'lbl');
+    txt(svg, 150, 152, '=', 'cf-eq');
+    var c = drawChain(svg, 4, 180, 122, 94, { wh: 'W\u2095', cellLabel: function (t) { return 'h' + '\u2081\u2082\u2083\u2084'[t]; } });
+    arrow(svg, c.cells[3] + 32, 116, c.cells[3] + 32, 72, mk);
+    rect(svg, c.cells[3] - 6, 36, 76, 32, 'blk dense', { rx: 5 }); txt(svg, c.cells[3] + 32, 57, 'Dense \u2192 \u0177', 'tick');
+    txt(svg, 330, 300, 'the same W\u2093, W\u2095 and b in every copy', 'lbl-sec');
+  })();
+
+  /* ---------- run an RNN by hand ---------- */
+  (function () {
+    var root = $('#rnn-step'); if (!root) return;
+    var svg = $('svg.fig', root), wI = $('#rs-w'), out = $('.readout', root), X = [1, 0.2, -0.1, 0, 0.3], k = 0;
+    function hs() { var w = +wI.value, h = [0]; X.forEach(function (x) { h.push(Math.tanh(x + w * h[h.length - 1])); }); return h; }
+    function f3(v) { return v.toFixed(3).replace('-', '\u2212'); }
+    function draw() {
+      wI.nextElementSibling.textContent = (+wI.value).toFixed(1);
+      clear(svg);
+      var H = hs(), gap = 118, x0 = 20, y0 = 110, mk = arrowDefs(svg, 'rs-mk');
+      txt(svg, x0 - 4, y0 + 30, 'h\u2080 = 0', 'tick', 'end');
+      for (var t = 0; t < X.length; t++) {
+        var x = x0 + t * gap + 10, done = t < k;
+        rect(svg, x, y0, 76, 54, 'blk ' + (done ? 'conv' : 'in') + (t === k - 1 ? ' hl' : ''), { rx: 6 });
+        txt(svg, x + 38, y0 + 22, 'h' + '\u2081\u2082\u2083\u2084\u2085'[t], 'tick');
+        txt(svg, x + 38, y0 + 42, done ? f3(H[t + 1]) : '?', 'lbl');
+        arrow(svg, x + 38, y0 + 110, x + 38, y0 + 60, mk);
+        txt(svg, x + 38, y0 + 128, 'x' + '\u2081\u2082\u2083\u2084\u2085'[t] + ' = ' + X[t].toString().replace('-', '\u2212'), 'lbl');
+        if (t > 0) arrow(svg, x - gap + 82, y0 + 27, x - 6, y0 + 27, mk);
+        var bar = Math.abs(H[t + 1]) * 70;
+        if (done) rect(svg, x + 18, y0 - 12 - bar, 40, bar, null, { style: mixFill('--sec', 55) });
+      }
+      txt(svg, 320, 24, 'bars: size of the memory h after each step', 'tick');
+      if (k === 0) out.innerHTML = 'Press <b>Next time step</b>.';
+      else {
+        var w = +wI.value, t = k - 1;
+        out.innerHTML = 'h' + (t + 1) + ' = tanh(' + X[t] + ' + ' + w.toFixed(1) + ' \u00d7 ' + f3(H[t]) + ') = <b>' + f3(H[t + 1]) + '</b>' + (k === X.length ? '<br>Done: the first input still echoes in h5.' : '');
+      }
+    }
+    $('[data-act=step]', root).addEventListener('click', function () { k = Math.min(X.length, k + 1); draw(); });
+    $('[data-act=reset]', root).addEventListener('click', function () { k = 0; draw(); });
+    wI.addEventListener('input', draw);
+    draw();
+  })();
+
+  /* ---------- backpropagation through time ---------- */
+  (function () {
+    var svg = $('#bptt-fig'); if (!svg) return;
+    var c = drawChain(svg, 5, 20, 110, 104, { cellLabel: function (t) { return 'h' + '\u2081\u2082\u2083\u2084\u2085'[t]; } });
+    var mkr = el('marker', { id: 'bp-mk', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, el('defs', {}, svg));
+    el('path', { d: 'M0,0 L10,5 L0,10 z', style: 'fill: var(--bad)' }, mkr);
+    rect(svg, c.cells[4] + 2, 28, 60, 30, 'blk dense', { rx: 5 }); txt(svg, c.cells[4] + 32, 48, 'loss', 'lbl');
+    arrow(svg, c.cells[4] + 32, 104, c.cells[4] + 32, 62, c.mk);
+    for (var t = 4; t > 0; t--) {
+      var x1 = c.cells[t], x0 = c.cells[t - 1] + 64;
+      el('path', { d: 'M' + (x1 + 4) + ',' + 106 + ' C' + (x1 - 20) + ',84 ' + (x0 + 20) + ',84 ' + (x0 - 4) + ',106', 'class': 'grad-arrow', 'marker-end': 'url(#bp-mk)' }, svg);
+      txt(svg, (x0 + x1) / 2, 80, '\u00d7 \u2202h' + '\u2081\u2082\u2083\u2084\u2085'[t] + '/\u2202h' + '\u2081\u2082\u2083\u2084'[t - 1], 'tick');
+    }
+    txt(svg, 280, 286, 'gradient to an early step = a product of one factor per step', 'lbl-bad');
+  })();
+
+  /* ---------- how far back does the gradient reach ---------- */
+  (function () {
+    var root = $('#grad-demo'); if (!root) return;
+    var svg = $('svg.fig', root), wI = $('#gd-w'), tI = $('#gd-t'), out = $('.readout', root);
+    function draw() {
+      var w = +wI.value, T = +tI.value; wI.nextElementSibling.textContent = w.toFixed(2); tI.nextElementSibling.textContent = T;
+      var P = makePlot(svg, { w: 600, h: 340, l: 54, b: 40, x: [0, T], y: [-8, 8], xt: [0, Math.round(T / 2), T], yt: [], xl: 'steps back, k' });
+      rect(svg, P.sx(0), P.sy(2), P.sx(T) - P.sx(0), P.sy(-2) - P.sy(2), 'ok-band');
+      logTicks(svg, P, -8, 8, 4, 48);
+      el('line', { x1: P.sx(0), x2: P.sx(T), y1: P.sy(0), y2: P.sy(0), 'class': 'ax-0' }, svg);
+      var d = '', lw = Math.log10(Math.abs(w)), k;
+      for (k = 0; k <= T; k += Math.max(1, Math.round(T / 200))) { var y = Math.max(-8, Math.min(8, k * lw)); d += (d ? 'L' : 'M') + P.sx(k).toFixed(1) + ',' + P.sy(y).toFixed(1); }
+      el('path', { d: d, 'class': 'c-sec' }, svg);
+      txt(svg, P.sx(T * 0.02), P.sy(2) - 6, 'usable: 0.01 to 100', 'tick', 'start');
+      var v = T * lw, val = Math.pow(10, v), s = Math.abs(v) < 4 ? val.toPrecision(3) : '10^' + v.toFixed(1);
+      out.innerHTML = '|w|<sup>' + T + '</sup> = <b>' + s.replace('-', '\u2212') + '</b><br>' + (v > 2 ? '<span class="tag-bad">exploding</span>: updates from early steps are enormous.' : v < -2 ? '<span class="tag-bad">vanishing</span>: early steps get essentially no gradient.' : '<span class="tag-good">still usable</span> over this many steps.');
+    }
+    [wI, tI].forEach(function (i) { i.addEventListener('input', draw); });
+    draw();
+  })();
+
+  /* ---------- LSTM cell diagram ---------- */
+  (function () {
+    var svg = $('#lstm-fig'); if (!svg) return;
+    var mk = arrowDefs(svg, 'lc-mk');
+    rect(svg, 60, 40, 440, 250, 'cf-frame', { rx: 14 });
+    el('path', { d: 'M10,80 H550', 'class': 'cell-line', 'marker-end': mk }, svg);
+    txt(svg, 20, 70, 'c\u209c\u208b\u2081', 'lbl', 'start'); txt(svg, 540, 70, 'c\u209c', 'lbl', 'end');
+    txt(svg, 280, 32, 'cell state: the conveyor belt', 'lbl-sec');
+    function op(x, y, s) { el('circle', { cx: x, cy: y, r: 15, 'class': 'op-node' }, svg); txt(svg, x, y + 6, s, 'lbl'); }
+    op(150, 80, '\u00d7'); op(290, 80, '+');
+    function gate(x, lab, sub) { rect(svg, x - 30, 190, 60, 34, 'blk ' + (lab === 'tanh' ? 'pool' : 'dense'), { rx: 5 }); txt(svg, x, 212, lab, 'lbl'); txt(svg, x, 248, sub, 'tick'); }
+    gate(150, '\u03c3', 'forget f'); gate(240, '\u03c3', 'input i'); gate(310, 'tanh', 'candidate c\u0303'); gate(420, '\u03c3', 'output o');
+    el('path', { d: 'M150,188 V96', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    op(275, 150, '\u00d7');
+    el('path', { d: 'M240,188 V164 H262', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    el('path', { d: 'M310,188 V164 H290', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    el('path', { d: 'M275,134 L286,96', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    op(420, 150, '\u00d7');
+    el('path', { d: 'M380,80 V112', 'class': 'pa-arrow' }, svg);
+    rect(svg, 356, 112, 48, 24, 'blk pool', { rx: 4 }); txt(svg, 380, 129, 'tanh', 'tick');
+    el('path', { d: 'M404,124 H406', 'class': 'pa-arrow' }, svg);
+    el('path', { d: 'M404,128 C410,140 404,146 406,148', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    el('path', { d: 'M420,188 V168', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    el('path', { d: 'M436,150 H550', 'class': 'pa-arrow', 'marker-end': mk }, svg); txt(svg, 540, 140, 'h\u209c', 'lbl', 'end');
+    el('path', { d: 'M10,300 H110 V270', 'class': 'pa-arrow' }, svg); txt(svg, 20, 318, 'h\u209c\u208b\u2081, x\u209c', 'lbl', 'start');
+    el('path', { d: 'M110,270 H420', 'class': 'pa-arrow' }, svg);
+    [150, 240, 310, 420].forEach(function (x) { el('path', { d: 'M' + x + ',270 V228', 'class': 'pa-arrow', 'marker-end': mk }, svg); });
+  })();
+
+  /* ---------- RNN versus LSTM gradient ---------- */
+  (function () {
+    var root = $('#lstm-demo'); if (!root) return;
+    var svg = $('svg.fig', root), wI = $('#ld-w'), fI = $('#ld-f'), out = $('.readout', root), T = 200;
+    function draw() {
+      var w = +wI.value, f = +fI.value; wI.nextElementSibling.textContent = w.toFixed(2); fI.nextElementSibling.textContent = f.toFixed(3);
+      var P = makePlot(svg, { w: 540, h: 280, l: 54, b: 40, x: [0, T], y: [-10, 0.5], xt: [0, 50, 100, 150, 200], yt: [], xl: 'steps back, k' });
+      logTicks(svg, P, -10, 0, 2, 48);
+      function line(r, cls) { var d = ''; for (var k = 0; k <= T; k += 2) d += (d ? 'L' : 'M') + P.sx(k).toFixed(1) + ',' + P.sy(Math.max(-10, k * Math.log10(r))).toFixed(1); el('path', { d: d, 'class': cls }, svg); }
+      line(w, 'c-bad'); line(f, 'c-sec');
+      txt(svg, P.sx(120), P.sy(Math.max(-9.6, 120 * Math.log10(w))) - 8, 'simple RNN: w\u1d4f', 'lbl-bad', 'start');
+      txt(svg, P.sx(150), P.sy(150 * Math.log10(f)) - 8, 'LSTM cell state: f\u1d4f', 'lbl-sec', 'start');
+      out.innerHTML = 'after 100 steps: RNN keeps <b>' + (100 * Math.pow(w, 100)).toPrecision(2) + '%</b> of the gradient, the LSTM cell state <b>' + (100 * Math.pow(f, 100)).toPrecision(2) + '%</b>.';
+    }
+    [wI, fI].forEach(function (i) { i.addEventListener('input', draw); });
+    draw();
+  })();
+
+  /* ---------- warm start ---------- */
+  (function () {
+    var svg = $('#warm-fig'); if (!svg) return;
+    var m = [340, 150], th = -0.5, c = Math.cos(th), s = Math.sin(th), L = [1, 7], S = 40;
+    function toScreen(u) { return [m[0] + S * (c * u[0] - s * u[1]), m[1] + S * (s * u[0] + c * u[1])]; }
+    function toU(p) { var x = (p[0] - m[0]) / S, y = (p[1] - m[1]) / S; return [c * x + s * y, -s * x + c * y]; }
+    [0.15, 0.6, 1.4, 2.6, 4.2, 6.2].forEach(function (lv) {
+      el('ellipse', { cx: m[0], cy: m[1], rx: S * Math.sqrt(2 * lv / L[0]), ry: S * Math.sqrt(2 * lv / L[1]), transform: 'rotate(' + (th * 180 / Math.PI) + ' ' + m[0] + ' ' + m[1] + ')', 'class': 'contour' }, svg);
+    });
+    function path(start, cls, lab, lx, ly) {
+      var u = toU(start), d = 'M' + start[0] + ',' + start[1], eta = 0.1;
+      for (var k = 0; k < 10; k++) { u = [u[0] - eta * L[0] * u[0], u[1] - eta * L[1] * u[1]]; var p = toScreen(u); d += ' L' + p[0].toFixed(1) + ',' + p[1].toFixed(1); }
+      el('path', { d: d, 'class': cls }, svg);
+      el('circle', { cx: start[0], cy: start[1], r: 7, 'class': cls === 'c-sec' ? 'dot-pt' : 'yc-dot' }, svg);
+      txt(svg, lx, ly, lab, cls === 'c-sec' ? 'lbl-sec' : 'lbl-bad', 'start');
+    }
+    path([40, 300], 'c-bad', 'random start \u03b8\u2080', 20, 324);
+    path([300, 100], 'c-sec', 'pretrained \u03b8\u209b*', 230, 84);
+    el('circle', { cx: m[0], cy: m[1], r: 4, 'class': 'min-pt' }, svg);
+    txt(svg, m[0] + 8, m[1] + 18, 'good minimum for the target task', 'tick', 'start');
+    txt(svg, 260, 22, 'target-task loss, 10 gradient steps from each start', 'tick');
+  })();
+
+  /* ---------- start ---------- */
+  var m = location.hash.match(/^#(\d+)$/);
+  var start = m ? Math.max(0, Math.min(N - 1, +m[1] - 1)) : 0;
+  slides[0].classList.remove('active');
+  cur = start;
+  slides[cur].classList.add('active');
+  updateFooter();
+  autoDoc();
+  fit();
+})();
+</script>
+</body>
+</html>
