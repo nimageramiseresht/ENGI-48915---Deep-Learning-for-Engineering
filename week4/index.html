@@ -449,6 +449,10 @@ body.doc .occ-wrap { width: min(420px, 90vw); height: min(420px, 90vw); }
 .op-node { fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.5; }
 .slide pre.narrow, .slide pre.narrow code { font-size: 13.5px !important; }
 
+.h5-row { display: grid; grid-template-columns: 250px 1fr; align-items: center; gap: 16px; }
+.h5-row p { margin: 0; }
+.cs-tbl td, .cs-tbl th { padding-top: 2px !important; padding-bottom: 2px !important; }
+.cs-tbl tr.hi td { background: color-mix(in srgb, var(--sec) 16%, transparent); }
 /* reveal */
 .reveal[hidden] { display: none; }
 
@@ -930,36 +934,51 @@ print(X.shape)  # (samples, timesteps, features)</code></pre></div>
 
 <section class="slide" data-part="3">
   <h2>The recurrent cell</h2>
-  <div class="cols" style="grid-template-columns: 1fr 1.1fr">
+  <div class="cols" style="grid-template-columns: 1fr 1.05fr">
     <div class="stack">
       <p class="small">At every time step the cell combines the new input \(\mathbf{x}_t\) with its own previous output, the <strong>hidden state</strong> \(\mathbf{h}_{t-1}\):</p>
       <p>\[ \mathbf{h}_t = \tanh\big(W_x\,\mathbf{x}_t + W_h\,\mathbf{h}_{t-1} + \mathbf{b}\big) \]</p>
-      <p class="small">After the last step, a Dense layer reads the final state: \(\hat{y} = W_y\,\mathbf{h}_T + c\). The state starts at \(\mathbf{h}_0 = \mathbf{0}\).</p>
-      <div class="box"><h3>The same weights at every step</h3><p class="small">\(W_x\), \(W_h\) and \(\mathbf{b}\) are reused at every time step, just as a CNN reuses one kernel at every position. Sharing in <em>time</em> instead of in <em>space</em>, so the cell handles any sequence length.</p></div>
+      <div class="box">
+        <h3>What counts as the input \(\mathbf{x}_t\)?</h3>
+        <p class="small">Whatever is measured <strong>at step \(t\)</strong>: one reading for one sensor, or a vector for several (temperature, pressure, flow), plus known external signals such as the hour of the day. It is everything <em>except</em> the past: earlier time steps are never fed in again; they reach step \(t\) only through \(\mathbf{h}_{t-1}\).</p>
+      </div>
+      <div class="box quiet"><p class="small"><strong>The same weights at every step:</strong> \(W_x\), \(W_h\) and \(\mathbf{b}\) are reused at every time step, as a CNN reuses one kernel at every position. Sharing in time instead of space, so the cell handles any sequence length.</p></div>
     </div>
-    <div>
-      <svg class="fig" id="rnn-unroll" viewBox="0 0 560 330" aria-label="A recurrent cell with a loop, and the same cell unrolled over four time steps"></svg>
+    <div class="stack">
+      <svg class="fig" id="rnn-unroll" viewBox="0 0 560 260" aria-label="A recurrent cell with a loop, and the same cell unrolled over a window of three readings"></svg>
+      <p class="small"><strong>Example, window of 3:</strong> three readings \(x_1, x_2, x_3\) go in, one per step, starting from \(\mathbf{h}_0 = \mathbf{0}\):</p>
+      <p>\[ \begin{aligned} \mathbf{h}_1 &amp;= \tanh(W_x x_1 + W_h \mathbf{h}_0 + \mathbf{b}) \\ \mathbf{h}_2 &amp;= \tanh(W_x x_2 + W_h \mathbf{h}_1 + \mathbf{b}) \\ \mathbf{h}_3 &amp;= \tanh(W_x x_3 + W_h \mathbf{h}_2 + \mathbf{b}) \\ \hat{y} &amp;= W_y\,\mathbf{h}_3 + c \quad \text{(forecast of } x_4) \end{aligned} \]</p>
+      <p class="small">Here \(\mathbf{h}_t\) at the end of the window is \(\mathbf{h}_3\): one vector summarising all three readings, in order.</p>
     </div>
   </div>
-  <aside class="notes"><ul><li>The loop on the left and the chain on the right are the same network: "unrolling" just draws one copy per time step.</li><li>h_t summarises everything seen so far; that is the memory.</li></ul></aside>
+  <aside class="notes"><ul><li>Walk the window of 3: x1 enters, makes h1; x2 and h1 make h2; x3 and h2 make h3; only h3 goes to the Dense layer.</li><li>Stress the input definition: x_t is the current measurement(s), never earlier readings. A window of 24 means 24 steps of this loop, not 24 inputs at once.</li></ul></aside>
 </section>
 
 <section class="slide" data-part="3">
   <h2>Try it: run an RNN by hand</h2>
-  <div class="cols" id="rnn-step" style="grid-template-columns: 1.25fr 1fr">
-    <svg class="fig" viewBox="0 0 640 330" aria-label="A scalar RNN unrolled over five steps, with the input, hidden state and calculation at each step"></svg>
+  <div class="cols" id="rnn-step" style="grid-template-columns: 1.2fr 1fr">
     <div class="stack">
-      <p class="small">A one-unit RNN with \(w_x = 1\), \(w_h = 0.8\), \(b = 0\):</p>
-      <p>\[ h_t = \tanh(1 \cdot x_t + 0.8\, h_{t-1}) \]</p>
+      <svg class="fig" viewBox="0 0 640 260" aria-label="A scalar RNN unrolled over five steps, with the input, hidden state and calculation at each step"></svg>
+    </div>
+    <div class="stack">
+      <p class="small">A one-unit RNN with \(w_x = 1\), \(w_h = w\), \(b = 0\):</p>
+      <p>\[ h_t = \tanh(x_t + w\, h_{t-1}) \]</p>
       <div class="btnrow">
         <button class="btn" type="button" data-act="step">Next time step</button>
         <button class="btn" type="button" data-act="reset">Reset</button>
       </div>
-      <div class="ctl" style="grid-template-columns: 70px 1fr 50px"><label for="rs-w">\(w_h\)</label><input id="rs-w" type="range" min="0" max="1.5" step="0.1" value="0.8"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 70px 1fr 50px"><label for="rs-w">\(w\)</label><input id="rs-w" type="range" min="0" max="1.5" step="0.1" value="0.8"><output></output></div>
       <div class="readout small" aria-live="polite"></div>
+      <div class="readout small rs-pow" aria-live="polite"></div>
     </div>
   </div>
-  <aside class="notes"><ul><li>Step through: the first input is 1, the rest are small, yet h stays non-zero for several steps: the cell remembers the spike.</li><li>Set w_h to 0: no memory, h just follows x. Set it to 1.5: the memory lingers far longer. w_h is the knob that will cause trouble on the gradient slides.</li></ul></aside>
+  <div class="box h5-box" style="margin-top:8px">
+    <div class="h5-row"><p class="small">Write out \(h_5\) by substituting each step into the next:</p>
+      <p>\[ h_5 = \tanh\!\Big(x_5 + w\tanh\!\big(x_4 + w\tanh(x_3 + w\tanh(x_2 + w\,h_1))\big)\Big) \]</p></div>
+    <div class="h5-row"><p class="small">Drop the tanh (its slope is at most 1) to see the structure:</p>
+      <p>\[ h_5 \approx x_5 + w\,x_4 + w^2 x_3 + w^3 x_2 + \boldsymbol{w^4}\,h_1 \quad\Rightarrow\quad \frac{\partial h_5}{\partial h_1} \approx w^4 \]</p></div>
+  </div>
+  <aside class="notes"><ul><li>The expansion is the key: each step back multiplies by one more w. Four steps from h1 to h5 give w to the power 4; a window of 100 gives w to the power 99.</li><li>Drag w: the second readout compares w^4 with the true value including tanh, and shows what the same w does over 100 steps.</li><li>At w = 1.5 the pure power is 5.06, but the true value is about 0.016: the large w drives h towards ±1, where tanh is flat. Saturation is a second road to vanishing; explosion shows up when the units stay in tanh's near-linear range (next slides).</li></ul></aside>
 </section>
 
 <section class="slide" data-part="3">
@@ -1041,27 +1060,24 @@ deep = keras.Sequential([
 
 <section class="slide" data-part="3">
   <h2>The same result for real, many-unit RNNs</h2>
-  <div class="cols">
+  <div class="cols" style="grid-template-columns: 1fr 1.05fr">
     <div class="stack">
-      <p class="small">With a vector state, each factor is a matrix, the Jacobian of one step:</p>
-      <p>\[ \frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-1}} = \mathrm{diag}\big(\tanh'(\mathbf{a}_t)\big)\,W_h \]</p>
-      <p class="small">Ignore the tanh for a moment. The product is then \(W_h^{\,T}\). Write \(W_h = Q \Lambda Q^{-1}\) with eigenvalues \(\lambda_i\):</p>
-      <p>\[ W_h^{\,T} = Q\,\Lambda^{T} Q^{-1}, \qquad \Lambda^{T} = \mathrm{diag}\big(\lambda_1^{T}, \dots, \lambda_n^{T}\big) \]</p>
-      <p class="small">Every eigenvalue is raised to the power \(T\): exactly the scalar case, once per direction.</p>
+      <p class="small">A real layer such as <code>SimpleRNN(32)</code> has \(n = 32\) units, so its memory is a <strong>vector state</strong> \(\mathbf{h}_t = (h_{t,1}, \dots, h_{t,n})\): one number per unit, each tracking a different pattern in the history. \(W_h\) is an \(n \times n\) matrix: entry \(W_{h,ij}\) says how much unit \(j\)'s previous value feeds unit \(i\) now.</p>
+      <p class="small">Each factor of the gradient product is then an \(n \times n\) matrix, the <strong>Jacobian</strong> of one step. With \(\mathbf{a}_t = W_x\mathbf{x}_t + W_h\mathbf{h}_{t-1} + \mathbf{b}\), its entries are:</p>
+      <p>\[ \left[\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-1}}\right]_{ij} = \tanh'(a_{t,i})\; W_{h,ij} \]</p>
+      <p class="small">"If unit \(j\) had been slightly larger one step ago, how much would unit \(i\) change now?" The product of these matrices over \(T\) steps plays the role of \(w^T\).</p>
     </div>
     <div class="stack">
+      <p class="small">Ignoring tanh, the product is \(W_h^{\,T}\). Write \(W_h = Q \Lambda Q^{-1}\) with eigenvalues \(\lambda_i\); then \(W_h^{\,T} = Q\,\Lambda^{T} Q^{-1}\): every eigenvalue is raised to the power \(T\), one scalar case per direction.</p>
       <div class="box">
-        <h3>The rule</h3>
-        <ul class="small">
-          <li>largest \(|\lambda_i| &gt; 1\): some direction <strong>explodes</strong></li>
-          <li>all \(|\lambda_i| &lt; 1\): every direction <strong>vanishes</strong></li>
-        </ul>
-        <p class="small">With tanh included, \(\big\|\partial \mathbf{h}_T/\partial \mathbf{h}_k\big\| \le \big(\gamma\,\sigma_{\max}(W_h)\big)^{T-k}\), where \(\gamma \le 1\) bounds tanh's slope (Pascanu et al., 2013).</p>
+        <h3>Example: 2 units</h3>
+        <p>\[ W_h = \begin{bmatrix} 0.9 &amp; 0.5 \\ 0.2 &amp; 0.6 \end{bmatrix}, \qquad \lambda_1 = 1.1,\;\; \lambda_2 = 0.4 \]</p>
+        <p class="small">Every entry is below 1, yet one direction explodes: \(W_h^{50}\) has entries up to 84, growing like \(1.1^{50} \approx 117\), while the other direction shrinks like \(0.4^{50} \approx 10^{-20}\).</p>
       </div>
-      <p class="small muted">First analysed by Hochreiter (1991) and Bengio et al. (1994).</p>
+      <p class="small"><strong>Rule:</strong> any \(|\lambda_i| &gt; 1\) explodes; all \(|\lambda_i| &lt; 1\) vanish. With tanh, \(\|\partial \mathbf{h}_T / \partial \mathbf{h}_k\| \le (\gamma\,\sigma_{\max}(W_h))^{T-k}\) (Pascanu et al., 2013).</p>
     </div>
   </div>
-  <aside class="notes"><ul><li>The eigen-decomposition makes the scalar argument general: in each eigen-direction the gradient is multiplied by lambda at every step.</li><li>σ_max is the largest singular value; for a symmetric W it equals the largest |λ|.</li></ul></aside>
+  <aside class="notes"><ul><li>Vector state: 32 numbers, one per unit; each unit is a little memory with its own role.</li><li>The 2-unit example is the punchline: small entries do not make a stable RNN. What matters is the eigenvalues. Check: trace 1.5 and determinant 0.44 give 1.1 and 0.4.</li><li>γ bounds tanh's slope (at most 1); σ_max is the largest singular value.</li></ul></aside>
 </section>
 
 <section class="slide" data-part="3">
@@ -1110,6 +1126,32 @@ deep = keras.Sequential([
     </div>
   </div>
   <aside class="notes"><ul><li>Read the cell-state line: keep a fraction f of the old memory, add a fraction i of new information. Multiplication by gates, addition of new content.</li><li>[h, x] means the two vectors stacked; ⊙ is element-wise multiplication.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>The cell state, in numbers</h2>
+  <div class="cols" id="cs-demo" style="grid-template-columns: 1fr 1.15fr">
+    <div class="stack">
+      <p class="small">Each LSTM unit keeps two numbers: the <strong>cell state</strong> \(c_t\), its long-term memory, which changes only when a gate allows; and the <strong>hidden state</strong> \(h_t = o_t \tanh(c_t)\), what it shows the network right now.</p>
+      <p>\[ c_t = f_t\,c_{t-1} + i_t\,\tilde{c}_t \]</p>
+      <p class="small">One unit, eight pump readings: a valve closes at step 1, matters again at step 6, and the episode ends at step 7.</p>
+      <table class="tbl compact small cs-tbl">
+        <thead><tr><th>step</th><th>what happens</th><th>f</th><th>i</th><th>\(\tilde{c}\)</th><th>o</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 260" aria-label="The cell state and hidden state over eight steps, with a simple RNN's fading memory for comparison"></svg>
+      <div class="btnrow">
+        <button class="btn" type="button" data-act="step">Next step</button>
+        <button class="btn" type="button" data-act="all">Show all</button>
+        <button class="btn" type="button" data-act="reset">Reset</button>
+      </div>
+      <div class="ctl" style="grid-template-columns: 170px 1fr 50px"><label for="cs-f">forget gate while quiet</label><input id="cs-f" type="range" min="0.5" max="1" step="0.01" value="0.98"><output></output></div>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Step through. Step 1 writes 0.855 into memory (input gate open). Steps 2 to 5: forget gate 0.98, so the memory barely fades, and the output gate is nearly shut, so h stays near 0: the unit remembers without shouting about it.</li><li>Step 6: the output gate opens and h jumps to about 0.63. Step 7: the forget gate drops to 0.05 and the memory is wiped.</li><li>Compare the dashed line: a simple RNN with w = 0.6 has lost over 90% of the event by step 6. Then lower the forget-gate slider to 0.6 and the LSTM behaves just like it.</li></ul></aside>
 </section>
 
 <section class="slide" data-part="3">
@@ -2165,15 +2207,17 @@ input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; paddi
   (function () {
     var svg = $('#rnn-unroll'); if (!svg) return;
     var mk = arrowDefs(svg, 'ru-mk');
-    rect(svg, 30, 120, 70, 54, 'blk conv', { rx: 6 }); txt(svg, 65, 152, 'cell', 'lbl');
-    el('path', { d: 'M100,135 C140,110 140,60 65,70 C20,76 30,110 52,118', 'class': 'pa-arrow', 'marker-end': mk }, svg);
-    txt(svg, 132, 74, 'h\u209c\u208b\u2081', 'tick');
-    arrow(svg, 65, 228, 65, 180, mk); txt(svg, 65, 246, 'x\u209c', 'lbl');
-    txt(svg, 150, 152, '=', 'cf-eq');
-    var c = drawChain(svg, 4, 180, 122, 94, { wh: 'W\u2095', cellLabel: function (t) { return 'h' + '\u2081\u2082\u2083\u2084'[t]; } });
-    arrow(svg, c.cells[3] + 32, 116, c.cells[3] + 32, 72, mk);
-    rect(svg, c.cells[3] - 6, 36, 76, 32, 'blk dense', { rx: 5 }); txt(svg, c.cells[3] + 32, 57, 'Dense \u2192 \u0177', 'tick');
-    txt(svg, 330, 300, 'the same W\u2093, W\u2095 and b in every copy', 'lbl-sec');
+    rect(svg, 20, 110, 70, 50, 'blk conv', { rx: 6 }); txt(svg, 55, 140, 'cell', 'lbl');
+    el('path', { d: 'M90,124 C130,100 125,58 55,66 C12,72 22,100 42,108', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    txt(svg, 122, 64, 'h\u209c\u208b\u2081', 'tick');
+    arrow(svg, 55, 214, 55, 166, mk); txt(svg, 55, 232, 'x\u209c', 'lbl');
+    txt(svg, 150, 142, '=', 'cf-eq');
+    var c = drawChain(svg, 3, 196, 110, 118, { wh: 'W\u2095', cellLabel: function (t) { return 'h' + '\u2081\u2082\u2083'[t]; },
+      xLabel: function (t) { return 'x' + '\u2081\u2082\u2083'[t] + ': reading ' + (t + 1); } });
+    txt(svg, 190, 140, 'h\u2080', 'tick', 'end');
+    arrow(svg, c.cells[2] + 32, 104, c.cells[2] + 32, 66, mk);
+    rect(svg, c.cells[2] - 10, 30, 84, 32, 'blk dense', { rx: 5 }); txt(svg, c.cells[2] + 32, 51, 'Dense \u2192 \u0177', 'tick');
+    txt(svg, 196, 20, 'unrolled over a window of 3', 'lbl-sec', 'start');
   })();
 
   /* ---------- run an RNN by hand ---------- */
@@ -2182,10 +2226,12 @@ input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; paddi
     var svg = $('svg.fig', root), wI = $('#rs-w'), out = $('.readout', root), X = [1, 0.2, -0.1, 0, 0.3], k = 0;
     function hs() { var w = +wI.value, h = [0]; X.forEach(function (x) { h.push(Math.tanh(x + w * h[h.length - 1])); }); return h; }
     function f3(v) { return v.toFixed(3).replace('-', '\u2212'); }
+    var pow = $('.rs-pow', root);
+    function sci(v) { if (v === 0) return '0'; var e = Math.floor(Math.log10(Math.abs(v))); return Math.abs(e) < 3 ? v.toPrecision(3) : (v / Math.pow(10, e)).toFixed(1) + ' \u00d7 10' + String(e).replace('-', '\u207b').replace(/[0-9]/g, function (d) { return '\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'[+d]; }); }
     function draw() {
       wI.nextElementSibling.textContent = (+wI.value).toFixed(1);
       clear(svg);
-      var H = hs(), gap = 118, x0 = 20, y0 = 110, mk = arrowDefs(svg, 'rs-mk');
+      var H = hs(), gap = 118, x0 = 20, y0 = 112, mk = arrowDefs(svg, 'rs-mk');
       txt(svg, x0 - 4, y0 + 30, 'h\u2080 = 0', 'tick', 'end');
       for (var t = 0; t < X.length; t++) {
         var x = x0 + t * gap + 10, done = t < k;
@@ -2198,12 +2244,16 @@ input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; paddi
         var bar = Math.abs(H[t + 1]) * 70;
         if (done) rect(svg, x + 18, y0 - 12 - bar, 40, bar, null, { style: mixFill('--sec', 55) });
       }
-      txt(svg, 320, 24, 'bars: size of the memory h after each step', 'tick');
+      txt(svg, 330, 20, 'bars: size of the memory h after each step', 'tick');
+      var w = +wI.value;
       if (k === 0) out.innerHTML = 'Press <b>Next time step</b>.';
       else {
-        var w = +wI.value, t = k - 1;
-        out.innerHTML = 'h' + (t + 1) + ' = tanh(' + X[t] + ' + ' + w.toFixed(1) + ' \u00d7 ' + f3(H[t]) + ') = <b>' + f3(H[t + 1]) + '</b>' + (k === X.length ? '<br>Done: the first input still echoes in h5.' : '');
+        var tt = k - 1;
+        out.innerHTML = 'h' + (tt + 1) + ' = tanh(' + X[tt] + ' + ' + w.toFixed(1) + ' \u00d7 ' + f3(H[tt]) + ') = <b>' + f3(H[tt + 1]) + '</b>' + (k === X.length ? '<br>Done: the first input still echoes in h5.' : '');
       }
+      var exact = 1;
+      for (var q = 2; q <= 5; q++) exact *= w * (1 - H[q] * H[q]);
+      pow.innerHTML = '\u2202h\u2085/\u2202h\u2081: w\u2074 = <b>' + sci(Math.pow(w, 4)) + '</b>; with tanh\u2019s slopes included, <b>' + sci(exact) + '</b>.<br>The same w over a window of 100: w\u2079\u2079 = <b>' + sci(Math.pow(w, 99)) + '</b>.';
     }
     $('[data-act=step]', root).addEventListener('click', function () { k = Math.min(X.length, k + 1); draw(); });
     $('[data-act=reset]', root).addEventListener('click', function () { k = 0; draw(); });
@@ -2316,6 +2366,46 @@ input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; paddi
     el('circle', { cx: m[0], cy: m[1], r: 4, 'class': 'min-pt' }, svg);
     txt(svg, m[0] + 8, m[1] + 18, 'good minimum for the target task', 'tick', 'start');
     txt(svg, 260, 22, 'target-task loss, 10 gradient steps from each start', 'tick');
+  })();
+
+  /* ---------- the cell state, in numbers ---------- */
+  (function () {
+    var root = $('#cs-demo'); if (!root) return;
+    var svg = $('svg.fig', root), fI = $('#cs-f'), out = $('.readout', root), tb = $('.cs-tbl tbody', root), k = 0;
+    var EV = [['valve closes: write it', 0.5, 0.95, 0.9, 0.1], ['quiet', 'F', 0.05, 0.1, 0.1], ['quiet', 'F', 0.05, 0.1, 0.1], ['quiet', 'F', 0.05, 0.1, 0.1],
+              ['quiet', 'F', 0.05, 0.1, 0.1], ['needed now: show it', 'F', 0.05, 0.1, 0.95], ['episode over: erase it', 0.05, 0.1, -0.2, 0.5], ['quiet', 'F', 0.05, 0.1, 0.1]];
+    function run() {
+      var F = +fI.value, c = 0, rows = [];
+      EV.forEach(function (e) { var f = e[1] === 'F' ? F : e[1], prev = c; c = f * c + e[2] * e[3]; rows.push({ f: f, prev: prev, c: c, h: e[4] * Math.tanh(c), i: e[2], g: e[3], o: e[4] }); });
+      return rows;
+    }
+    function n2(v) { return v.toFixed(2).replace('-', '\u2212'); }
+    function draw() {
+      var F = +fI.value; fI.nextElementSibling.textContent = F.toFixed(2);
+      var R = run();
+      tb.innerHTML = EV.map(function (e, t) { return '<tr' + (t === k - 1 ? ' class="hi"' : '') + '><td>' + (t + 1) + '</td><td>' + e[0] + '</td><td>' + n2(R[t].f) + '</td><td>' + n2(e[2]) + '</td><td>' + n2(e[3]) + '</td><td>' + n2(e[4]) + '</td></tr>'; }).join('');
+      var P = makePlot(svg, { w: 560, h: 260, l: 40, b: 38, x: [0.4, 8.6], y: [0, 1], xt: [1, 2, 3, 4, 5, 6, 7, 8], yt: [0, 0.5, 1], xl: 'step' });
+      var rd = '', t;
+      for (t = 1; t <= 8; t++) rd += (t > 1 ? 'L' : 'M') + P.sx(t).toFixed(1) + ',' + P.sy(0.855 * Math.pow(0.6, t - 1)).toFixed(1);
+      el('path', { d: rd, 'class': 'c-alt' }, svg);
+      txt(svg, 552, P.sy(0.32), 'dashed: simple RNN memory, w = 0.6', 'tick', 'end');
+      for (t = 0; t < k; t++) {
+        var r = R[t], x = P.sx(t + 1);
+        rect(svg, x - 16, P.sy(Math.max(0, r.c)), 32, P.sy(0) - P.sy(Math.max(0, r.c)), null, { style: mixFill('--sec', 55) });
+        el('circle', { cx: x, cy: P.sy(Math.max(0, r.h)), r: 6, 'class': 'yc-dot' }, svg);
+      }
+      txt(svg, 552, 22, 'bars: cell state c', 'lbl-sec', 'end');
+      txt(svg, 552, 40, 'dots: hidden state h', 'lbl-bad', 'end');
+      if (!k) { out.innerHTML = 'Press <b>Next step</b>. The memory starts empty: c\u2080 = 0.'; return; }
+      var q = R[k - 1];
+      function n3(v) { var t = v.toFixed(3); return t === '-0.000' ? '0.000' : t.replace('-', '\u2212'); }
+      out.innerHTML = 'step ' + k + ': c = ' + n2(q.f) + ' \u00d7 ' + n2(q.prev) + ' + ' + n2(q.i) + ' \u00d7 ' + n2(q.g) + ' = <b>' + n3(q.c) + '</b><br>h = ' + n2(q.o) + ' \u00d7 tanh(' + n3(q.c) + ') = <b>' + n3(q.h) + '</b>';
+    }
+    $('[data-act=step]', root).addEventListener('click', function () { k = Math.min(8, k + 1); draw(); });
+    $('[data-act=all]', root).addEventListener('click', function () { k = 8; draw(); });
+    $('[data-act=reset]', root).addEventListener('click', function () { k = 0; draw(); });
+    fI.addEventListener('input', draw);
+    draw();
   })();
 
   /* ---------- start ---------- */
