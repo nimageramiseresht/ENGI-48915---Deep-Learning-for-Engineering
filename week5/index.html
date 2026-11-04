@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Granular Computing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+  };
+  window.Prism = { manual: true };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+<style>
+:root {
+  --frame: #D9E1E7;
+  --paper: #F4F7F9;
+  --grid: #E3E9EE;
+  --grid-major: #D6DFE6;
+  --ink: #18222D;
+  --ink-2: #4B5867;
+  --ink-3: #7A8794;
+  --rule: #C5D0D9;
+  --panel: #E8EEF2;
+  --code-bg: #EDF2F6;
+  --code-border: #C9D5DE;
+  --tok-kw: #7B2D8E;
+  --tok-str: #1E7A45;
+  --tok-num: #A4500A;
+  --tok-fn: #1D5BA6;
+  --tok-com: #687582;
+  --tok-builtin: #0D6E6A;
+  --p1: #1F5FA8; --p2: #0E7470; --p3: #3D4A5C; --p4: #B23A2B;
+  --p5: #8F5D00; --p6: #2E7A48; --p7: #6B3FA0; --p8: #9C2F62;
+  --p9: #5A6812; --p10: #3B48A6; --p11: #7A5C45;
+  --good: #2E7A48; --bad: #B23A2B;
+  --sec: var(--p1);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --frame: #070B0F; --paper: #111920; --grid: #172129; --grid-major: #1D2832;
+    --ink: #E4EAF0; --ink-2: #A8B4C0; --ink-3: #7D8A97; --rule: #2B3946;
+    --panel: #1A2530; --code-bg: #0C1319; --code-border: #24323E;
+    --tok-kw: #D19BEA; --tok-str: #7FD19E; --tok-num: #F0A867; --tok-fn: #82B4F2;
+    --tok-com: #8996A3; --tok-builtin: #6FD1C9;
+    --p1: #6FA3E8; --p2: #4DBDB5; --p3: #A3B2C4; --p4: #F07A6A;
+    --p5: #E0AA45; --p6: #6CC690; --p7: #B18BE6; --p8: #E58BB6;
+    --p9: #B5C55A; --p10: #98A2F2; --p11: #C9A68A;
+    --good: #6CC690; --bad: #F07A6A;
+  }
+}
+:root[data-theme="dark"] {
+  --frame: #070B0F; --paper: #111920; --grid: #172129; --grid-major: #1D2832;
+  --ink: #E4EAF0; --ink-2: #A8B4C0; --ink-3: #7D8A97; --rule: #2B3946;
+  --panel: #1A2530; --code-bg: #0C1319; --code-border: #24323E;
+  --tok-kw: #D19BEA; --tok-str: #7FD19E; --tok-num: #F0A867; --tok-fn: #82B4F2;
+  --tok-com: #8996A3; --tok-builtin: #6FD1C9;
+  --p1: #6FA3E8; --p2: #4DBDB5; --p3: #A3B2C4; --p4: #F07A6A;
+  --p5: #E0AA45; --p6: #6CC690; --p7: #B18BE6; --p8: #E58BB6;
+  --p9: #B5C55A; --p10: #98A2F2; --p11: #C9A68A;
+  --good: #6CC690; --bad: #F07A6A;
+}
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  height: 100%; margin: 0; background: var(--frame); color: var(--ink);
+  font-family: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+[data-part="1"] { --sec: var(--p1); } [data-part="2"] { --sec: var(--p2); }
+[data-part="3"] { --sec: var(--p3); } [data-part="4"] { --sec: var(--p4); }
+[data-part="5"] { --sec: var(--p5); } [data-part="6"] { --sec: var(--p6); }
+[data-part="7"] { --sec: var(--p7); } [data-part="8"] { --sec: var(--p8); }
+[data-part="9"] { --sec: var(--p9); } [data-part="10"] { --sec: var(--p10); }
+[data-part="11"] { --sec: var(--p11); }
+
+/* ---------- stage ---------- */
+.viewport {
+  position: fixed; top: 0; bottom: 0; left: 0; right: 0;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.stage {
+  width: 1280px; height: 720px; flex: none; position: relative; overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+.slide {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  padding: 38px 56px 62px; box-sizing: border-box;
+  display: flex; flex-direction: column;
+  visibility: hidden; opacity: 0; transition: opacity .22s ease;
+}
+.slide.active { visibility: visible; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .slide { transition: none; } }
+
+/* ---------- type ---------- */
+.slide h1, .slide h2, .slide h3, .slide h4, .tblock, .btn, .tbl th {
+  font-family: 'Barlow Semi Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+}
+.slide h2 {
+  font-weight: 600; font-size: 42px; line-height: 1.06; margin: 0 0 22px;
+  padding-left: 18px; border-left: 8px solid var(--sec); letter-spacing: -0.003em;
+}
+.slide h3 { font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 8px; color: var(--sec); }
+.slide h4 { font-weight: 600; font-size: 21px; margin: 0 0 4px; }
+.slide p, .slide li { font-size: 22px; line-height: 1.42; }
+.slide p { margin: 0 0 12px; }
+.slide ul, .slide ol { margin: 0 0 12px; padding-left: 26px; }
+.slide li { margin: 0 0 6px; }
+.slide li::marker { color: var(--sec); font-weight: 700; }
+.slide .small, .slide .small p, .slide .small li { font-size: 18.5px; }
+.muted { color: var(--ink-2); }
+.center { text-align: center; }
+code { font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace; font-size: .84em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+strong { font-weight: 700; }
+.opt-tag {
+  display: inline-block; vertical-align: middle; margin-left: 14px; padding: 2px 12px;
+  font: 600 16px 'Barlow Semi Condensed', sans-serif; color: var(--sec);
+  border: 1.5px solid var(--sec); border-radius: 999px; letter-spacing: .01em;
+}
+
+/* ---------- layout ---------- */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; min-height: 0; }
+.cols > * { min-width: 0; }
+.cols.wl { grid-template-columns: 1.45fr 1fr; }
+.cols.wr { grid-template-columns: 1fr 1.35fr; }
+.cols.code { grid-template-columns: 2fr 1fr; gap: 32px; }
+.cols.three { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.cols.four { grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.slide .stack > * + * { margin-top: 16px; }
+.grow { flex: 1; min-height: 0; }
+.box { border-left: 5px solid var(--sec); background: var(--panel); padding: 14px 20px; }
+.box > :last-child { margin-bottom: 0; }
+.box.quiet { border-left-color: var(--rule); }
+.ask { border: 1.5px dashed var(--sec); padding: 12px 18px; }
+.ask > :last-child { margin-bottom: 0; }
+.ask strong:first-child { color: var(--sec); }
+.bottom-line { margin-top: auto; font-size: 23px; padding-top: 12px; border-top: 1.5px solid var(--rule); }
+.bottom-line p { margin: 0; }
+
+/* tables */
+.tbl { border-collapse: collapse; width: 100%; font-size: 19px; line-height: 1.35; }
+.tbl th { text-align: left; font-weight: 600; font-size: 20px; border-bottom: 2px solid var(--ink); padding: 7px 10px; }
+.tbl td { border-bottom: 1px solid var(--rule); padding: 7px 10px; vertical-align: top; }
+.tbl td:first-child { font-weight: 700; }
+.tbl.compact td, .tbl.compact th { padding: 5px 8px; }
+.tbl .now td { background: color-mix(in srgb, var(--sec) 12%, transparent); }
+
+/* code */
+.code-wrap { position: relative; min-height: 0; }
+pre {
+  margin: 0; font: 16.5px/1.5 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  background: var(--code-bg); color: var(--ink); border: 1px solid var(--code-border);
+  border-left: 4px solid var(--sec); padding: 13px 16px; overflow: auto; tab-size: 4; max-height: 560px;
+}
+pre.dense { font-size: 16px; line-height: 1.45; }
+pre code { background: none; padding: 0; font-size: inherit; border-radius: 0; }
+.copy {
+  position: absolute; bottom: 7px; right: 8px; z-index: 2; cursor: pointer;
+  font: 600 14px 'Atkinson Hyperlegible', sans-serif; padding: 3px 10px;
+  color: var(--ink-2); background: var(--paper); border: 1px solid var(--code-border);
+}
+.copy:hover { color: var(--ink); border-color: var(--ink-3); }
+.token.comment { color: var(--tok-com); font-style: italic; }
+.token.keyword { color: var(--tok-kw); }
+.token.string, .token.triple-quoted-string { color: var(--tok-str); }
+.token.number, .token.boolean { color: var(--tok-num); }
+.token.function { color: var(--tok-fn); }
+.token.builtin { color: var(--tok-builtin); }
+.token.operator, .token.punctuation { color: var(--ink-2); }
+
+/* controls */
+.btn {
+  font-weight: 600; font-size: 17px; cursor: pointer; padding: 4px 13px;
+  color: var(--sec); background: transparent; border: 1.5px solid var(--sec);
+}
+.btn:hover, .btn[aria-pressed="true"] { background: var(--sec); color: var(--paper); }
+:focus-visible { outline: 3px solid var(--sec); outline-offset: 2px; }
+input[type=range] { accent-color: var(--sec); width: 100%; margin: 0; }
+input[type=checkbox], input[type=radio] { accent-color: var(--sec); width: 18px; height: 18px; }
+.ctl { display: grid; grid-template-columns: 40px 1fr 58px; align-items: center; gap: 10px; font-size: 18px; margin-bottom: 6px; }
+.ctl output, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.readout { font-size: 19px; line-height: 1.5; }
+.readout b { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 17px; }
+
+/* svg helpers */
+svg.fig { display: block; max-width: 100%; height: auto; }
+mjx-container[display="true"] { margin: 0.5em 0 !important; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+.ax { stroke: var(--ink-3); stroke-width: 1.2; fill: none; }
+.ax-0 { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.tick { fill: var(--ink-2); font: 11px 'Atkinson Hyperlegible', sans-serif; }
+.lbl { fill: var(--ink); font: 600 13px 'Barlow Semi Condensed', sans-serif; }
+.c-sec { stroke: var(--sec); stroke-width: 2.6; fill: none; }
+.c-alt { stroke: var(--ink-2); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-bad { stroke: var(--bad); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-good { stroke: var(--good); stroke-width: 2.6; fill: none; }
+.g-old { stroke: var(--ink-3); stroke-width: .6; opacity: .45; fill: none; }
+.g-line { stroke: var(--sec); stroke-width: 1.1; opacity: .5; fill: none; }
+.g-int { stroke: var(--sec); stroke-width: 1.6; opacity: .8; fill: none; }
+.g-sq { fill: var(--sec); fill-opacity: .16; stroke: var(--sec); stroke-width: 2; }
+.g-f { fill: var(--ink); fill-opacity: .85; stroke: none; }
+.g-arrow { stroke: var(--bad); stroke-width: 2.6; fill: none; }
+.g-arrow2 { stroke: var(--good); stroke-width: 2.6; fill: none; }
+.node { fill: var(--paper); stroke: var(--sec); stroke-width: 2; }
+.node.in { stroke: var(--ink-3); }
+.edge { stroke: var(--ink-3); stroke-width: .7; opacity: .35; }
+.dot-pt { fill: var(--sec); }
+
+/* softmax demo */
+.sm-row { display: grid; grid-template-columns: 140px 230px 56px 1fr 70px 34px; align-items: center; gap: 12px; font-size: 21px; margin-bottom: 12px; }
+.sm-bar { height: 32px; background: var(--panel); position: relative; border: 1px solid var(--rule); }
+.sm-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-3); transition: width .12s; }
+.sm-bar.top i { background: var(--sec); }
+
+/* pipeline + folds */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px 30px; margin-top: 10px; counter-reset: st; }
+.flow > div { position: relative; border: 1.5px solid var(--ink-3); background: var(--paper); padding: 16px 18px 18px; min-height: 150px; }
+.flow > div::before { counter-increment: st; content: counter(st); position: absolute; top: -13px; left: 10px; background: var(--sec); color: var(--paper); font: 700 15px 'Barlow Semi Condensed', sans-serif; padding: 1px 8px; }
+.flow > div:not(:nth-child(4n))::after { content: ''; position: absolute; right: -25px; top: 50%; border: 8px solid transparent; border-left: 12px solid var(--ink-3); transform: translateY(-50%); }
+.flow h4 { margin-top: 6px; font-size: 25px !important; }
+.slide .flow p { font-size: 19px; line-height: 1.4; margin: 0 0 4px; color: var(--ink-2); }
+.flow code { font-size: 15px; }
+.folds { margin-bottom: 10px; display: grid; grid-template-columns: 70px repeat(4, 1fr) 80px; gap: 8px; align-items: center; font-size: 18px; }
+.folds span.c { border: 1px solid var(--ink-3); text-align: center; padding: 8px 0; background: var(--paper); }
+.folds span.v { border: 2px solid var(--sec); background: color-mix(in srgb, var(--sec) 22%, var(--paper)); font-weight: 700; }
+.folds .s { color: var(--sec); font-weight: 700; }
+
+
+/* overfitting demos */
+.lab { display: grid; grid-template-columns: 1.12fr 1fr; gap: 34px; align-items: start; min-height: 0; }
+.lab > * { min-width: 0; }
+.lab .ctl, #sel-demo .ctl { grid-template-columns: 92px 1fr 64px; }
+#sel-demo .ctl { grid-template-columns: 150px 1fr 76px; }
+.lab .readout { margin-top: 6px; }
+.lab-plots > svg + svg { margin-top: 6px; }
+.slide .lab-key { font-size: 16.5px; line-height: 1.5; margin: 0 0 10px; }
+.k-dot, .k-ring { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: middle; }
+.k-dot { background: var(--sec); } .k-ring { border: 1.6px solid var(--ink-3); width: 9px; height: 9px; }
+.k-dash { color: var(--ink-2); }
+.chk { display: flex; gap: 10px; align-items: center; font-size: 18px; margin: 4px 0; }
+.dot-val { fill: none; stroke: var(--ink-3); stroke-width: 1.4; }
+.c-sec-d { stroke: var(--sec); stroke-width: 2.4; fill: none; stroke-dasharray: 7 5; }
+.c-bad-s { stroke: var(--bad); stroke-width: 2.6; fill: none; }
+.c-faint { opacity: .25; }
+.shade { fill: var(--ink-3); opacity: .1; }
+.mark-now { stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 2 3; }
+.lbl-sec, .lbl-alt, .lbl-bad { font: 600 13px 'Barlow Semi Condensed', sans-serif; }
+.lbl-sec { fill: var(--sec); } .lbl-alt { fill: var(--ink-2); } .lbl-bad { fill: var(--bad); }
+.edge.on { opacity: .55; }
+.node.off { stroke: var(--ink-3); stroke-dasharray: 3 3; opacity: .6; }
+.x-mark { stroke: var(--bad); stroke-width: 2; }
+
+
+/* animated and interactive slides, part 2 */
+.pa-card { fill: var(--panel); stroke: var(--ink-3); stroke-width: 1.2; }
+.pa-arrow { stroke: var(--ink-2); stroke-width: 1.6; fill: none; }
+.pa-mkf { fill: var(--ink-2); }
+.pa-big { fill: var(--ink); font: 700 34px 'Barlow Semi Condensed', sans-serif; }
+.slide.active .pa-step { animation: paIn .7s ease both; animation-delay: var(--d, 0s); }
+@keyframes paIn { from { opacity: 0; } to { opacity: 1; } }
+.slide.active .flow-e { stroke-dasharray: 3 7; animation: flowE 1.4s linear infinite; }
+@keyframes flowE { to { stroke-dashoffset: -20; } }
+.w-pos { stroke: var(--sec); } .w-neg { stroke: var(--bad); }
+.w-pos, .w-neg, .w-lbl { transition: opacity .25s; }
+.w-lbl { fill: var(--ink); font: 600 13px 'JetBrains Mono', monospace; text-anchor: middle; paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
+.pulse { fill: var(--sec); }
+.mat-eq { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px; }
+.mat-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mat { display: grid; gap: 1px 8px; padding: 3px 7px; border-left: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); border-radius: 7px; }
+.mat span { text-align: right; padding: 1px 3px; transition: background .2s; }
+.mat span.hl { background: color-mix(in srgb, var(--sec) 24%, transparent); }
+.mat-lbl { font: 600 15px 'Barlow Semi Condensed', sans-serif; color: var(--ink-2); }
+.mat-eq .op { color: var(--ink-2); font-size: 18px; }
+.cf-frame { fill: none; stroke: var(--rule); }
+.cf-eq { fill: var(--ink); font: 600 40px 'Barlow Semi Condensed', sans-serif; text-anchor: middle; }
+.contour { fill: none; stroke: var(--ink-3); stroke-width: 1; opacity: .7; }
+.min-pt { fill: var(--ink); }
+.bow-strip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; margin-top: 18px; }
+.bow-cell { text-align: center; min-width: 0; }
+.bow-cell .w { font-size: 14.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bow-cell .v { font: 600 22px 'JetBrains Mono', monospace; border: 1.5px solid var(--rule); padding: 7px 0; margin-top: 4px; background: var(--paper); transition: background .15s; }
+.bow-cell.on .v { border-color: var(--sec); background: color-mix(in srgb, var(--sec) 18%, var(--paper)); color: var(--sec); }
+#bow-text { width: 100%; box-sizing: border-box; font: 19px 'Atkinson Hyperlegible', sans-serif; padding: 7px 10px; border: 1.5px solid var(--ink-3); background: var(--paper); color: var(--ink); }
+.ep-s { transition: transform .6s ease; }
+.ep-s rect { fill: var(--panel); stroke: var(--ink-3); stroke-width: 1.2; transition: fill .2s, stroke .2s; }
+.ep-s.on rect { fill: color-mix(in srgb, var(--sec) 28%, var(--paper)); stroke: var(--sec); stroke-width: 2; }
+.ep-flow { stroke: var(--sec); stroke-width: 2.2; transition: opacity .2s; }
+.vr-bar { display: flex; height: 36px; border: 1.5px solid var(--ink-3); margin-top: 10px; font: 600 15px 'Barlow Semi Condensed', sans-serif; }
+.vr-bar > div { display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; transition: width .2s; }
+.vr-bar .tr { background: color-mix(in srgb, var(--sec) 28%, var(--paper)); }
+.vr-bar .va { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--sec) 45%, var(--paper)) 0 4px, var(--paper) 4px 9px); }
+.refs li { margin-bottom: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .slide.active .pa-step, .slide.active .flow-e { animation: none; }
+  .ep-s, .vr-bar > div, .mat span, .w-pos, .w-neg, .w-lbl { transition: none; }
+}
+body.doc .bow-strip { grid-template-columns: repeat(4, 1fr); }
+
+/* section title slides, outline, notes */
+.sec-no { font: 600 30px 'Barlow Semi Condensed', sans-serif; color: var(--sec); margin: 0 0 6px !important; }
+.slide.divider h1 { font-size: 72px; }
+.sec-map { list-style: none; margin: 0; padding: 0 0 0 4px; border-left: 2px solid var(--rule); }
+.slide .sec-map li { font-size: 19px; line-height: 1.3; margin: 0; padding: 7px 0 7px 18px; color: var(--ink-2); }
+.sec-map li span { display: inline-block; width: 24px; font: 600 18px 'Barlow Semi Condensed', sans-serif; }
+.slide .sec-map li.done { color: var(--ink-3); }
+.slide .sec-map li.now { color: var(--ink); font-weight: 700; border-left: 6px solid var(--sec); margin-left: -6px; }
+.sec-map li.now span { color: var(--sec); }
+.slide ol.outline li { margin-bottom: 7px; }
+aside.notes { display: none !important; }
+.tblock .nbtn { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.tblock .nbtn:hover { color: var(--ink); }
+
+/* ---------- week 3: grids, kernels, scenes ---------- */
+.g-cell { fill: var(--paper); stroke: var(--rule); stroke-width: 1; }
+.g-cell.on { fill: var(--ink); }
+.g-cell.pad { fill: var(--panel); stroke-dasharray: 3 3; }
+.kwin { fill: color-mix(in srgb, var(--sec) 10%, transparent); stroke: var(--sec); stroke-width: 3.5; }
+.k-cell { stroke: var(--rule); stroke-width: 1.2; }
+.k-txt { font: 600 15px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink); }
+.sum-txt { font: 700 22px 'JetBrains Mono', ui-monospace, monospace; fill: var(--sec); }
+.o-cell { stroke: var(--rule); stroke-width: 1; }
+.o-cell.hidden { stroke-dasharray: 2 3; }
+.o-cell.now { stroke: var(--sec); stroke-width: 3; }
+.o-cell.match { stroke: var(--ink); stroke-width: 3; }
+.o-txt { font: 500 12px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink-2); }
+.o-txt.match { font-weight: 800; font-size: 15px; fill: var(--ink); }
+.tie { stroke: var(--sec); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; opacity: .7; }
+.kbr { fill: none; stroke: var(--sec); stroke-width: 2; }
+.slab { fill: color-mix(in srgb, var(--sec) 14%, var(--paper)); stroke: var(--ink-3); }
+.slab.k { fill: color-mix(in srgb, var(--bad) 28%, var(--paper)); }
+.slab.one { fill: color-mix(in srgb, var(--sec) 38%, var(--paper)); }
+.pool-grid { stroke: var(--ink); stroke-width: 2; }
+.rf-box { fill: none; stroke-width: 3.5; }
+.blk { stroke: var(--ink-3); stroke-width: 1; }
+.blk.in { fill: var(--panel); }
+.blk.conv { fill: color-mix(in srgb, var(--sec) 35%, var(--paper)); }
+.blk.pool { fill: color-mix(in srgb, var(--p6) 30%, var(--paper)); }
+.blk.flat, .blk.dense { fill: color-mix(in srgb, var(--p5) 35%, var(--paper)); }
+.det-box { fill: none; stroke-width: 2.5; }
+.det-box.c0, .det-chip.c0 { stroke: var(--p10); } .det-box.c1, .det-chip.c1 { stroke: var(--p8); } .det-box.c2, .det-chip.c2 { stroke: var(--p6); }
+.det-chip { stroke-width: 1.5; }
+.det-chip.c0 { fill: color-mix(in srgb, var(--p10) 26%, var(--paper)); }
+.det-chip.c1 { fill: color-mix(in srgb, var(--p8) 26%, var(--paper)); }
+.det-chip.c2 { fill: color-mix(in srgb, var(--p6) 26%, var(--paper)); }
+.det-chip.plain { fill: var(--paper); stroke: var(--rule); }
+.det-txt { font: 600 12.5px 'Barlow Semi Condensed', sans-serif; fill: var(--ink); }
+.det-txt.b { font-weight: 700; font-size: 14px; }
+.sc-sky { fill: color-mix(in srgb, var(--p1) 14%, var(--paper)); }
+.sc-ground { fill: color-mix(in srgb, var(--p11) 24%, var(--paper)); }
+.sc-line { stroke: var(--ink-3); }
+.sc-track { fill: var(--ink-2); }
+.sc-wheel { fill: var(--ink-3); }
+.sc-body { fill: color-mix(in srgb, var(--p5) 70%, var(--paper)); stroke: var(--ink-2); stroke-width: 1.5; }
+.sc-glass { fill: color-mix(in srgb, var(--p1) 35%, var(--paper)); }
+.sc-arm { fill: none; stroke: color-mix(in srgb, var(--p5) 70%, var(--ink)); stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+.sc-helmet { fill: var(--p5); }
+.sc-skin { fill: #C99A76; }
+.sc-vest { fill: color-mix(in srgb, var(--p4) 75%, var(--paper)); }
+.sc-legs { stroke: var(--ink-2); stroke-width: 7; stroke-linecap: round; fill: none; }
+.sc-cone { fill: var(--p4); }
+.yg-cell { fill: transparent; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; cursor: pointer; }
+.yg-cell:hover { fill: color-mix(in srgb, var(--sec) 10%, transparent); }
+.yg-cell.sel { fill: color-mix(in srgb, var(--sec) 22%, transparent); stroke: var(--sec); stroke-width: 2.5; stroke-dasharray: none; }
+.yc-dot { fill: var(--bad); stroke: var(--paper); stroke-width: 2; }
+.gt-box { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 7 5; }
+.pr-box { fill: color-mix(in srgb, var(--sec) 10%, transparent); stroke: var(--sec); stroke-width: 3; }
+.iou-int { fill: color-mix(in srgb, var(--sec) 40%, transparent); }
+.tag-good { color: var(--good); font-weight: 700; } .tag-bad { color: var(--bad); font-weight: 700; }
+.ghost, .ghost * { fill: color-mix(in srgb, var(--ink-3) 25%, transparent); stroke: color-mix(in srgb, var(--ink-3) 25%, transparent); }
+.nms-box { fill: none; stroke-width: 1.8; }
+.nms-box.pending { stroke: var(--ink-3); }
+.nms-box.kept { stroke: var(--sec); stroke-width: 3.5; }
+.nms-box.suppressed { stroke: var(--bad); stroke-dasharray: 4 4; opacity: .45; }
+.nms-txt { font: 600 12px 'JetBrains Mono', ui-monospace, monospace; fill: var(--ink-2); }
+.nms-txt.kept { fill: var(--sec); font-size: 14px; }
+.tl-stem { stroke: var(--ink-3); }
+.tl-dot { fill: var(--ink-2); } .tl-dot.hi { fill: var(--sec); }
+.pr-area { fill: color-mix(in srgb, var(--sec) 16%, transparent); }
+.conv-eq { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+.conv-eq .mat span { font-size: 22px; padding: 4px 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.conv-eq .op { font-size: 24px; color: var(--ink-2); font-family: 'Barlow Semi Condensed', sans-serif; }
+.conv-eq .mat.out-1 { border-color: var(--sec); }
+.btnrow .sp { flex: 1; }
+.btnrow.vert { flex-direction: column; align-items: stretch; }
+.edge-pair { display: flex; gap: 24px; }
+.slide figure { margin: 0; }
+canvas.px { image-rendering: pixelated; width: 300px; height: 300px; border: 1px solid var(--rule); display: block; }
+.slide figcaption { font-size: 15.5px; color: var(--ink-2); margin-top: 6px; max-width: 300px; line-height: 1.3; }
+.sw { display: inline-block; width: 14px; height: 14px; vertical-align: middle; border-radius: 3px; }
+.sw.pos { background: var(--sec); } .sw.neg { background: var(--bad); }
+.fmap-grid { display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 10px 14px; margin: 12px 0 8px; }
+.fmap-grid canvas.px { width: 170px; height: 170px; }
+.fmap-grid figcaption { font-size: 14.5px; max-width: 170px; }
+.occ-wrap { position: relative; width: 420px; height: 420px; touch-action: none; cursor: crosshair; }
+.occ-wrap canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.occ-img { image-rendering: pixelated; border: 1px solid var(--rule); }
+.occ-patch { position: absolute; background: rgb(158, 158, 158); outline: 2px solid var(--ink); pointer-events: none; }
+body.doc .edge-pair { flex-wrap: wrap; }
+body.doc .fmap-grid { grid-template-columns: repeat(3, auto); }
+body.doc .occ-wrap { width: min(420px, 90vw); height: min(420px, 90vw); }
+
+/* ---------- revision 2 ---------- */
+.kframe { fill: none; stroke: var(--sec); }
+.kframe-in { stroke: var(--sec); stroke-width: 1.2; }
+.kwin-next { fill: none; stroke: var(--sec); stroke-width: 2; stroke-dasharray: 6 5; opacity: .7; }
+.kwin-dash { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 8 5; }
+.op-txt { font: 600 30px 'Barlow Semi Condensed', sans-serif; fill: var(--ink-2); }
+.k-count { font: 700 19px 'Barlow Semi Condensed', sans-serif; fill: var(--sec); }
+.blk.hl { stroke: var(--bad); stroke-width: 3; }
+.blk.alt { opacity: .55; stroke-dasharray: 4 3; }
+.pa-arrow.alt { stroke-dasharray: 5 4; opacity: .7; }
+.grad-arrow { fill: none; stroke: var(--bad); stroke-width: 2; stroke-dasharray: 6 4; }
+.enc-box { fill: none; stroke: var(--ink-3); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.c-line { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 4; }
+.rho-line { stroke: var(--bad); stroke-width: 2; }
+.neck-zone { fill: color-mix(in srgb, var(--p6) 7%, transparent); stroke: var(--rule); stroke-dasharray: 4 4; }
+.rf-tbl tr[data-rf] { cursor: pointer; }
+.rf-tbl tr.hi td { background: color-mix(in srgb, var(--sec) 14%, transparent); }
+/* ---------- week 4 ---------- */
+.skip-line { fill: none; stroke: var(--sec); stroke-width: 2; stroke-dasharray: 6 4; }
+.mm-gt { fill: color-mix(in srgb, var(--ink-3) 18%, transparent); stroke: var(--ink); stroke-width: 2; stroke-dasharray: 6 4; }
+.mm-pr { fill: color-mix(in srgb, var(--sec) 14%, transparent); stroke: var(--sec); stroke-width: 2.5; }
+.mm-int { fill: color-mix(in srgb, var(--sec) 50%, transparent); stroke: none; }
+.sam-mask { fill: color-mix(in srgb, var(--sec) 60%, transparent); stroke: var(--sec); stroke-width: 2; }
+.sam-mask.line { fill: none; stroke: color-mix(in srgb, var(--sec) 75%, transparent); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+.sam-pt { fill: var(--bad); stroke: var(--paper); stroke-width: 2.5; }
+.sam-box { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 7 4; }
+.sd-cands { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.win-band { fill: color-mix(in srgb, var(--sec) 12%, transparent); stroke: var(--sec); stroke-dasharray: 4 3; }
+.ok-band { fill: color-mix(in srgb, var(--ink-3) 14%, transparent); }
+.cell-line { stroke: var(--sec); stroke-width: 4; fill: none; }
+.op-node { fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.5; }
+.slide pre.narrow, .slide pre.narrow code { font-size: 13.5px !important; }
+
+.h5-row { display: grid; grid-template-columns: 250px 1fr; align-items: center; gap: 16px; }
+.h5-row p { margin: 0; }
+.cs-tbl td, .cs-tbl th { padding-top: 2px !important; padding-bottom: 2px !important; }
+.cs-tbl tr.hi td { background: color-mix(in srgb, var(--sec) 16%, transparent); }
+/* ---------- granular computing ---------- */
+[data-part="3"] { --sec: var(--p7); }
+[data-part="4"] { --sec: var(--p5); }
+[data-part="5"] { --sec: var(--p6); }
+[data-part="6"] { --sec: var(--p10); }
+[data-part="7"] { --sec: var(--p4); }
+[data-part="8"] { --sec: var(--p8); }
+.gc-pt { fill: var(--ink-2); }
+.gc-bubble { fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.5; }
+.gc-crane { fill: none; stroke: var(--p5); stroke-width: 7; stroke-linejoin: round; }
+.gc-rope { stroke: var(--ink-3); stroke-width: 2; }
+.gc-load { fill: var(--ink-3); stroke: var(--ink); stroke-width: 1.5; }
+.gc-motion { stroke: var(--ink-3); stroke-width: 2; stroke-linecap: round; opacity: .6; }
+.gc-shadow { fill: color-mix(in srgb, var(--ink-3) 30%, transparent); }
+.gc-lower { fill: color-mix(in srgb, var(--sec) 75%, transparent); stroke: var(--paper); }
+.gc-upper { fill: color-mix(in srgb, var(--sec) 16%, transparent); stroke: var(--sec); stroke-dasharray: 5 4; }
+.gc-cell { fill: none; stroke: var(--rule); }
+.gc-hit { fill: transparent; cursor: ns-resize; }
+.gc-forbid { fill: color-mix(in srgb, var(--bad) 14%, transparent); }
+.dot-val { fill: var(--sec); }
+.fr-list li.ok::marker { content: '\2713  '; color: var(--good, #2e7d32); }
+.fr-list li.bad::marker { content: '\2717  '; color: var(--bad); }
+.fr-list li.bad { color: var(--bad); }
+label.chk { font-size: 15px; display: flex; gap: 8px; align-items: center; }
+.proj-line { stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .8; }
+.pm-tbl tr.hi td { background: color-mix(in srgb, var(--sec) 14%, transparent); }
+.pt-mat td, .pt-mat th { text-align: center; }
+
+/* reveal */
+.reveal[hidden] { display: none; }
+
+/* title slide */
+.slide.title { justify-content: center; }
+.slide.title h1 { font-weight: 700; font-size: 82px; line-height: .98; margin: 0 0 14px; letter-spacing: -0.01em; }
+.slide.title .sub { font-size: 30px; color: var(--ink-2); margin-bottom: 40px; }
+.slide.title .meta p { font-size: 21px; margin: 0 0 4px; }
+.slide .keys { font-size: 16px; color: var(--ink-2); margin-top: 34px; }
+.keys kbd, .help kbd { font-family: 'JetBrains Mono', monospace; font-size: 13px; border: 1px solid var(--rule); border-bottom-width: 2px; padding: 1px 6px; background: var(--paper); color: var(--ink); }
+
+/* title block footer */
+.tblock {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 40px; z-index: 5;
+  display: grid; grid-template-columns: auto 1fr auto auto auto auto; align-items: stretch;
+  border-top: 1.5px solid var(--ink); background: var(--paper); font-weight: 500; font-size: 16px;
+}
+.tblock > * { display: flex; align-items: center; padding: 0 14px; border-left: 1.5px solid var(--ink); white-space: nowrap; }
+.tblock > :first-child { border-left: 0; padding: 0; }
+.tblock .nav button { height: 100%; width: 42px; border: 0; background: transparent; color: var(--ink); font-size: 18px; cursor: pointer; }
+.tblock .nav button + button { border-left: 1.5px solid var(--ink); }
+.tblock .nav button:hover { background: var(--panel); }
+.tblock .part { gap: 10px; font-weight: 600; }
+.tblock .part i { width: 14px; height: 14px; background: var(--sec); display: inline-block; }
+.tblock .timer { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.tblock .timer.run { color: var(--ink); }
+.tblock .timer.late { color: var(--bad); font-weight: 600; }
+.tblock .count { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+/* help overlay */
+.help {
+  position: absolute; z-index: 10; right: 24px; bottom: 56px; width: 380px;
+  background: var(--paper); border: 1.5px solid var(--ink); padding: 18px 22px; font-size: 17px; line-height: 1.7;
+}
+.help[hidden] { display: none; }
+.help h4 { margin: 0 0 6px; font: 600 21px 'Barlow Semi Condensed', sans-serif; }
+
+/* ---------- handout / small-screen mode ---------- */
+body.doc { height: auto; background: var(--paper); }
+body.doc .viewport { position: static; display: block; padding: 0; overflow: visible; }
+body.doc .stage { width: auto; height: auto; transform: none !important; overflow: visible; box-shadow: none; }
+body.doc .slide {
+  position: relative; visibility: visible; opacity: 1; transition: none;
+  padding: 30px clamp(16px, 4vw, 56px) 34px; border-bottom: 2px solid var(--rule);
+}
+body.doc .tblock { display: none; }
+body.doc .help { position: fixed; bottom: 16px; right: 16px; max-width: calc(100% - 32px); }
+body.doc .slide h2 { font-size: clamp(26px, 4vw, 40px); }
+body.doc .slide p, body.doc .slide li { font-size: clamp(16px, 2.2vw, 21px); }
+body.doc .slide.title h1 { font-size: clamp(42px, 8vw, 78px); }
+body.doc .cols, body.doc .cols.wl, body.doc .cols.wr, body.doc .cols.code,
+body.doc .cols.three, body.doc .cols.four { grid-template-columns: 1fr !important; gap: 20px; }
+body.doc .ctl { grid-template-columns: auto 1fr auto !important; }
+body.doc #grid-demo > svg { max-width: 440px; }
+body.doc .flow { grid-template-columns: 1fr; }
+body.doc .lab { grid-template-columns: 1fr !important; gap: 20px; }
+body.doc .flow > div::after { display: none; }
+body.doc pre { font-size: 13px; max-height: none; }
+body.doc .sm-row { grid-template-columns: 26px 104px 1fr 52px; font-size: 16px; gap: 6px 8px; }
+body.doc .sm-row > :nth-child(6) { grid-row: 1; grid-column: 1; }
+body.doc .sm-row > :nth-child(1) { grid-row: 1; grid-column: 2; }
+body.doc .sm-row > :nth-child(2) { grid-row: 1; grid-column: 3; }
+body.doc .sm-row > :nth-child(3) { grid-row: 1; grid-column: 4; }
+body.doc .sm-row > :nth-child(4) { grid-row: 2; grid-column: 2 / 4; height: 22px; }
+body.doc .sm-row > :nth-child(5) { grid-row: 2; grid-column: 4; }
+body.doc .sm-head { display: none !important; }
+body.doc #softmax-demo .ctl > span { grid-column: 1 / -1; }
+body.doc .tbl { font-size: 15px; display: block; overflow-x: auto; }
+body.doc .tbl-wrap { overflow-x: auto; }
+@media print {
+  .copy, .btnrow, .help { display: none !important; }
+  body.doc .slide { break-after: page; border: 0; }
+}
+</style>
+</head>
+<body>
+<div class="viewport">
+<div class="stage" id="stage">
+
+<!-- ===================== OPENING ===================== -->
+<section class="slide title" data-part="1">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <h1 style="font-size:76px">Granular<br>computing</h1>
+      <p class="sub">Information granules, fuzzy sets, and how to build them from data and use them in machine learning</p>
+      <div class="meta">
+        <p><strong>Deep Learning for Engineering</strong></p>
+        <p class="muted">Durham University, Michaelmas Term 2026</p>
+        <p class="muted small">Based on W. Pedrycz, <em>An Introduction to Computing with Fuzzy Sets</em> (Springer, 2021)</p>
+      </div>
+      <p class="keys"><kbd>→</kbd> next &nbsp; <kbd>N</kbd> lecture notes &nbsp; <kbd>T</kbd> lecture timer &nbsp; <kbd>D</kbd> dark/light &nbsp; <kbd>H</kbd> handout view &nbsp; <kbd>?</kbd> all keys</p>
+    </div>
+    <div><svg class="fig" id="gc-hero" viewBox="0 0 400 400" aria-label="Numeric data points gathered into three overlapping fuzzy granules"></svg></div>
+  </div>
+  <aside class="notes"><ul><li>Two hours on a different way of representing data: not as precise numbers, but as granules, chunks of information at a level of detail that suits the problem.</li><li>The lecture follows Pedrycz's 2021 textbook, chapters 1, 2, 5, 8, 9 and 10, and ends with our own paper on knowledge-informed machine learning.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="1">
+  <h2>Today's plan</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.05fr; gap: 34px">
+    <div>
+      <p class="small">People reason with imprecise, meaningful chunks such as <em>heavy</em>, <em>about 20 °C</em> or <em>low risk</em>. Granular computing gives machines the same vocabulary, and lets us build it from data.</p>
+      <h3>Outline</h3>
+      <ol class="small outline">
+        <li><strong>Granular computing:</strong> information granules and the uncertainty they capture</li>
+        <li><strong>Fuzzy sets and fuzzy numbers:</strong> common membership functions</li>
+        <li><strong>Characterising fuzzy sets:</strong> specificity, energy, cardinality, coverage and more</li>
+        <li><strong>Building information granules:</strong> from experts, and from data by unsupervised learning</li>
+        <li><strong>Fuzzy c-means clustering:</strong> data-driven granules</li>
+        <li><strong>Justifiable granularity:</strong> balancing coverage and specificity</li>
+        <li><strong>Granules in machine learning:</strong> a knowledge-informed neural network</li>
+      </ol>
+    </div>
+    <svg class="fig" id="gc-plan" viewBox="0 0 560 400" aria-label="From a person's words, to fuzzy sets, to data-driven granules, to a neural network guided by granules"></svg>
+  </div>
+  <aside class="notes"><ul><li>Rough timing: 15, 15, 15, 10, 20, 15 and 25 minutes.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 1 ===================== -->
+<section class="slide title divider" data-part="2">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 1</p>
+      <h1>Granular computing</h1>
+      <p class="sub">What information granules are, and which kinds of uncertainty they capture</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="now"><span>1</span>Granular computing</li><li><span>2</span>Fuzzy sets and fuzzy numbers</li><li><span>3</span>Characterising fuzzy sets</li><li><span>4</span>Building information granules</li><li><span>5</span>Fuzzy c-means clustering</li><li><span>6</span>Justifiable granularity</li><li><span>7</span>Granules in machine learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 15 minutes. Start from human perception, then formalise.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Humans think in granules, not numbers</h2>
+  <div class="cols" id="fall-demo" style="grid-template-columns: 1.1fr 1fr; gap: 30px">
+    <svg class="fig" viewBox="0 0 560 400" aria-label="A load falling towards a construction worker, with what a machine would say and what a colleague shouts"></svg>
+    <div class="stack">
+      <div class="btnrow" role="group" aria-label="Who is speaking">
+        <button class="btn" type="button" data-say="machine" aria-pressed="false">How a machine would say it</button>
+        <button class="btn" type="button" data-say="human" aria-pressed="true">How a colleague says it</button>
+      </div>
+      <div class="ctl" style="grid-template-columns: 90px 1fr 70px"><label for="fd-m">mass</label><input id="fd-m" type="range" min="1" max="300" step="1" value="126"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 90px 1fr 70px"><label for="fd-v">speed</label><input id="fd-v" type="range" min="0" max="25" step="0.5" value="15"><output></output></div>
+      <div class="readout small" aria-live="polite"></div>
+      <p class="small">Nobody shouts the mass and the speed. We shout <em>heavy</em> and <em>falling</em>: imprecise, but fast, meaningful and enough to act on. Each word is an <strong>information granule</strong>; how well 126 kg fits <em>heavy</em> is a matter of degree, which is exactly what fuzzy logic models.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Tell the story: a colleague does not say "a 126 kg mass is falling at 15 m/s; you have 0.8 s to move at least 5 m". They say "watch out, something heavy is falling on you!"</li><li>Drag the mass and speed: four fuzzy rules (heavy or light, fast or slow) fire to different degrees, with AND as the minimum, and the strongest rule chooses the warning. A small, fast object and a heavy, slow one now get different warnings.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Partial membership: cold or warm?</h2>
+  <div class="cols" id="pm-demo" style="grid-template-columns: 1.15fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 330" aria-label="Crisp and fuzzy definitions of cold and warm temperature"></svg>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 64px"><label for="pm-t">temperature</label><input id="pm-t" type="range" min="0" max="40" step="0.5" value="24.5"><output></output></div>
+    </div>
+    <div class="stack">
+      <p class="small"><strong>Crisp world:</strong> one threshold at 25 °C. Below it is <em>cold</em>, above it is <em>warm</em>. So 24.5 °C is exactly as cold as 5 °C, and completely different from 25.5 °C.</p>
+      <p class="small"><strong>Fuzzy world:</strong> a temperature belongs to <em>cold</em> and to <em>warm</em> at the same time, each to a degree. 24.5 °C is barely more cold than warm, much like 25.5 °C, and nothing like 5 °C.</p>
+      <table class="tbl compact small pm-tbl">
+        <thead><tr><th>T (°C)</th><th>crisp cold</th><th>crisp warm</th><th>fuzzy cold</th><th>fuzzy warm</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="small muted">Here the fuzzy degrees always add to 1, but they need not: membership is a degree of compatibility, not a probability.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The three fixed rows make the point: crisp treats 5 and 24.5 °C alike, and 24.5 and 25.5 °C as opposites. Fuzzy membership reverses both judgements.</li><li>Drag the slider: the last row follows it.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Information granules and granular computing</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="box">
+        <h3>Information granule</h3>
+        <p class="small">A collection of elements drawn together by their closeness: resemblance, proximity or functionality, in space, in time or in function (Zadeh, 1997). <em>Comfortable temperature</em>, <em>rush hour</em>, <em>small crack</em>.</p>
+      </div>
+      <div class="box">
+        <h3>Granular computing</h3>
+        <p class="small">Representing, constructing, processing and communicating information granules (Pedrycz, 2021, ch. 1). It brings intervals, fuzzy sets, rough sets and others under one banner.</p>
+      </div>
+    </div>
+    <div class="stack">
+      <h3>Four observations</h3>
+      <ol class="small">
+        <li>Granules are the building blocks of how we represent and process knowledge.</li>
+        <li>Their <strong>size</strong>, the level of granularity, shapes how a problem is described and solved.</li>
+        <li>Granules form <strong>hierarchies</strong>: the same system seen at coarser or finer detail.</li>
+        <li>There is no universal level of granularity: it depends on the problem and the user.</li>
+      </ol>
+      <p class="small muted">Too much detail hides the big picture: we recognise a face, not 2 million pixel values.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The four points are Pedrycz's (a) to (d) in section 1.1.</li><li>Ask: at what granularity does a site manager think about a project schedule? Days? Weeks? Phases? It depends on the decision.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>One concept, several kinds of granule</h2>
+  <div class="cols" id="frames-demo" style="grid-template-columns: 1.2fr 1fr; gap: 30px">
+    <svg class="fig" viewBox="0 0 600 330" aria-label="The concept comfortable temperature represented by the selected formalism"></svg>
+    <div class="stack">
+      <div class="btnrow vert" role="group" aria-label="Choose a formalism">
+        <button class="btn" type="button" data-fr="set" aria-pressed="false">Set (interval)</button>
+        <button class="btn" type="button" data-fr="fuzzy" aria-pressed="true">Fuzzy set</button>
+        <button class="btn" type="button" data-fr="shadow" aria-pressed="false">Shadowed set</button>
+        <button class="btn" type="button" data-fr="rough" aria-pressed="false">Rough set</button>
+        <button class="btn" type="button" data-fr="prob" aria-pressed="false">Probability (histogram)</button>
+      </div>
+      <div class="box fr-box" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Same concept, <em>comfortable room temperature</em>, five formal frameworks from section 1.2.</li><li>Shadowed sets: three regions, in, out and unknown. Rough sets: a lower and an upper approximation forced by a coarse vocabulary (here, readings only to the nearest 2 °C). The histogram is Pedrycz's Example 1: a granule built from data.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>What kind of uncertainty?</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.05fr">
+    <div>
+      <svg class="fig" id="unc-fig" viewBox="0 0 540 330" aria-label="Uncertainty divides into fuzziness and ambiguity; ambiguity divides into nonspecificity and discord"></svg>
+      <p class="small muted">After Klir and Yuan (1995).</p>
+    </div>
+    <div class="stack">
+      <table class="tbl compact small">
+        <thead><tr><th>Type</th><th>Example</th><th>Natural granule</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Fuzziness</strong> (vagueness)</td><td>Is 126 kg <em>heavy</em>? Is 23 °C <em>warm</em>?</td><td>fuzzy set</td></tr>
+          <tr><td><strong>Nonspecificity</strong> (imprecision)</td><td>the load is somewhere between 100 and 150 kg</td><td>interval, set</td></tr>
+          <tr><td><strong>Discord</strong> (conflict)</td><td>two sensors disagree; it may or may not rain</td><td>probability, evidence</td></tr>
+        </tbody>
+      </table>
+      <div class="box">
+        <h3>Fuzziness is not probability</h3>
+        <p class="small"><strong>Probability</strong> asks how likely an event is: will it rain on 1 September? <strong>Fuzziness</strong> asks how well a value fits a concept: is 10 °C <em>warm</em>? Nothing random happens; the boundary of the word is gradual. The two combine: "<em>high</em> probability of <em>low</em> rainfall".</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The taxonomy is Klir and Yuan's figure, also in the CIVE 654 notes.</li><li>Ask the room for an engineering example of each: vague specifications ("adequate drainage"), imprecise measurements (± tolerance), conflicting expert opinions.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="2">
+  <h2>Why granules matter for AI: explanation</h2>
+  <div class="cols">
+    <div class="stack">
+      <p>Modern AI models are accurate but opaque. To be trusted, their results must be explained at a level of abstraction people use: as information granules.</p>
+      <div class="box"><p class="small">"The pump is <em>likely to fail soon</em> because vibration is <em>high</em> and temperature is <em>rising quickly</em>" is an explanation. A 64-dimensional activation vector is not.</p></div>
+      <p class="small">Granules sit at the <strong>interface</strong> between a model and its users: inputs described in their terms, outputs delivered in their terms.</p>
+    </div>
+    <div>
+      <svg class="fig" id="xai-fig" viewBox="0 0 540 300" aria-label="An AI model with granular input and output interfaces communicating with a user"></svg>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Pedrycz, section 1.3, explainable AI, and section 1.5: a processing framework with granular interfaces.</li><li>This is the thread we come back to in Section 7: granules as a way of putting domain knowledge into, and getting explanation out of, a neural network.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 2 ===================== -->
+<section class="slide title divider" data-part="3">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 2</p>
+      <h1>Fuzzy sets and fuzzy numbers</h1>
+      <p class="sub">Membership as a matter of degree, and the functions that describe it</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Granular computing</li><li class="now"><span>2</span>Fuzzy sets and fuzzy numbers</li><li><span>3</span>Characterising fuzzy sets</li><li><span>4</span>Building information granules</li><li><span>5</span>Fuzzy c-means clustering</li><li><span>6</span>Justifiable granularity</li><li><span>7</span>Granules in machine learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 15 minutes.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Fuzzy sets: a departure from yes or no</h2>
+  <div class="cols" id="crisp-demo" style="grid-template-columns: 1fr 1.15fr">
+    <div class="stack">
+      <p class="small">A classical set draws a sharp line: 21.9 °C is comfortable, 22.1 °C is not. A <strong>fuzzy set</strong> admits degrees of membership (Zadeh, 1965):</p>
+      <p>\[ A : X \to [0, 1] \]</p>
+      <p class="small">\(A(x) = 1\): fully compatible with the concept; \(A(x) = 0\): incompatible; values in between: partly compatible. The membership function <em>is</em> the fuzzy set.</p>
+      <p class="small">Neighbouring concepts overlap: 25 °C is partly <em>comfortable</em> and partly <em>warm</em>.</p>
+      <p class="small muted">Precision in the grades is not the point: \(A(4) = 0.9865\) means nothing more than "high". What matters is the ordering.</p>
+    </div>
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 300" aria-label="Fuzzy sets cold, comfortable and warm, with the crisp interval shown under the axis"></svg>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 60px"><label for="cd-t">temperature</label><input id="cd-t" type="range" min="0" max="35" step="0.5" value="24"><output></output></div>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Pedrycz's own example (section 2.2): comfortable around 20 °C; 19.5 and 20.5 feel the same to people; 25 °C is partly comfortable and partly warm.</li><li>The crisp interval sits under the axis for comparison: drag across 22 °C and the crisp answer flips while the fuzzy grades change gradually.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Fuzzy sets on a discrete universe</h2>
+  <div class="cols" id="prov-demo" style="grid-template-columns: 1.25fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 600 320" aria-label="Membership of each Canadian province in the fuzzy set extreme winter cold"></svg>
+      <div class="btnrow" role="group" aria-label="Fuzzy or crisp">
+        <button class="btn" type="button" data-pv="fuzzy" aria-pressed="true">Fuzzy: extreme cold</button>
+        <button class="btn" type="button" data-pv="crisp" aria-pressed="false">Crisp: mean below −10 °C</button>
+      </div>
+    </div>
+    <div class="stack">
+      <p class="small">The universe need not be continuous. Here \(X\) is the ten provinces of Canada, and the fuzzy set <em>extreme winter cold</em> gives each one a degree:</p>
+      <p>\[ A = \tfrac{0}{\text{BC}} + \tfrac{0.47}{\text{AB}} + \tfrac{0.71}{\text{SK}} + \tfrac{0.80}{\text{MB}} + \dots + \tfrac{0.14}{\text{NL}} \]</p>
+      <p class="small">Read \(\tfrac{a}{x}\) as "\(x\) with membership \(a\)"; the + only lists the elements. On a finite universe a fuzzy set is simply a <strong>vector</strong> of grades, one per element.</p>
+      <p class="small">The crisp version must pick a cut-off: with −10 °C, Alberta (−10.4) counts as extremely cold and New Brunswick (−9.4) does not.</p>
+      <p class="small muted">Grades from the January mean temperature of each capital (approximate), through \(A(T) = 1\) below −20 °C, 0 above −2 °C, linear in between.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Temperatures are approximate January means for the provincial capitals; check them against Environment Canada climate normals before teaching. The territories would all be close to 1.</li><li>Switch to crisp: one degree decides whether Alberta is "extremely cold". Ask the room whether Winnipeg and Edmonton are equally cold in January.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Common membership functions</h2>
+  <div class="cols" id="mf-demo" style="grid-template-columns: 1.15fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 290" aria-label="The selected membership function and its parameters"></svg>
+      <div class="btnrow" role="group" aria-label="Choose a shape">
+        <button class="btn" type="button" data-mf="tri" aria-pressed="true">Triangular</button>
+        <button class="btn" type="button" data-mf="trap" aria-pressed="false">Trapezoidal</button>
+        <button class="btn" type="button" data-mf="gauss" aria-pressed="false">Gaussian</button>
+        <button class="btn" type="button" data-mf="s" aria-pressed="false">S-shaped</button>
+        <button class="btn" type="button" data-mf="pw" aria-pressed="false">Piecewise linear</button>
+      </div>
+      <div class="mf-ctls"></div>
+    </div>
+    <div class="stack">
+      <div class="mf-f" data-mf="tri"><p>\[ A(x) = \begin{cases} \dfrac{x - a}{m - a}, &amp; x \in [a, m] \\[4pt] \dfrac{b - x}{b - m}, &amp; x \in [m, b] \\[4pt] 0, &amp; \text{otherwise} \end{cases} \]</p><p class="small">The simplest model: a modal value \(m\) and bounds \(a\), \(b\). Three parameters, clear meaning.</p></div>
+      <div class="mf-f" data-mf="trap" hidden><p>\[ A(x) = \begin{cases} \dfrac{x - a}{m - a}, &amp; x \in [a, m] \\[4pt] 1, &amp; x \in [m, n] \\[4pt] \dfrac{b - x}{b - n}, &amp; x \in [n, b] \\[4pt] 0, &amp; \text{otherwise} \end{cases} \]</p><p class="small">A flat top \([m, n]\): those values are equally typical, as in a tolerance band.</p></div>
+      <div class="mf-f" data-mf="gauss" hidden><p>\[ A(x) = \exp\!\big(-(x - m)^2 / \sigma^2\big) \]</p><p class="small">Smooth and differentiable everywhere, which suits gradient-based learning; \(\sigma\) sets the spread.</p></div>
+      <div class="mf-f" data-mf="s" hidden><p>\[ A(x) = \begin{cases} 0, &amp; x \le a \\ 2\big(\tfrac{x - a}{b - a}\big)^2, &amp; x \in [a, m] \\ 1 - 2\big(\tfrac{x - b}{b - a}\big)^2, &amp; x \in [m, b] \\ 1, &amp; x \ge b \end{cases} \]</p><p class="small">Monotonic, for open-ended concepts such as <em>high</em> or <em>large</em>; \(m = (a + b)/2\) is the crossover point.</p></div>
+      <div class="mf-f" data-mf="pw" hidden><p class="small">Straight lines between points \((a_i, b_i)\) given by an expert: the most flexible shape, and the natural result of eliciting a few membership grades.</p></div>
+      <p class="small muted">Choose the shape to match the meaning of the concept, the detail you need, and whether you will optimise it later.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Pedrycz section 2.3. Drag the parameters for each shape.</li><li>Sigmoid functions are the other common monotonic choice; they satisfy dA/dx ∝ A(1 − A) (section 2.3, Example 2).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="3">
+  <h2>Fuzzy numbers</h2>
+  <div class="cols" id="fn-demo" style="grid-template-columns: 1fr 1.1fr">
+    <div class="stack">
+      <p class="small">A <strong>fuzzy number</strong> is a fuzzy set on the real line, \(A : \mathbb{R} \to [0, 1]\), with two properties (Dubois and Prade, 1978):</p>
+      <ul class="small">
+        <li><strong>Normal:</strong> its height is 1, so at least one value is fully typical:
+          \[ \mathrm{hgt}(A) = \sup_{x} A(x) = 1 \]</li>
+        <li><strong>Unimodal:</strong> one peak; membership rises to the top, then falls, and never dips in between.</li>
+      </ul>
+      <p class="small">Fuzzy numbers model imprecise quantities: <em>about 20 minutes</em>, <em>around 120 kg</em>, <em>roughly 3 m</em>. Triangular, trapezoidal and Gaussian shapes are the usual choices.</p>
+    </div>
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 540 270" aria-label="A candidate fuzzy set, checked against the two properties"></svg>
+      <div class="btnrow" role="group" aria-label="Candidate">
+        <button class="btn" type="button" data-fn="tri" aria-pressed="true">about 20 minutes</button>
+        <button class="btn" type="button" data-fn="trap" aria-pressed="false">between about 18 and 22</button>
+        <button class="btn" type="button" data-fn="sub" aria-pressed="false">height 0.7</button>
+        <button class="btn" type="button" data-fn="bi" aria-pressed="false">two peaks</button>
+      </div>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Click through the four candidates. Only the first two are fuzzy numbers: the third never reaches 1, the fourth has two peaks.</li><li>A flat-topped trapezoid is sometimes called a fuzzy interval; it is still normal and unimodal.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 3 ===================== -->
+<section class="slide title divider" data-part="4">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 3</p>
+      <h1>Characterising fuzzy sets</h1>
+      <p class="sub">A few numbers that describe a whole membership function</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Granular computing</li><li class="done"><span>2</span>Fuzzy sets and fuzzy numbers</li><li class="now"><span>3</span>Characterising fuzzy sets</li><li><span>4</span>Building information granules</li><li><span>5</span>Fuzzy c-means clustering</li><li><span>6</span>Justifiable granularity</li><li><span>7</span>Granules in machine learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 15 minutes. Descriptors from Pedrycz section 2.4, and the frame of cognition from 2.6.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Height, normality, support and core</h2>
+  <div class="cols" id="desc-demo" style="grid-template-columns: 1.15fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 300" aria-label="A trapezoidal fuzzy set with its support, core and height marked"></svg>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 50px"><label for="dd-h">height</label><input id="dd-h" type="range" min="0.3" max="1" step="0.05" value="1"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 50px"><label for="dd-c">core width</label><input id="dd-c" type="range" min="0" max="4" step="0.5" value="2"><output></output></div>
+    </div>
+    <div class="stack">
+      <p class="small"><strong>Height</strong>, \(\mathrm{hgt}(A) = \sup_x A(x)\). If it is 1 the set is <strong>normal</strong>: at least one element is fully typical. Otherwise it is subnormal, and can be normalised by dividing by its height.</p>
+      <p class="small"><strong>Support</strong>, \(\mathrm{supp}(A) = \{x : A(x) &gt; 0\}\): everything with any membership at all.</p>
+      <p class="small"><strong>Core</strong>, \(\mathrm{core}(A) = \{x : A(x) = 1\}\): the fully typical elements.</p>
+      <p class="small"><strong>Convex</strong> if \(A(\lambda x_1 + (1 - \lambda)x_2) \ge \min(A(x_1), A(x_2))\): no dips between two points.</p>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Lower the height: the core disappears (empty) because nothing reaches 1, and the set becomes subnormal.</li><li>Typo to watch for in the book's eq. 2.12: the core is the set where A(x) = 1, not 0.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>α-cuts and the representation theorem</h2>
+  <div class="cols" id="acut-demo" style="grid-template-columns: 1.15fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 300" aria-label="A fuzzy set, one α-cut, and the fuzzy set rebuilt from a stack of α-cuts"></svg>
+      <div class="ctl" style="grid-template-columns: 70px 1fr 50px"><label for="ac-a">\(\alpha\)</label><input id="ac-a" type="range" min="0.05" max="1" step="0.05" value="0.5"><output></output></div>
+      <label class="chk"><input type="checkbox" id="ac-stack"> show the stack of α-cuts that rebuilds the set</label>
+    </div>
+    <div class="stack">
+      <p class="small">An <strong>α-cut</strong> keeps the elements whose membership reaches α. It is an ordinary set, an interval for a fuzzy number:</p>
+      <p>\[ A_\alpha = \{x : A(x) \ge \alpha\} \]</p>
+      <p class="small">Raising α gives smaller, nested cuts: \(\alpha \le \beta \Rightarrow A_\alpha \supseteq A_\beta\). The support is the limit at 0, the core the cut at 1.</p>
+      <p class="small"><strong>Representation theorem:</strong> a fuzzy set is exactly the stack of its α-cuts, each lifted to height α:</p>
+      <p>\[ A(x) = \sup_{\alpha \in (0, 1]} \alpha\, A_\alpha(x) \]</p>
+      <p class="small muted">So anything we can compute for intervals, we can compute for fuzzy sets, one α at a time.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>This is why fuzzy-number arithmetic works with interval arithmetic, and why the principle of justifiable granularity (Section 6) can build a fuzzy set out of intervals.</li><li>The book's sentence that "higher values of the threshold imply that more elements are accepted" has it backwards: higher α accepts fewer.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Cardinality, energy and entropy</h2>
+  <div class="cols" id="card-demo" style="grid-template-columns: 1.15fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 260" aria-label="Two fuzzy sets on six elements, with each element's contribution to the chosen measure"></svg>
+      <div class="btnrow" role="group" aria-label="Choose a measure">
+        <button class="btn" type="button" data-ms="card" aria-pressed="true">Cardinality</button>
+        <button class="btn" type="button" data-ms="energy" aria-pressed="false">Energy</button>
+        <button class="btn" type="button" data-ms="entropy" aria-pressed="false">Entropy</button>
+      </div>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+    <div class="stack">
+      <p class="small"><strong>Cardinality</strong> (σ-count): add up the grades, counting partial members partly.</p>
+      <p>\[ \mathrm{card}(A) = \sum_{x} A(x) \]</p>
+      <p class="small"><strong>Energy</strong>: weight each grade by an increasing \(e\), with \(e(0) = 0\), \(e(1) = 1\). With \(e(u) = u^2\), grades near 1 count much more than grades near 0.5.</p>
+      <p>\[ E(A) = \sum_x e\big(A(x)\big) \]</p>
+      <p class="small"><strong>Entropy</strong>: how fuzzy the set is. \(h\) is 0 at 0 and 1, and largest at ½, the most hesitant grade; here \(h(u) = 2\min(u, 1 - u)\).</p>
+      <p>\[ H(A) = \sum_x h\big(A(x)\big) \]</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The two sets are chosen to have the same cardinality, 3.0. Click Energy: B wins, because its grades are all 0 or 1. Click Entropy: A wins by far, because its grades all hover around 0.5; B, a crisp set, has zero entropy.</li><li>The outlined bars show each element's contribution e(u) or h(u); the shaded bars are the grades themselves.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Specificity: how much detail does a granule carry?</h2>
+  <div class="cols" id="spec-demo" style="grid-template-columns: 1.1fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 540 260" aria-label="A triangular fuzzy set on a range; narrower sets are more specific"></svg>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 50px"><label for="sp-w">half-width s</label><input id="sp-w" type="range" min="0" max="10" step="0.25" value="3"><output></output></div>
+      <div class="readout" aria-live="polite"></div>
+    </div>
+    <div class="stack">
+      <p class="small">Specificity is a <strong>decreasing</strong> function of the size of a granule, equal to 1 for a single number and 0 for the whole range. For an interval:</p>
+      <p>\[ \mathrm{sp}(A) = 1 - \frac{\mathrm{length}(A)}{\mathrm{range}} \]</p>
+      <p class="small">For a fuzzy set, average the specificity of its α-cuts (representation theorem again):</p>
+      <p>\[ \mathrm{sp}(A) = \int_0^1 \mathrm{sp}(A_\alpha)\, d\alpha \]</p>
+      <p class="small">A symmetric triangle of half-width \(s\) has cuts of length \(2s(1 - \alpha)\), so \(\mathrm{sp}(A) = 1 - s/\mathrm{range}\).</p>
+      <div class="box quiet"><p class="small">Specificity and cardinality pull opposite ways: the more a granule includes, the more general and the less specific it is.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Range here is [0, 20]. Drag s to 0: specificity 1, a single number. Drag to 10: the triangle spans the range and specificity falls to 0.5, since the α-cuts shrink towards the top.</li><li>Other decreasing functions work too, such as exp(−length); the paper in Section 7 uses an exponential form.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="4">
+  <h2>Coverage, and families of fuzzy sets</h2>
+  <div class="cols" id="frame-demo" style="grid-template-columns: 1.15fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 560 250" aria-label="A family of fuzzy sets across a variable, with coverage gaps or heavy overlap highlighted"></svg>
+      <div class="ctl" style="grid-template-columns: 140px 1fr 50px"><label for="fr-n">number of sets</label><input id="fr-n" type="range" min="2" max="12" step="1" value="5"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 140px 1fr 50px"><label for="fr-w">width</label><input id="fr-w" type="range" min="0.3" max="2.5" step="0.05" value="1"><output></output></div>
+    </div>
+    <div class="stack">
+      <p class="small">A variable is usually described by a family of fuzzy sets, such as <em>low</em>, <em>medium</em>, <em>high</em>: a <strong>frame of cognition</strong>. To keep its meaning (Pedrycz, 2021, §2.6):</p>
+      <ul class="small fr-list">
+        <li data-k="cov"><strong>Coverage:</strong> every \(x\) belongs to some set, \(\max_i A_i(x) \ge \varepsilon\)</li>
+        <li data-k="num"><strong>Few sets:</strong> at most about 7 ± 2, so each keeps a name</li>
+        <li data-k="uni"><strong>Unimodal</strong> sets, each with one focus</li>
+        <li data-k="ovl"><strong>Restricted overlap:</strong> \(\max_x \min(A_i(x), A_j(x)) \le \delta\), so neighbours stay distinguishable</li>
+      </ul>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Narrow sets leave gaps (coverage fails); wide sets overlap so much that neighbours mean the same thing; 12 sets are too many to name.</li><li>Thresholds used here: ε = 0.2 and δ = 0.75. The book prints the overlap condition with "&gt; δ"; it should be "at most δ".</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 4 ===================== -->
+<section class="slide title divider" data-part="5">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 4</p>
+      <h1>Building information granules</h1>
+      <p class="sub">From experts, from data, and the idea of unsupervised learning</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Granular computing</li><li class="done"><span>2</span>Fuzzy sets and fuzzy numbers</li><li class="done"><span>3</span>Characterising fuzzy sets</li><li class="now"><span>4</span>Building information granules</li><li><span>5</span>Fuzzy c-means clustering</li><li><span>6</span>Justifiable granularity</li><li><span>7</span>Granules in machine learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 10 minutes: the question every application faces, where do the membership functions come from?</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Where do membership functions come from?</h2>
+  <div class="cols three">
+    <div class="box"><h3>From people</h3><p class="small">Elicit the meaning of a concept from experts: voting, intervals, or pairwise comparisons (Pedrycz, 2021, ch. 8).</p><p class="small muted">Captures domain knowledge; subjective, and hard with many variables.</p></div>
+    <div class="box"><h3>From data</h3><p class="small">Let the structure in the data define the granules: <strong>clustering</strong>, an unsupervised method (ch. 9).</p><p class="small muted">Objective and automatic; ignores what experts know, and granules may lack meaning.</p></div>
+    <div class="box"><h3>From both</h3><p class="small">Summarise data with granules that are both <em>supported</em> by evidence and <em>specific</em> enough to mean something: <strong>justifiable granularity</strong> (ch. 10).</p><p class="small muted">The middle road: data plus a design criterion.</p></div>
+  </div>
+  <svg class="fig" id="src-spec" viewBox="0 0 1160 110" aria-label="A spectrum from human-centric to data-driven construction of granules" style="margin-top:14px"></svg>
+  <div class="bottom-line"><p>Sections 5 and 6 build granules from data. First, two expert-driven methods, and then the idea of learning without labels.</p></div>
+  <aside class="notes"><ul><li>Frame this as a spectrum: human-centric at one end, data-driven at the other, justifiable granularity in between (the book's own framing in the chapter 10 abstract).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>From experts: horizontal and vertical methods</h2>
+  <div class="cols" id="vote-demo" style="grid-template-columns: 1.1fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 540 270" aria-label="Ten experts answer yes or no for each load; the proportion of yes votes gives the membership in heavy"></svg>
+      <div class="btnrow"><button class="btn" type="button" data-act="poll">Poll the experts again</button></div>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Horizontal</h3>
+        <p class="small">For each value \(x\), ask \(N\) experts "is \(x\) <em>heavy</em>?" and take the share of yes answers as the membership: \(A(x) = N_{\text{yes}} / N\). Disagreement gives intermediate grades.</p>
+      </div>
+      <div class="box">
+        <h3>Vertical</h3>
+        <p class="small">For chosen levels \(\alpha\), ask "which values are <em>heavy</em> to degree at least \(\alpha\)?". Each answer is an α-cut; the representation theorem stacks them into a fuzzy set.</p>
+      </div>
+      <p class="small muted">Saaty's pairwise comparisons ask only "how much heavier is A than B?", and check the answers for consistency (§8.5).</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The demo simulates 10 experts with slightly different personal thresholds for "heavy". Re-poll: the curve wobbles; with more experts it would smooth out.</li><li>These are the methods in CIVE 654 Lecture 9 as direct and indirect methods; the book calls them horizontal and vertical (section 8.4).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>Unsupervised learning: structure without labels</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small"><strong>Supervised</strong> learning, everything so far in this module, learns a mapping from input-output pairs: a classifier or a regressor.</p>
+      <p class="small"><strong>Unsupervised</strong> learning has inputs only. Its job is to <em>reveal structure</em>: groups, regularities, a summary of the data. <strong>Clustering</strong> is the classic example: find \(c\) groups of similar data, each described by a prototype \(\mathbf{v}_i\).</p>
+      <p class="small">In granular computing, every cluster is an information granule built from data, with a meaning the data supplies.</p>
+    </div>
+    <div>
+      <svg class="fig" id="sup-fig" viewBox="0 0 540 300" aria-label="Left: labelled data with a decision boundary. Right: the same data unlabelled, with discovered groups"></svg>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Engineering examples: grouping operating conditions of a machine, finding typical daily load profiles, segmenting traffic patterns, none of which come with labels.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="5">
+  <h2>From hard to fuzzy partitions</h2>
+  <div class="cols" id="part-demo" style="grid-template-columns: 1.1fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 540 330" aria-label="Six points and three cluster prototypes; drag the points"></svg>
+      <div class="btnrow" role="group" aria-label="Partition type">
+        <button class="btn" type="button" data-pt="hard" aria-pressed="true">k-means: hard</button>
+        <button class="btn" type="button" data-pt="fuzzy" aria-pressed="false">fuzzy c-means: graded</button>
+      </div>
+      <p class="small muted">Drag the points. Prototypes are held fixed for illustration.</p>
+    </div>
+    <div class="stack">
+      <p class="small">A clustering of \(N\) points into \(c\) groups is a <strong>partition matrix</strong> \(U\), \(c \times N\), with \(u_{ik}\) the membership of point \(k\) in cluster \(i\):</p>
+      <p>\[ \sum_{i=1}^{c} u_{ik} = 1, \qquad 0 &lt; \sum_{k=1}^{N} u_{ik} &lt; N \]</p>
+      <div class="pt-mat" aria-live="polite"></div>
+      <p class="small pt-read"></p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Hard view: each point goes to its nearest prototype, so its column holds a single 1. The starting layout gives the book's own example (section 9.2): cluster 1 holds x2, x4 and x5.</li><li>Switch to fuzzy: x3, sitting between clusters 1 and 2, gets about half of each. Drag it towards a prototype and watch its column sharpen; drag it to the middle of the triangle and it spreads across all three.</li><li>Memberships use the FCM formula with m = 2.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 5 ===================== -->
+<section class="slide title divider" data-part="6">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 5</p>
+      <h1>Fuzzy c-means clustering</h1>
+      <p class="sub">Data-driven information granules, with membership functions that come with a formula</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Granular computing</li><li class="done"><span>2</span>Fuzzy sets and fuzzy numbers</li><li class="done"><span>3</span>Characterising fuzzy sets</li><li class="done"><span>4</span>Building information granules</li><li class="now"><span>5</span>Fuzzy c-means clustering</li><li><span>6</span>Justifiable granularity</li><li><span>7</span>Granules in machine learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 20 minutes. Pedrycz chapter 9; the algorithm is due to Dunn (1973) and Bezdek (1981).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="6">
+  <h2>The FCM objective</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">Given data \(\mathbf{x}_1, \dots, \mathbf{x}_N \in \mathbb{R}^n\) and a number of clusters \(c\), find prototypes \(\mathbf{v}_1, \dots, \mathbf{v}_c\) and a fuzzy partition matrix \(U\) that minimise</p>
+      <p>\[ Q = \sum_{i=1}^{c}\sum_{k=1}^{N} u_{ik}^{\,m}\, \|\mathbf{x}_k - \mathbf{v}_i\|^2 \qquad \text{subject to } \sum_{i=1}^{c} u_{ik} = 1 \]</p>
+      <p class="small">Each point pulls on every prototype, in proportion to its membership raised to the power \(m\).</p>
+      <p class="small">The <strong>fuzzification coefficient</strong> \(m &gt; 1\) controls how soft the partition is; \(m = 2\) is the usual choice.</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Solving it: alternate two steps</h3>
+        <p class="small">With \(U\) fixed, setting \(\partial Q / \partial \mathbf{v}_i = 0\) gives weighted means:</p>
+        <p>\[ \mathbf{v}_i = \frac{\sum_k u_{ik}^{\,m}\, \mathbf{x}_k}{\sum_k u_{ik}^{\,m}} \]</p>
+        <p class="small">With the prototypes fixed, a Lagrange multiplier for the constraint gives:</p>
+        <p>\[ u_{ik} = \frac{1}{\sum_{j=1}^{c} \left( \dfrac{\|\mathbf{x}_k - \mathbf{v}_i\|}{\|\mathbf{x}_k - \mathbf{v}_j\|} \right)^{2/(m - 1)}} \]</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Derivation in section 9.3: augment Q with λ(Σu − 1) per data point, differentiate, and eliminate λ using the constraint.</li><li>Read the membership formula: a point twice as far from v_i as from v_j gets a much smaller membership in i; the exponent 2/(m − 1) controls how much smaller.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="6">
+  <h2>The FCM algorithm</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">import numpy as np
+
+def fcm(X, c=3, m=2.0, tol=1e-5, max_iter=300, seed=0):
+    rng = np.random.default_rng(seed)
+    U = rng.random((c, len(X)))
+    U /= U.sum(axis=0)                  # each column sums to 1
+    for _ in range(max_iter):
+        Um = U ** m
+        V = Um @ X / Um.sum(axis=1, keepdims=True)    # prototypes
+        D = np.linalg.norm(X[None] - V[:, None], axis=2) + 1e-12
+        U_new = 1 / ((D[:, None] / D[None])
+                     ** (2 / (m - 1))).sum(axis=1)  # memberships
+        done = np.abs(U_new - U).max() &lt; tol
+        U = U_new
+        if done:
+            break
+    Q = ((U ** m) * D ** 2).sum()
+    return V, U, Q
+
+V, U, Q = fcm(X, c=3, m=2.0)    # X: (N, n) array of data</code></pre></div>
+    <div class="stack">
+      <ol class="small">
+        <li>Initialise \(U\) at random, columns summing to 1.</li>
+        <li>Update the prototypes from \(U\).</li>
+        <li>Update \(U\) from the prototypes.</li>
+        <li>Stop when \(U\) barely changes, \(\|U^{(t+1)} - U^{(t)}\| &lt; \varepsilon\).</li>
+      </ol>
+      <p class="small">Each iteration never increases \(Q\), so the algorithm converges, though to a local minimum: run it from several seeds.</p>
+      <p class="small muted">Tested: on three Gaussian blobs it finds the three centres. <code>scikit-fuzzy</code> offers the same as <code>skfuzzy.cluster.cmeans</code>.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Twenty lines that follow equations 9.13 and 9.16 exactly. D[:, None] / D[None] builds every ratio d_ik / d_jk at once.</li><li>skfuzzy expects data shaped (features, samples), transposed relative to this function.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="6">
+  <h2>Try it: fuzzy c-means on two-dimensional data</h2>
+  <div class="cols" id="fcm-demo" style="grid-template-columns: 1.15fr 1fr">
+    <svg class="fig" viewBox="0 0 560 400" aria-label="Data points coloured by their fuzzy memberships, with the cluster prototypes"></svg>
+    <div class="stack">
+      <div class="btnrow">
+        <button class="btn" type="button" data-act="step">One iteration</button>
+        <button class="btn" type="button" data-act="run">Run to convergence</button>
+        <button class="btn" type="button" data-act="reset">New start</button>
+      </div>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="fc-c">clusters c</label><input id="fc-c" type="range" min="2" max="6" step="1" value="3"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="fc-m">fuzzifier m</label><input id="fc-m" type="range" min="1.1" max="4" step="0.1" value="2"><output></output></div>
+      <div class="btnrow" role="group" aria-label="Data set">
+        <button class="btn" type="button" data-ds="blobs" aria-pressed="true">Three groups</button>
+        <button class="btn" type="button" data-ds="bridge" aria-pressed="false">Two groups and a bridge</button>
+      </div>
+      <div class="readout small" aria-live="polite"></div>
+      <p class="small muted">Colour shows each point's strongest cluster; paler points belong to several clusters at once.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Step a few iterations from a random start and watch the prototypes (crosses) move and Q fall.</li><li>Use "two groups and a bridge": the bridge points get split memberships, which hard k-means would force into one group.</li><li>Set m close to 1: memberships become 0 or 1, which is k-means (section 9.4).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="6">
+  <h2>The fuzzifier m shapes the membership functions</h2>
+  <div class="cols" id="fuzz-demo" style="grid-template-columns: 1.2fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 580 300" aria-label="One-dimensional FCM membership functions for three prototypes"></svg>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 50px"><label for="fz-m">fuzzifier m</label><input id="fz-m" type="range" min="1.05" max="4" step="0.05" value="2"><output></output></div>
+    </div>
+    <div class="stack">
+      <p class="small">With the prototypes fixed at \(v_1 = -4\), \(v_2 = 0\) and \(v_3 = 2.7\) (Pedrycz, 2021, Fig. 9.6), the membership formula gives a fuzzy set for each cluster, <em>with an explicit formula</em>.</p>
+      <ul class="small">
+        <li>\(m \to 1\): characteristic functions, so FCM becomes k-means</li>
+        <li>\(m = 2\): smooth, Gaussian-like sets</li>
+        <li>large \(m\): flat, near \(1/c\), with spikes at the prototypes</li>
+      </ul>
+      <p class="small">Note the <strong>rippling</strong>: because memberships must sum to 1, a set can rise again far from its prototype. FCM sets are normal but not always unimodal.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Far away from all prototypes every membership tends to 1/c, here 1/3. This matters in Section 7: a prediction far outside the data still gets coverage 1/c, which the paper has to correct.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="6">
+  <h2>Choosing c, the distance, and reading the result</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="box"><h3>Number of clusters, c</h3><p class="small">\(Q\) always falls as \(c\) grows; with \(c = N\), \(Q = 0\). For granules that people can name, keep \(c\) small, about 5 to 9, or use a validity index or subtractive clustering to suggest it.</p></div>
+      <div class="box"><h3>Distance</h3><p class="small">It decides the shape of the clusters. Euclidean finds spheres; standardise variables first, or use a weighted distance, \(\sum_j (x_j - v_j)^2 / \sigma_j^2\).</p></div>
+    </div>
+    <div class="stack">
+      <div class="box"><h3>Reading the result</h3><p class="small">The prototypes are numeric summaries of each granule; the rows of \(U\) are the granules themselves, fuzzy sets over the data. To name the granules variable by variable, project them onto each axis: next slide.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Sections 9.4 and 9.5. Subtractive clustering is what the paper in Section 7 used to choose c = 5.</li><li>Projection is how FCM produces the labelled granules a fuzzy rule-based model needs.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="6">
+  <h2>Projecting clusters onto each variable</h2>
+  <div class="cols" id="proj-demo" style="grid-template-columns: 1.15fr 1fr">
+    <svg class="fig" viewBox="0 0 560 420" aria-label="Two-dimensional clusters with their prototypes projected onto the x and y axes, giving fuzzy sets on each axis"></svg>
+    <div class="stack">
+      <div class="btnrow" role="group" aria-label="Layout">
+        <button class="btn" type="button" data-pj="a" aria-pressed="true">Well separated</button>
+        <button class="btn" type="button" data-pj="b" aria-pressed="false">Two clusters at the same height</button>
+      </div>
+      <p class="small">FCM's granules live in the full space. To talk about one variable at a time, drop each prototype onto that axis (dashed lines) and apply the membership formula on that axis alone:</p>
+      <p>\[ A_{ij}(x_j) = \frac{1}{\sum_{l=1}^{c} \left( \dfrac{x_j - v_{ij}}{x_j - v_{lj}} \right)^{2/(m-1)}} \]</p>
+      <p class="small">Each variable gets its own vocabulary, built from data: <em>low</em>, <em>medium</em>, <em>high</em>, ready for rules such as <em>IF x is low AND y is high THEN …</em></p>
+      <p class="small pj-read" aria-live="polite"></p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Pedrycz section 9.5 and Fig. 9.8. Below the scatter are the fuzzy sets on x; to its left, rotated, those on y.</li><li>Switch layout: two prototypes now project to almost the same y, so their fuzzy sets on y collapse into one. Only two meaningful granules remain on that variable, although there are three clusters.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 6 ===================== -->
+<section class="slide title divider" data-part="7">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 6</p>
+      <h1>Justifiable granularity</h1>
+      <p class="sub">A granule should be supported by the data and specific enough to mean something</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Granular computing</li><li class="done"><span>2</span>Fuzzy sets and fuzzy numbers</li><li class="done"><span>3</span>Characterising fuzzy sets</li><li class="done"><span>4</span>Building information granules</li><li class="done"><span>5</span>Fuzzy c-means clustering</li><li class="now"><span>6</span>Justifiable granularity</li><li><span>7</span>Granules in machine learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 15 minutes. Pedrycz chapter 10; the principle was introduced by Pedrycz and Homenda (2013).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="7">
+  <h2>Two requirements that pull apart</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">Forecasting tomorrow's temperature:</p>
+      <table class="tbl compact small">
+        <thead><tr><th>Statement</th><th>Coverage</th><th>Specificity</th></tr></thead>
+        <tbody>
+          <tr><td>it will be 17.65 °C</td><td>almost never true</td><td>maximal</td></tr>
+          <tr><td>between 15 and 18 °C</td><td>often true</td><td>high</td></tr>
+          <tr><td>between 12 and 22 °C</td><td>usually true</td><td>moderate</td></tr>
+          <tr><td>between −10 and 34 °C</td><td>always true</td><td>useless</td></tr>
+        </tbody>
+      </table>
+      <p class="small">A good granule is <strong>justified</strong> by experimental evidence (coverage) and carries <strong>meaning</strong> (specificity). The more specific a statement, the less likely it is to hold.</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Coverage</h3>
+        <p class="small">How much data stands behind the granule: for an interval, the fraction of data inside it.</p>
+        <p>\[ \mathrm{cov}(A) = \frac{1}{N}\,\mathrm{card}\{x_k : x_k \in A\} \]</p>
+      </div>
+      <div class="box">
+        <h3>Specificity</h3>
+        <p class="small">How precise the granule is (Section 3):</p>
+        <p>\[ \mathrm{sp}(A) = 1 - \frac{|b - a|}{\mathrm{range}} \]</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Pedrycz Fig. 10.1. Ask the room which statement a site manager would want before pouring concrete tomorrow: it is the compromise, not either extreme.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="7">
+  <h2>The principle: maximise coverage × specificity</h2>
+  <div class="cols" id="jg-demo" style="grid-template-columns: 1.2fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 580 330" aria-label="Sixteen data points, the interval granule around their mean, and the curves of coverage, specificity and their product"></svg>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 54px"><label for="jg-b">upper bound b</label><input id="jg-b" type="range" min="0" max="8" step="1" value="4"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 110px 1fr 54px"><label for="jg-a">lower bound a</label><input id="jg-a" type="range" min="0" max="6" step="1" value="2"><output></output></div>
+    </div>
+    <div class="stack">
+      <p>\[ V = \mathrm{cov}(A) \cdot \mathrm{sp}(A), \qquad A^{*} = \arg\max V \]</p>
+      <p class="small"><strong>Two-phase design:</strong> take a numeric representative \(r\), such as the mean; then choose each bound separately, using only the data on its side:</p>
+      <p>\[ b^{*} = \arg\max_b \; \mathrm{cov}([r, b])\,\mathrm{sp}([r, b]) \]</p>
+      <p class="small">As \(b\) grows, coverage climbs in steps and specificity falls linearly; their product peaks in between.</p>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>The data are Pedrycz's Example 1 (section 10.1): 16 values with mean 0.756. Move b along the data: the book's optimum is b = 2.5 with V = 0.34; the same procedure on the left gives a = −2.0 (V = 0.38). Verified in Python.</li><li>Coverage on each side is counted relative to the data on that side, as in the book's worked numbers.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="7">
+  <h2>From intervals to fuzzy sets</h2>
+  <div class="cols" id="xi-demo" style="grid-template-columns: 1.2fr 1fr">
+    <div class="stack">
+      <svg class="fig" viewBox="0 0 580 300" aria-label="Nested justified intervals for increasing ξ, stacked into a fuzzy set"></svg>
+      <div class="ctl" style="grid-template-columns: 70px 1fr 54px"><label for="xi-x">\(\xi\)</label><input id="xi-x" type="range" min="0" max="4" step="0.1" value="1"><output></output></div>
+      <label class="chk"><input type="checkbox" id="xi-stack" checked> stack the intervals for every ξ into a fuzzy set</label>
+    </div>
+    <div class="stack">
+      <p class="small">Weight specificity by a power \(\xi\):</p>
+      <p>\[ V = \mathrm{cov}(A)\cdot \mathrm{sp}(A)^{\xi} \]</p>
+      <p class="small">\(\xi = 0\) ignores specificity, so the interval covers everything; larger \(\xi\) gives narrower, more specific intervals. They are <strong>nested</strong>, like α-cuts.</p>
+      <p class="small">So rescale \(\xi\) to \(\alpha \in [0, 1]\) and stack the intervals: by the representation theorem, the result is a <strong>fuzzy set</strong> built directly from the data.</p>
+      <p class="small muted">Alternatively, fix a shape (such as triangular), replace the count with the σ-count \(\sum_k A(x_k)\), and optimise its bounds.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Section 10.2. This closes the loop with Section 3: α-cuts, specificity and cardinality are exactly the tools the principle uses.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="7">
+  <h2>Justifiable granularity in Python</h2>
+  <div class="cols code">
+    <div class="code-wrap"><pre class="dense"><code class="language-python">import numpy as np
+
+def justifiable_interval(x, r=None):
+    """Interval granule [a, b] maximising coverage * specificity."""
+    x = np.sort(np.asarray(x, float))
+    r = x.mean() if r is None else r          # numeric representative
+    up = x[x &gt; r]                             # candidates for b
+    lo = x[x &lt; r][::-1]                       # candidates for a
+    V_b = (np.arange(1, len(up) + 1) / len(up)          # coverage
+           * (1 - (up - r) / (x.max() - r)))           # specificity
+    V_a = (np.arange(1, len(lo) + 1) / len(lo)
+           * (1 - (r - lo) / (r - x.min())))
+    return lo[V_a.argmax()], r, up[V_b.argmax()]
+
+data = [-5.2, -4.5, -2.0, -1.9, -0.5, 0.1, 0.7, 0.8,
+        1.7, 1.9, 2.2, 2.5, 3.1, 3.5, 4.4, 5.3]
+print(justifiable_interval(data))    # (-2.0, 0.756, 2.5)</code></pre></div>
+    <div class="stack">
+      <p class="small">Every data value is a candidate bound, so the search is a simple sweep: coverage counts the points passed so far, specificity falls with the distance from \(r\).</p>
+      <p class="small">Reproduces the book's example: \(b^* = 2.5\) with \(V = 0.342\), and \(a^* = -2.0\).</p>
+      <p class="small muted">To summarise an FCM cluster, call it on that cluster's data with \(r = \mathbf{v}_i\), counting each point by its membership.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Tested in Python against Pedrycz's Example 1.</li></ul></aside>
+</section>
+
+<!-- ===================== SECTION 7 ===================== -->
+<section class="slide title divider" data-part="8">
+  <div class="cols wl" style="align-items:center">
+    <div>
+      <p class="sec-no">Section 7</p>
+      <h1>Granules in machine learning</h1>
+      <p class="sub">Putting domain knowledge into a neural network through information granules</p>
+    </div>
+    <ol class="sec-map" aria-label="Lecture outline"><li class="done"><span>1</span>Granular computing</li><li class="done"><span>2</span>Fuzzy sets and fuzzy numbers</li><li class="done"><span>3</span>Characterising fuzzy sets</li><li class="done"><span>4</span>Building information granules</li><li class="done"><span>5</span>Fuzzy c-means clustering</li><li class="done"><span>6</span>Justifiable granularity</li><li class="now"><span>7</span>Granules in machine learning</li></ol>
+  </div>
+  <aside class="notes"><ul><li>About 25 minutes, including the wrap-up. The case study is our paper: French, Gerami-Seresht and Pedrycz, knowledge-informed machine learning for space debris (manuscript).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Three ways granules enter machine learning</h2>
+  <div class="cols three">
+    <div class="box"><h3>Granular inputs</h3><p class="small">Describe inputs with fuzzy sets and reason with rules: <em>IF vibration is high AND temperature is rising THEN risk is high</em>. Fuzzy rule-based and neuro-fuzzy models (Pedrycz, 2021, chs. 12 to 14).</p><p class="small muted">Gain: interpretable models.</p></div>
+    <div class="box"><h3>Granular outputs</h3><p class="small">Predict a granule rather than a number: an interval or fuzzy set around the forecast, built with justifiable granularity.</p><p class="small muted">Gain: honest uncertainty.</p></div>
+    <div class="box"><h3>Granular knowledge in training</h3><p class="small">Use granules as <strong>knowledge hints</strong> in the loss function, so a standard network learns to respect what the granules say is physically valid.</p><p class="small muted">Gain: reliability outside the training data. Our case study.</p></div>
+  </div>
+  <svg class="fig" id="ml-ways" viewBox="0 0 1160 150" aria-label="Where each kind of granule plugs into a model: inputs, outputs and the training loss" style="margin-top:12px"></svg>
+  <div class="bottom-line"><p class="small">All three answer the same weakness of purely data-driven models: they memorise statistical patterns, and can produce confident, impossible answers when the data shift.</p></div>
+  <aside class="notes"><ul><li>Remind the class of Week 2: a model that overfits learns accidents of the sample; Week 3: shortcuts found by Grad-CAM. Knowledge hints are another defence.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Case study: predicting the drag of space debris</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="small">Over a million debris objects of 1 to 10 cm orbit in low Earth orbit. Predicting where they will be depends above all on atmospheric drag, governed by the <strong>ballistic coefficient</strong>:</p>
+      <p>\[ \mathrm{BC} = \frac{C_d\, A_{\text{proj}}}{M} \]</p>
+      <p class="small">A recurrent network (a GRU, Week 4) can estimate BC from 180 days of orbital elements. Purely data-driven, it is accurate on familiar data but can predict a <strong>negative BC</strong>, implying that drag <em>adds</em> energy to the orbit: physically impossible.</p>
+    </div>
+    <div class="stack">
+      <div class="box">
+        <h3>Four kinds of generalisation</h3>
+        <ul class="small">
+          <li><strong>Type I</strong>: interpolation within the training data</li>
+          <li><strong>Type II</strong>: the same objects, further in time</li>
+          <li><strong>Type III</strong>: unseen objects (new altitude, new shape)</li>
+          <li><strong>Type IV</strong>: unseen environments (a solar maximum)</li>
+        </ul>
+      </div>
+      <p class="small">Data: 25,000 synthetic objects with known BC from aerodynamic simulation, filtered to 15,000 observable ones, since real catalogues have no ground-truth BC.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Types I to III follow Peng and Bai; Type IV is introduced in the paper.</li><li>The safety argument: avoiding impossible predictions under domain shift matters more than a few percent of in-distribution accuracy.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Step 1: granulate the target with FCM</h2>
+  <div class="cols" style="grid-template-columns: 1.15fr 1fr">
+    <div>
+      <svg class="fig" id="bc-gran" viewBox="0 0 580 300" aria-label="Five FCM fuzzy sets over the ballistic coefficient, with the physical observability floor"></svg>
+      <p class="small muted">Illustrative shapes; the paper's Figure 1 shows the real granules.</p>
+    </div>
+    <div class="stack">
+      <p class="small">Cluster the <strong>known physical BC values</strong> of the 15,000 objects, the output space, not the inputs. Each cluster is a valid aerodynamic regime.</p>
+      <ul class="small">
+        <li>number of granules from subtractive clustering: \(C = 5\)</li>
+        <li>membership functions from FCM with \(m = 2\): Section 5's formula</li>
+        <li>each granule \(G_k\) gets a specificity from its area \(A_k\) relative to the range \(R\):</li>
+      </ul>
+      <p>\[ \mathrm{sp}(G_k) = \exp\!\big(-K_{\text{spec}}\, A_k / R\big) \]</p>
+      <p class="small">Narrow regimes are specific; broad ones less so.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Why the output space: clustering the inputs would only rediscover the Latin hypercube sampling grid used to generate them.</li><li>Specificity via the area under the membership function is the paper's choice for fuzzy granules, since they have no sharp endpoints (Section 3: specificity decreases with size).</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Step 2: a knowledge-informed loss function</h2>
+  <div class="cols" style="grid-template-columns: 1.1fr 1fr">
+    <div class="stack">
+      <p>\[ \begin{aligned} \mathcal{L} = {} &amp; \frac{\lambda}{N}\sum_{k=1}^{N} \|y_k - \hat{y}_k\|^2 \\ &amp; + \frac{1 - \lambda}{N}\sum_{k=1}^{N} \Big(1 - \mathrm{cov}(\hat{y}_k, G_k)\,\mathrm{sp}(G_k)\Big) \end{aligned} \]</p>
+      <p class="small">The first sum, the <strong>data term</strong>, is the usual MSE. The second, the <strong>knowledge term</strong>, rewards a prediction for lying inside the right granule: justifiable granularity's coverage × specificity, now a training signal.</p>
+      <ul class="small">
+        <li><strong>Coverage</strong> = the FCM membership of the prediction \(\hat{y}_k\) in granule \(G_k\)</li>
+        <li><strong>Target-anchored:</strong> \(G_k\) is the granule of the <em>true</em> value \(y_k\), so the network cannot cheat by aiming at the most specific granule</li>
+        <li><strong>Boundary penalty:</strong> far from all clusters FCM membership tends to \(1/C\), so below the physical floor coverage is forced down exponentially</li>
+      </ul>
+    </div>
+    <div>
+      <svg class="fig" id="kiml-arch" viewBox="0 0 540 340" aria-label="Training architecture: orbital elements into a GRU network, predicted BC, and a loss combining MSE with the granular knowledge term"></svg>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>Boundary: for ŷ below Y_min = 0.05 m²/kg, cov = cov₀(Y_min)·exp(α(ŷ − Y_min)), which gives strong gradients back into the valid region.</li><li>λ is annealed: start with more knowledge, then shift weight towards the data as the knowledge term stops improving. No extra network, and no differential equations in the loss, unlike a PINN.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Try it: the knowledge term</h2>
+  <div class="cols" id="kiml-demo" style="grid-template-columns: 1.2fr 1fr">
+    <svg class="fig" viewBox="0 0 580 320" aria-label="The five granules, the true value, the prediction, and the penalty below the physical floor"></svg>
+    <div class="stack">
+      <p>\[ \mathcal{L}_k = \lambda\,\underbrace{(y_k - \hat{y}_k)^2}_{\text{data}} + (1 - \lambda)\,\underbrace{\big(1 - \mathrm{cov}\cdot\mathrm{sp}\big)}_{\text{knowledge}} \]</p>
+      <p class="small">\(\lambda\) shares the loss between the two: \(\lambda = 1\) is plain MSE, the baseline; \(\lambda = 0\) is knowledge only. In training it starts low, so the granules first anchor the physics, and rises as the knowledge term stops improving.</p>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 60px"><label for="ki-y">true BC, y</label><input id="ki-y" type="range" min="0.06" max="1.4" step="0.01" value="0.2"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 60px"><label for="ki-p">prediction, ŷ</label><input id="ki-p" type="range" min="-0.3" max="1.5" step="0.01" value="0.3"><output></output></div>
+      <div class="ctl" style="grid-template-columns: 120px 1fr 60px"><label for="ki-l">λ (data weight)</label><input id="ki-l" type="range" min="0" max="1" step="0.05" value="0.5"><output></output></div>
+      <div class="readout small" aria-live="polite"></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>One sample's loss. Move the prediction away from the truth but inside the same granule: the data term grows, the knowledge term barely moves. Move it into another granule: the knowledge term jumps. Below the floor the penalty takes over.</li><li>Set λ to 1: pure MSE, the baseline. Set it to 0: knowledge only, which keeps predictions in the right regime but not at the right value. Illustrative granules; K_spec = 1.5, α = 10 as in the paper's in-distribution set-up.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>What the granules bought</h2>
+  <div class="cols">
+    <div class="stack">
+      <table class="tbl compact small">
+        <thead><tr><th></th><th>Baseline (MSE)</th><th>KI-ML</th></tr></thead>
+        <tbody>
+          <tr><td colspan="3"><strong>In distribution</strong> (1,500 test objects)</td></tr>
+          <tr><td>normalised MAE</td><td class="mono">18.84%</td><td class="mono">27.88%</td></tr>
+          <tr><td>RMSE (m²/kg)</td><td class="mono">0.1553</td><td class="mono">0.1537</td></tr>
+          <tr><td>physically impossible predictions</td><td class="mono">4.20%</td><td class="mono">0.07%</td></tr>
+          <tr><td colspan="3"><strong>Out of distribution</strong> (unseen altitude regime, 50 runs)</td></tr>
+          <tr><td>normalised MAE</td><td class="mono">434.5% ± 226.5</td><td class="mono">102.3% ± 28.0</td></tr>
+          <tr><td>median 7-day along-track error</td><td class="mono">506 km</td><td class="mono">130 km</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stack">
+      <p class="small"><strong>A trade, by design.</strong> On familiar data the granules cost average accuracy, yet the worst errors shrink (lower RMSE) and impossible predictions almost vanish.</p>
+      <p class="small"><strong>Where it matters,</strong> under domain shift, errors fall by up to four times.</p>
+      <p class="small">This is the bias-variance trade-off of Week 2: a little bias, in exchange for much less variance where the data run out.</p>
+      <div class="box quiet"><p class="small"><strong>Limitation:</strong> under a solar maximum (Type IV) the gain is partial, because the granules describe BC only, not the space weather driving the shift.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>All numbers from the manuscript (Tables 5 and 6 and the abstract). The along-track figure is for unseen-domain extrapolation.</li><li>Hyperparameters found by Bayesian optimisation used λ = 0.1 for the hardest shifts: the less the data can be trusted, the more weight goes to the knowledge.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Key takeaways</h2>
+  <div class="cols wl">
+    <ol class="small">
+      <li><strong>Information granules</strong> represent knowledge at the level of abstraction people use. Fuzzy sets capture vagueness, intervals capture imprecision, probability captures randomness.</li>
+      <li><strong>Fuzzy sets</strong> are membership functions \(A: X \to [0, 1]\), on continuous or discrete universes; <strong>fuzzy numbers</strong> are the ones on the real line with height 1 and a single peak.</li>
+      <li><strong>Descriptors</strong> summarise a granule: support, core, α-cuts, cardinality, energy, entropy, specificity; families need coverage and distinguishability.</li>
+      <li><strong>Granules can be built</strong> from experts, from data with <strong>fuzzy c-means</strong>, or with the <strong>principle of justifiable granularity</strong>, which maximises coverage × specificity.</li>
+      <li><strong>In machine learning</strong>, granules make models interpretable, outputs honest, and training knowledge-informed, which helps most when the data shift.</li>
+    </ol>
+    <div class="box quiet">
+      <h3>Try at home</h3>
+      <p class="small">Cluster a sensor dataset of your own with the FCM code, project the prototypes to one variable, and build a justified interval around each one.</p>
+    </div>
+  </div>
+  <aside class="notes"><ul><li>One line per section; leave time for questions.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>References</h2>
+  <div class="cols refs">
+    <ul class="small">
+      <li>Pedrycz, W. (2021). <em>An Introduction to Computing with Fuzzy Sets: Analysis, Design, and Applications</em>. Intelligent Systems Reference Library 190. Springer.</li>
+      <li>Bargiela, A. and Pedrycz, W. (2003). <em>Granular Computing: An Introduction</em>. Kluwer Academic Publishers.</li>
+      <li>Bezdek, J. C. (1981). <em>Pattern Recognition with Fuzzy Objective Function Algorithms</em>. Plenum Press.</li>
+      <li>Dubois, D. and Prade, H. (1978). Operations on fuzzy numbers. <em>International Journal of Systems Science</em>, 9(6), 613–626.</li>
+      <li>Klir, G. J. and Yuan, B. (1995). <em>Fuzzy Sets and Fuzzy Logic: Theory and Applications</em>. Prentice Hall.</li>
+      <li>Miller, G. A. (1956). The magical number seven, plus or minus two. <em>Psychological Review</em>, 63(2), 81–97.</li>
+    </ul>
+    <ul class="small">
+      <li>Pedrycz, W. and Homenda, W. (2013). Building the fundamentals of granular computing: a principle of justifiable granularity. <em>Applied Soft Computing</em>, 13(10), 4209–4218.</li>
+      <li>Zadeh, L. A. (1965). Fuzzy sets. <em>Information and Control</em>, 8(3), 338–353.</li>
+      <li>Zadeh, L. A. (1997). Toward a theory of fuzzy information granulation and its centrality in human reasoning and fuzzy logic. <em>Fuzzy Sets and Systems</em>, 90(2), 111–127.</li>
+      <li>French, B., Gerami-Seresht, N. and Pedrycz, W. Knowledge-informed machine learning supporting the prediction of physically-reliable space debris trajectory. Manuscript.</li>
+    </ul>
+  </div>
+  <aside class="notes"><ul><li>Please verify citation details before sharing; they were not checked against a database.</li></ul></aside>
+</section>
+
+<section class="slide" data-part="8">
+  <h2>Looking ahead: granules for structural health monitoring</h2>
+  <p class="small">A CNN with segmentation (Weeks 3 and 4) can find cracks on concrete. Granular computing can help turn those pixels into decisions an inspector trusts. Some directions to explore:</p>
+  <div class="cols three" style="margin-top:6px">
+    <div class="box"><h3>Describe cracks as granules</h3><p class="small">From each mask, measure width, length, orientation and density. Treat each measurement as a fuzzy number, since a width read from pixels is <em>about</em> 0.3 mm, not exactly.</p></div>
+    <div class="box"><h3>Categories without hard cut-offs</h3><p class="small">Build <em>hairline</em>, <em>fine</em>, <em>moderate</em> and <em>severe</em> with FCM or justifiable granularity on measured cracks, anchored to code limits, so a 0.29 mm crack is not a different world from a 0.31 mm one.</p></div>
+    <div class="box"><h3>Rules an inspector can read</h3><p class="small"><em>IF width is moderate AND length is long AND location is near a support THEN priority is high.</em> Every classification comes with its reason.</p></div>
+  </div>
+  <div class="cols three" style="margin-top:12px">
+    <div class="box quiet"><h3>Honest outputs</h3><p class="small">Report severity as a granule: an interval or fuzzy set reflecting segmentation uncertainty, such as the spread of SAM's candidate masks.</p></div>
+    <div class="box quiet"><h3>Knowledge in training</h3><p class="small">As in the debris case, add a knowledge term that penalises physically implausible masks or widths below the camera's resolution.</p></div>
+    <div class="box quiet"><h3>Granules over time</h3><p class="small">Track each crack's granules across inspections; an RNN on granular time series can flag cracks that are <em>growing quickly</em>.</p></div>
+  </div>
+  <aside class="notes"><ul><li>Deliberately open-ended: these are project ideas, not a method. Each connects a part of today's lecture (fuzzy numbers, FCM, justifiable granularity, rules, the knowledge-informed loss) with the CNN and segmentation weeks.</li><li>Category boundaries such as crack-width limits come from the relevant design code or inspection manual; the point is to make the transitions gradual.</li></ul></aside>
+</section>
+
+<div class="tblock" id="tblock" data-part="1">
+  <div class="nav"><button id="prev" type="button" aria-label="Previous slide">‹</button><button id="next" type="button" aria-label="Next slide">›</button></div>
+  <div class="part"><i></i><span id="part-name"></span></div>
+  <div id="part-time"></div>
+  <div class="timer" id="timer" role="button" tabindex="0" title="Lecture timer: T to start or pause, R to reset"></div>
+  <div class="nbtn" id="notes-btn" role="button" tabindex="0" title="Open the lecture notes in a separate window (N)">N: notes</div>
+  <div class="count" id="count"></div>
+</div>
+
+<div class="help" id="help" hidden>
+  <h4>Keys</h4>
+  <kbd>→</kbd> <kbd>Space</kbd> <kbd>PgDn</kbd> next slide<br>
+  <kbd>←</kbd> <kbd>PgUp</kbd> previous slide<br>
+  <kbd>Home</kbd> <kbd>End</kbd> first or last slide<br>
+  <kbd>T</kbd> start or pause the lecture timer, <kbd>R</kbd> reset it<br>
+  <kbd>D</kbd> switch dark and light<br>
+  <kbd>H</kbd> handout view: all slides in one scrolling page<br>
+  <kbd>N</kbd> lecture notes in a separate window<br>
+  <kbd>F</kbd> full screen &nbsp; <kbd>Esc</kbd> close this
+  <p style="margin:8px 0 0;font-size:15px;color:var(--ink-2)">The timer turns red when you run past the planned end of the current section. Add <code>#12</code> to the address to open slide 12.</p>
+</div>
+
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<style>
+.mk-bad { fill: var(--bad); } .mk-good { fill: var(--good); }
+.sm-head { color: var(--ink-2); font-size: 15px !important; margin-bottom: 4px !important; }
+input[type=number] { font: 16px 'JetBrains Mono', ui-monospace, monospace; padding: 4px 8px; width: 130px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var PARTS = {
+    1: ['Opening', 0, 5],
+    2: ['Section 1: Granular computing', 5, 15],
+    3: ['Section 2: Fuzzy sets and fuzzy numbers', 20, 15],
+    4: ['Section 3: Characterising fuzzy sets', 35, 15],
+    5: ['Section 4: Building information granules', 50, 10],
+    6: ['Section 5: Fuzzy c-means clustering', 60, 20],
+    7: ['Section 6: Justifiable granularity', 80, 15],
+    8: ['Section 7: Granules in machine learning', 95, 25]
+  };
+  var NPARTS = Object.keys(PARTS).length;
+  var NS = 'http://www.w3.org/2000/svg';
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* ---------- theme ---------- */
+  var savedTheme = store.get('l3-theme');
+  if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme);
+  function isDark() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t) return t === 'dark';
+    return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function toggleTheme() {
+    var next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    store.set('l3-theme', next);
+  }
+
+  /* ---------- slides ---------- */
+  var slides = $$('.slide');
+  var N = slides.length;
+  var stage = $('#stage');
+  var vp = $('.viewport');
+  var cur = 0;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmtSec(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+    return (h ? h + ':' + pad(m) : String(m)) + ':' + pad(s);
+  }
+  function fmtMin(min) { return Math.floor(min / 60) + ':' + pad(min % 60); }
+
+  function fit() {
+    if (document.body.classList.contains('doc')) { stage.style.transform = ''; return; }
+    var cs = getComputedStyle(vp);
+    var w = vp.clientWidth;
+    var h = vp.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var s = Math.min(w / 1280, h / 720);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+
+  function updateFooter() {
+    var p = slides[cur].getAttribute('data-part');
+    var info = PARTS[p];
+    $('#tblock').setAttribute('data-part', p);
+    $('#part-name').textContent = info[0];
+    $('#part-time').textContent = 'planned ' + fmtMin(info[1]) + '\u2013' + fmtMin(info[1] + info[2]);
+    $('#count').textContent = (cur + 1) + ' / ' + N;
+    renderTimer();
+  }
+
+  function go(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    slides[cur].classList.remove('active');
+    cur = i;
+    slides[cur].classList.add('active');
+    updateFooter();
+    renderNotes();
+    try { history.replaceState(null, '', '#' + (cur + 1)); } catch (e) {}
+  }
+
+  /* ---------- lecture notes window ---------- */
+  var notesWin = null;
+  var NOTES_CSS = "body{margin:0;font:18px/1.5 'Atkinson Hyperlegible','Segoe UI','Helvetica Neue',Arial,sans-serif;background:#F4F7F9;color:#16202A}" +
+    "header{position:sticky;top:0;display:flex;align-items:center;gap:10px;padding:10px 16px;background:#E8EDF1;border-bottom:1.5px solid #16202A;font:600 16px 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif}" +
+    "header .sp{flex:1}button{font:600 16px 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;padding:3px 12px;cursor:pointer;background:transparent;color:inherit;border:1.5px solid currentColor}" +
+    "#t{font:14px 'JetBrains Mono',monospace}main{padding:14px 22px 28px}h1{font:600 26px/1.15 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;margin:0 0 4px}" +
+    ".m{color:#55606C;margin:0 0 14px;font-size:15px}ul{padding-left:22px;margin:0}li{margin:0 0 10px}" +
+    ".nx{color:#55606C;border-top:1px solid #C9D2DA;margin-top:18px;padding-top:10px;font-size:15px}" +
+    "@media (prefers-color-scheme: dark){body{background:#12171D;color:#E3E8EE}header{background:#1B222A;border-color:#E3E8EE}.m,.nx{color:#9AA7B4}.nx{border-color:#34404C}}";
+  function plainTitle(s) {
+    var h = s.querySelector('h1, h2');
+    if (!h) return '';
+    return h.innerHTML.replace(/<br\s*\/?>/g, ' ').replace(/<span class="opt-tag">.*?<\/span>/g, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  }
+  function renderNotes() {
+    if (!notesWin || notesWin.closed) return;
+    var d = notesWin.document, s = slides[cur], info = PARTS[s.getAttribute('data-part')];
+    var aside = s.querySelector('aside.notes'), nxt = slides[cur + 1];
+    d.getElementById('pos').textContent = 'Slide ' + (cur + 1) + ' of ' + N;
+    d.getElementById('body').innerHTML = '<h1>' + plainTitle(s) + '</h1>' +
+      '<p class="m">' + info[0] + ', planned ' + fmtMin(info[1]) + '\u2013' + fmtMin(info[1] + info[2]) + '</p>' +
+      (aside ? aside.innerHTML : '<p>No notes for this slide.</p>') +
+      (nxt ? '<p class="nx">Next: ' + plainTitle(nxt) + '</p>' : '<p class="nx">Last slide.</p>');
+    renderTimer();
+  }
+  function openNotes() {
+    if (notesWin && !notesWin.closed) { notesWin.focus(); renderNotes(); return; }
+    notesWin = window.open('', 'lecture-notes', 'width=560,height=760');
+    if (!notesWin) { var h = $('#help'); h.hidden = false; return; }
+    var fonts = $('link[href*="fonts.googleapis"]');
+    var d = notesWin.document;
+    d.open();
+    d.write('<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>Lecture notes: Granular computing</title>' +
+      (fonts ? '<link rel="stylesheet" href="' + fonts.href + '">' : '') + '<style>' + NOTES_CSS + '</style></head><body>' +
+      '<header><button id="pv" aria-label="Previous slide">\u2039</button><button id="nx" aria-label="Next slide">\u203a</button>' +
+      '<span id="pos"></span><span class="sp"></span><span id="t"></span></header><main id="body"></main></body></html>');
+    d.close();
+    d.getElementById('pv').addEventListener('click', function () { go(cur - 1); });
+    d.getElementById('nx').addEventListener('click', function () { go(cur + 1); });
+    d.addEventListener('keydown', function (e) {
+      var k = e.key;
+      if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(cur + 1); }
+      else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(cur - 1); }
+      else if (k === 't' || k === 'T') toggleTimer();
+    });
+    renderNotes();
+  }
+
+  /* ---------- timer ---------- */
+  var tRun = false, tStart = 0, tAcc = 0, tInt = null;
+  function elapsed() { return tAcc + (tRun ? (Date.now() - tStart) / 1000 : 0); }
+  function renderTimer() {
+    var el = $('#timer');
+    if (!tRun && tAcc === 0) { el.textContent = 'T: start timer'; el.className = 'timer'; if (notesWin && !notesWin.closed && notesWin.document.getElementById('t')) notesWin.document.getElementById('t').textContent = 'T: start timer'; return; }
+    var e = elapsed();
+    var info = PARTS[slides[cur].getAttribute('data-part')];
+    el.textContent = (tRun ? '' : 'paused ') + fmtSec(e);
+    el.className = 'timer' + (tRun ? ' run' : '') + (e > (info[1] + info[2]) * 60 ? ' late' : '');
+    if (notesWin && !notesWin.closed) { var nt = notesWin.document.getElementById('t'); if (nt) { nt.textContent = el.textContent; nt.style.color = /late/.test(el.className) ? '#C0392B' : ''; } }
+  }
+  function toggleTimer() {
+    if (tRun) { tAcc = elapsed(); tRun = false; clearInterval(tInt); }
+    else { tStart = Date.now(); tRun = true; tInt = setInterval(renderTimer, 1000); }
+    renderTimer();
+  }
+  function resetTimer() { tRun = false; tAcc = 0; clearInterval(tInt); renderTimer(); }
+
+  /* ---------- handout mode ---------- */
+  var docForced = null;
+  var narrow = window.matchMedia ? matchMedia('(max-width: 760px)') : null;
+  function setDoc(on) {
+    var was = document.body.classList.contains('doc');
+    document.body.classList.toggle('doc', on);
+    fit();
+    if (on && !was) requestAnimationFrame(function () { slides[cur].scrollIntoView(); });
+  }
+  function autoDoc() { setDoc(docForced !== null ? docForced : !!(narrow && narrow.matches)); }
+  if (narrow) {
+    if (narrow.addEventListener) narrow.addEventListener('change', autoDoc);
+    else if (narrow.addListener) narrow.addListener(autoDoc);
+  }
+  var docBeforePrint = false;
+  window.addEventListener('beforeprint', function () { docBeforePrint = document.body.classList.contains('doc'); setDoc(true); });
+  window.addEventListener('afterprint', function () { setDoc(docBeforePrint); });
+
+  /* ---------- input ---------- */
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target, k = e.key;
+    if (k === 'Escape') { $('#help').hidden = true; return; }
+    if (t && t.matches && t.matches('input[type=number], input[type=text], textarea, select')) return;
+    var navKey = /^(Arrow|Page|Home$|End$)/.test(k);
+    if (navKey && t && t.matches && t.matches('input[type=range], input[type=radio]')) return;
+    var isDoc = document.body.classList.contains('doc');
+    var onButton = t && t.matches && t.matches('button, [role=button]');
+    if (!isDoc && (k === 'ArrowRight' || k === 'PageDown' || k === 'ArrowDown' || (k === ' ' && !onButton))) { e.preventDefault(); go(cur + 1); }
+    else if (!isDoc && (k === 'ArrowLeft' || k === 'PageUp' || k === 'ArrowUp')) { e.preventDefault(); go(cur - 1); }
+    else if (!isDoc && k === 'Home') { e.preventDefault(); go(0); }
+    else if (!isDoc && k === 'End') { e.preventDefault(); go(N - 1); }
+    else if (k === 't' || k === 'T') toggleTimer();
+    else if (k === 'n' || k === 'N') openNotes();
+    else if (k === 'r' || k === 'R') resetTimer();
+    else if (k === 'd' || k === 'D') toggleTheme();
+    else if (k === 'h' || k === 'H') { docForced = !isDoc; setDoc(docForced); if (!docForced) go(cur); }
+    else if (k === '?') { var h = $('#help'); h.hidden = !h.hidden; }
+    else if (k === 'f' || k === 'F') {
+      try {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      } catch (err) {}
+    }
+  });
+  $('#prev').addEventListener('click', function () { go(cur - 1); });
+  $('#next').addEventListener('click', function () { go(cur + 1); });
+  $('#timer').addEventListener('click', toggleTimer);
+  $('#notes-btn').addEventListener('click', openNotes);
+  $('#notes-btn').addEventListener('keydown', function (e) { if (e.key === 'Enter') openNotes(); });
+  window.addEventListener('beforeunload', function () { try { if (notesWin && !notesWin.closed) notesWin.close(); } catch (e) {} });
+  $('#timer').addEventListener('keydown', function (e) { if (e.key === 'Enter') toggleTimer(); });
+  window.addEventListener('hashchange', function () {
+    var m = location.hash.match(/^#(\d+)$/);
+    if (m && +m[1] - 1 !== cur) go(+m[1] - 1);
+  });
+  window.addEventListener('resize', fit);
+  /* after a mouse drag, hand the arrow keys back to slide navigation */
+  document.addEventListener('pointerup', function (e) {
+    var t = e.target;
+    if (t && t.matches && t.matches('input[type=range], input[type=radio], input[type=checkbox], button') && e.pointerType === 'mouse') {
+      setTimeout(function () { t.blur(); }, 0);
+    }
+  });
+
+  var tx = null, ty = null;
+  stage.addEventListener('touchstart', function (e) {
+    if (e.target.closest('input, button, pre, .sm-rows, svg')) { tx = null; return; }
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (tx === null || document.body.classList.contains('doc')) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < 60) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, { passive: true });
+
+  /* ---------- code: highlight + copy ---------- */
+  try { if (window.Prism && Prism.highlightAll) Prism.highlightAll(); } catch (e) {}
+  $$('.code-wrap').forEach(function (wrap) {
+    var pre = $('pre', wrap);
+    if (!pre) return;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'copy'; b.textContent = 'Copy';
+    b.addEventListener('click', function () {
+      var text = pre.textContent;
+      function done(ok) { b.textContent = ok ? 'Copied' : 'Select the code to copy'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); done(ok);
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+        else fallback();
+      } catch (e) { fallback(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  $$('[data-reveal]').forEach(function (b) {
+    var showLabel = b.textContent, hideLabel = showLabel.replace(/^Show/, 'Hide');
+    b.addEventListener('click', function () {
+      var el = document.getElementById(b.getAttribute('data-reveal'));
+      el.hidden = !el.hidden;
+      b.setAttribute('aria-pressed', String(!el.hidden));
+      b.textContent = el.hidden ? showLabel : hideLabel;
+    });
+  });
+
+  /* ---------- svg helpers ---------- */
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, s, cls, anchor) {
+    var t = el('text', { x: x, y: y, 'class': cls || 'tick', 'text-anchor': anchor || 'middle' }, parent);
+    t.textContent = s;
+    return t;
+  }
+  var clipN = 0;
+  function makePlot(svg, o) {
+    var W = o.w || 300, H = o.h || 200, L = o.l != null ? o.l : 34, R = o.r != null ? o.r : 10, T = o.t != null ? o.t : 12, B = o.b != null ? o.b : (o.xl ? (o.xt ? 44 : 26) : 28);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    function sx(x) { return L + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - L - R); }
+    function sy(y) { return T + (1 - (y - o.y[0]) / (o.y[1] - o.y[0])) * (H - T - B); }
+    var id = 'clip' + (++clipN);
+    var cp = el('clipPath', { id: id }, el('defs', {}, svg));
+    el('rect', { x: L, y: T - 2, width: W - L - R, height: H - T - B + 2 }, cp);
+    if (o.x[0] < 0 && o.x[1] > 0) el('line', { x1: sx(0), x2: sx(0), y1: T, y2: H - B, 'class': 'ax-0' }, svg);
+    if (o.y[0] < 0 && o.y[1] > 0) el('line', { x1: L, x2: W - R, y1: sy(0), y2: sy(0), 'class': 'ax-0' }, svg);
+    el('path', { d: 'M' + L + ',' + T + ' V' + (H - B) + ' H' + (W - R), 'class': 'ax' }, svg);
+    (o.xt || []).forEach(function (v) { txt(svg, sx(v), H - B + 15, String(v)); });
+    (o.yt || []).forEach(function (v) { txt(svg, L - 6, sy(v) + 4, String(v), 'tick', 'end'); });
+    if (o.xl) txt(svg, (L + W - R) / 2, H - 6, o.xl, 'tick');
+    if (o.yl) txt(svg, L + 6, T + 10, o.yl, 'tick', 'start');
+    return {
+      sx: sx, sy: sy, svg: svg,
+      curve: function (f, cls, a, b) {
+        a = a != null ? a : o.x[0]; b = b != null ? b : o.x[1];
+        var d = '', n = 200;
+        for (var i = 0; i <= n; i++) {
+          var x = a + (b - a) * i / n, y = f(x);
+          if (!isFinite(y)) continue;
+          y = Math.max(o.y[0] - 1, Math.min(o.y[1] + 1, y));
+          d += (d ? 'L' : 'M') + sx(x).toFixed(2) + ',' + sy(y).toFixed(2);
+        }
+        return el('path', { d: d, 'class': cls, 'clip-path': 'url(#' + id + ')' }, svg);
+      }
+    };
+  }
+
+  /* ---------- shared helpers ---------- */
+  function slideOf(node) { return node.closest('.slide'); }
+  function isActive(node) { var s = slideOf(node); return !!s && s.classList.contains('active') && !document.body.classList.contains('doc'); }
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setPressed(btns, which) { btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b === which)); }); }
+  function rng(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+  function rect(p, x, y, w, h, cls, extra) { var a = { x: x, y: y, width: w, height: h }; if (cls) a['class'] = cls; for (var k in extra || {}) a[k] = extra[k]; return el('rect', a, p); }
+  function arrowDefs(svg, id) {
+    var mk = el('marker', { id: id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, el('defs', {}, svg));
+    el('path', { d: 'M0,0 L10,5 L0,10 z', 'class': 'pa-mkf' }, mk);
+    return 'url(#' + id + ')';
+  }
+  function arrow(svg, x1, y1, x2, y2, mk) { return el('path', { d: 'M' + x1 + ',' + y1 + ' L' + x2 + ',' + y2, 'class': 'pa-arrow', 'marker-end': mk }, svg); }
+  /* colours from the theme, for canvases */
+  function hexRGB(s) {
+    s = (s || '').trim();
+    var m = s.match(/^#([0-9a-f]{6})$/i);
+    if (m) { var v = parseInt(m[1], 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; }
+    m = s.match(/rgba?\(([^)]+)\)/);
+    if (m) return m[1].split(',').slice(0, 3).map(function (t) { return parseFloat(t); });
+    return [128, 128, 128];
+  }
+  function themeRGB(node, name) { return hexRGB(getComputedStyle(node).getPropertyValue(name)); }
+  var redrawers = [];
+  function onTheme(fn) { redrawers.push(fn); }
+  new MutationObserver(function () { redrawers.forEach(function (f) { f(); }); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { redrawers.forEach(function (f) { f(); }); }); } catch (e) {} }
+
+  /* ---------- granular computing: helpers ---------- */
+  function mixFill(v, a) { return 'fill: color-mix(in srgb, var(' + v + ') ' + a + '%, var(--paper))'; }
+  function gauss(r) { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  var CL = ['--p1', '--p4', '--p6', '--p5', '--p10', '--p8'];
+  function tri(x, a, m, b) { return x <= a || x >= b ? 0 : x <= m ? (x - a) / (m - a || 1e-9) : (b - x) / (b - m || 1e-9); }
+  function trap(x, a, m, n, b) { return x <= a || x >= b ? 0 : x < m ? (x - a) / (m - a || 1e-9) : x <= n ? 1 : (b - x) / (b - n || 1e-9); }
+  function smf(x, a, b) { var m = (a + b) / 2; return x <= a ? 0 : x >= b ? 1 : x <= m ? 2 * Math.pow((x - a) / (b - a), 2) : 1 - 2 * Math.pow((x - b) / (b - a), 2); }
+  function n2(v) { return (Math.round(v * 100) / 100).toFixed(2).replace('-', '\u2212'); }
+  function pathFn(P, f, x0, x1, n, cls, g, style) {
+    var d = ''; n = n || 300;
+    for (var i = 0; i <= n; i++) { var x = x0 + (x1 - x0) * i / n; d += (i ? 'L' : 'M') + P.sx(x).toFixed(1) + ',' + P.sy(f(x)).toFixed(1); }
+    var e = el('path', { d: d, 'class': cls || 'c-sec' }, g || P.svg); if (style) e.setAttribute('style', style); return e;
+  }
+  function fcmU(x, V, m) {           /* 1-D FCM memberships of x in prototypes V */
+    var d = V.map(function (v) { return Math.abs(x - v) + 1e-9; });
+    return d.map(function (di) { var s = 0; d.forEach(function (dj) { s += Math.pow(di / dj, 2 / (m - 1)); }); return 1 / s; });
+  }
+
+  /* ---------- title ---------- */
+  (function () {
+    var svg = $('#gc-hero'); if (!svg) return;
+    var r = rng(5), C = [[120, 130, '--p1'], [270, 150, '--p4'], [190, 285, '--p6']];
+    C.forEach(function (c) {
+      [90, 66, 42].forEach(function (rad, k) { el('circle', { cx: c[0], cy: c[1], r: rad, style: mixFill(c[2], 10 + 12 * k) + '; stroke: var(' + c[2] + '); stroke-opacity: .35' }, svg); });
+    });
+    C.forEach(function (c) { for (var i = 0; i < 26; i++) el('circle', { cx: c[0] + 34 * gauss(r), cy: c[1] + 34 * gauss(r), r: 3.2, 'class': 'gc-pt' }, svg); });
+    txt(svg, 200, 390, 'numbers become granules', 'tick');
+  })();
+
+  /* ---------- plan figure ---------- */
+  (function () {
+    var svg = $('#gc-plan'); if (!svg) return;
+    var mk = arrowDefs(svg, 'gp-mk');
+    [[10, 10, 'words people use'], [290, 10, 'fuzzy sets'], [10, 210, 'granules from data'], [290, 210, 'granules guiding a network']].forEach(function (p) { rect(svg, p[0], p[1], 260, 180, 'cf-frame', { rx: 6 }); txt(svg, p[0] + 12, p[1] + 170, p[2], 'lbl-sec', 'start'); });
+    rect(svg, 40, 40, 200, 56, 'gc-bubble', { rx: 14 }); txt(svg, 140, 74, '\u201cwatch out, heavy!\u201d', 'lbl');
+    rect(svg, 60, 112, 160, 40, 'gc-bubble', { rx: 14 }); txt(svg, 140, 137, '\u201cabout 20 \u00b0C\u201d', 'lbl');
+    var P = { sx: function (x) { return 300 + x * 24; }, sy: function (y) { return 160 - y * 120; } };
+    [[1, 3, 5, '--p1'], [3, 5, 7, '--p4'], [5, 7, 9, '--p6']].forEach(function (t) { pathFn(P, function (x) { return tri(x, t[0], t[1], t[2]); }, 0, 10, 100, 'c-sec', svg, 'stroke: var(' + t[3] + ')'); });
+    var r = rng(8);
+    [[80, 260, '--p1'], [180, 300, '--p4']].forEach(function (c) { el('circle', { cx: c[0], cy: c[1], r: 40, style: mixFill(c[2], 25) + '; stroke: var(' + c[2] + ')' }, svg); for (var i = 0; i < 14; i++) el('circle', { cx: c[0] + 22 * gauss(r), cy: c[1] + 18 * gauss(r), r: 2.8, 'class': 'gc-pt' }, svg); });
+    [0, 1, 2].forEach(function (i) { el('circle', { cx: 330, cy: 240 + i * 36, r: 9, 'class': 'node in' }, svg); });
+    [0, 1, 2, 3].forEach(function (i) { el('circle', { cx: 400, cy: 230 + i * 30, r: 9, 'class': 'node' }, svg); });
+    el('circle', { cx: 470, cy: 285, r: 9, 'class': 'node' }, svg);
+    rect(svg, 492, 262, 50, 46, 'blk pool', { rx: 4 }); txt(svg, 517, 290, 'loss', 'tick');
+    arrow(svg, 480, 285, 488, 285, mk);
+  })();
+
+  /* ---------- humans think in granules ---------- */
+  (function () {
+    var root = $('#fall-demo'); if (!root) return;
+    var svg = $('svg.fig', root), mI = $('#fd-m'), vI = $('#fd-v'), out = $('.readout', root), sBtns = $$('[data-say]', root), say = 'human', H = 12;
+    function heavy(m) { return smf(m, 20, 150); }
+    function fast(v) { return smf(v, 1, 14); }
+    function draw() {
+      var m = +mI.value, v = +vI.value, mh = heavy(m), mf = fast(v), danger = Math.min(mh, mf);
+      mI.nextElementSibling.textContent = m + ' kg'; vI.nextElementSibling.textContent = v + ' m/s';
+      clear(svg);
+      rect(svg, 0, 0, 560, 250, 'sc-sky'); rect(svg, 0, 230, 560, 20, 'sc-ground');
+      el('path', { d: 'M40,230 V20 H300', 'class': 'gc-crane' }, svg);
+      el('path', { d: 'M260,20 V' + (60 + 40 * (1 - Math.min(1, v / 25))), 'class': 'gc-rope' }, svg);
+      var s = 24 + 36 * Math.sqrt(m / 300), ly = 70 + 60 * Math.min(1, v / 25);
+      rect(svg, 260 - s / 2, ly, s, s * 0.8, 'gc-load', { rx: 3 });
+      for (var k = 0; k < 3; k++) el('path', { d: 'M' + (240 - s / 2 - k * 6) + ',' + (ly - 8 - k * 10) + ' v-16', 'class': 'gc-motion' }, svg);
+      var w = el('g', {}, svg), wx = 270, wy = 172;
+      el('path', { d: 'M' + (wx - 11) + ',' + (wy - 14) + ' A11,11 0 0 1 ' + (wx + 11) + ',' + (wy - 14) + ' Z', 'class': 'sc-helmet' }, w);
+      el('circle', { cx: wx, cy: wy - 8, r: 9, 'class': 'sc-skin' }, w);
+      rect(w, wx - 14, wy + 2, 28, 34, 'sc-vest', { rx: 5 });
+      el('path', { d: 'M' + (wx - 7) + ',' + (wy + 36) + ' L' + (wx - 9) + ',' + (wy + 56) + ' M' + (wx + 7) + ',' + (wy + 36) + ' L' + (wx + 9) + ',' + (wy + 56), 'class': 'sc-legs' }, w);
+      var t = H / Math.max(v, 0.1), msg;
+      if (say === 'machine') msg = ['A ' + m + ' kg mass is falling at ' + v + ' m/s', 'from ' + H + ' m. You have ' + t.toFixed(2) + ' s', 'to move at least 5 m (' + (5 / t).toFixed(1) + ' m/s).'];
+      var light = 1 - mh, slow = 1 - mf;
+      var RULES = [['heavy', 'fast', Math.min(mh, mf), ['WATCH OUT!', 'Something heavy is falling!']],
+                   ['heavy', 'slow', Math.min(mh, slow), ['Careful, keep clear:', 'a heavy load is coming down.']],
+                   ['light', 'fast', Math.min(light, mf), ['Heads up!', 'Something small is dropping fast.']],
+                   ['light', 'slow', Math.min(light, slow), ['Mind out,', 'something light is coming down.']]];
+      var best = RULES.reduce(function (p, q) { return q[2] > p[2] ? q : p; });
+      if (say !== 'machine') msg = best[3];
+      rect(svg, 330, 34, 220, 22 + 20 * msg.length, 'gc-bubble', { rx: 12 });
+      el('path', { d: 'M350,' + (56 + 20 * msg.length - 2) + ' L300,150 L380,' + (56 + 20 * msg.length - 2), 'class': 'gc-bubble' }, svg);
+      msg.forEach(function (l, i) { txt(svg, 440, 60 + i * 20, l, say === 'machine' ? 'tick' : (i === 0 ? 'lbl' : 'tick')); });
+      function mini(x0, title, f, val, xmax, unit) {
+        var P = makePlot(el('g', {}, svg), { w: 560, h: 400, l: x0, r: 560 - x0 - 230, t: 275, b: 26, x: [0, xmax], y: [0, 1], xt: [0, xmax], yt: [0, 1] });
+        var g = svg.lastChild;
+        pathFn(P, f, 0, xmax, 120, 'c-sec', g);
+        el('circle', { cx: P.sx(val), cy: P.sy(f(val)), r: 6, 'class': 'dot-pt' }, g);
+        txt(g, x0 + 115, 268, title + ': \u03bc = ' + n2(f(val)), 'lbl-sec');
+        txt(g, x0 + 115, 396, unit, 'tick');
+      }
+      mini(40, 'heavy', heavy, m, 300, 'mass (kg)');
+      mini(310, 'falling fast', fast, v, 25, 'speed (m/s)');
+      out.innerHTML = RULES.map(function (q) { var s = 'IF <em>' + q[0] + '</em> AND <em>' + q[1] + '</em>: min = ' + n2(q[2]); return q === best ? '<b>' + s + ' \u2190 strongest</b>' : '<span class="muted">' + s + '</span>'; }).join('<br>');
+    }
+    sBtns.forEach(function (b) { b.addEventListener('click', function () { say = b.getAttribute('data-say'); setPressed(sBtns, b); draw(); }); });
+    [mI, vI].forEach(function (i) { i.addEventListener('input', draw); });
+    draw();
+  })();
+
+  /* ---------- one concept, several formalisms ---------- */
+  (function () {
+    var root = $('#frames-demo'); if (!root) return;
+    var svg = $('svg.fig', root), box = $('.fr-box', root), btns = $$('[data-fr]', root);
+    var INFO = {
+      set: ['Set (interval)', 'Comfortable means [18, 22] \u00b0C: fully in or fully out. 21.9 \u00b0C is comfortable, 22.1 \u00b0C is not. Captures imprecision, not gradual meaning.'],
+      fuzzy: ['Fuzzy set', 'Membership falls gradually from 1 between 19 and 21 \u00b0C to 0 at 16 and 24 \u00b0C. Captures the vagueness of the word.'],
+      shadow: ['Shadowed set', 'Three regions: certainly comfortable (19\u201321), certainly not (below 16, above 24), and a shadow where membership is simply unknown.'],
+      rough: ['Rough set', 'A thermometer reading only to the nearest 2 \u00b0C cannot draw the true boundary. The lower approximation holds the cells certainly inside, the upper those possibly inside.'],
+      prob: ['Probability (histogram)', 'Temperatures people reported as comfortable, as a histogram: the granule is a vector of probabilities p\u1d62 = n\u1d62 / N (Pedrycz, 2021, \u00a71.2, Example 1).']
+    };
+    function show(k) {
+      var P = makePlot(svg, { w: 600, h: 330, l: 40, b: 40, x: [10, 30], y: [0, 1.15], xt: [10, 14, 18, 22, 26, 30], yt: [0, 0.5, 1], xl: 'temperature (\u00b0C)', yl: 'membership' });
+      if (k === 'set') pathFn(P, function (x) { return x >= 18 && x <= 22 ? 1 : 0; }, 10, 30, 800);
+      if (k === 'fuzzy') pathFn(P, function (x) { return trap(x, 16, 19, 21, 24); }, 10, 30);
+      if (k === 'shadow') {
+        rect(svg, P.sx(16), P.sy(1), P.sx(19) - P.sx(16), P.sy(0) - P.sy(1), 'gc-shadow'); rect(svg, P.sx(21), P.sy(1), P.sx(24) - P.sx(21), P.sy(0) - P.sy(1), 'gc-shadow');
+        pathFn(P, function (x) { return x >= 19 && x <= 21 ? 1 : 0; }, 10, 30, 800);
+        txt(svg, P.sx(17.5), P.sy(0.5), 'unknown', 'tick'); txt(svg, P.sx(22.5), P.sy(0.5), 'unknown', 'tick');
+      }
+      if (k === 'rough') {
+        for (var c = 10; c < 30; c += 2) {
+          var inside = c >= 18 && c + 2 <= 22, touch = c + 2 > 17.3 && c < 22.6;
+          rect(svg, P.sx(c), P.sy(1), P.sx(c + 2) - P.sx(c), P.sy(0) - P.sy(1), inside ? 'gc-lower' : touch ? 'gc-upper' : 'gc-cell');
+        }
+        el('line', { x1: P.sx(17.3), x2: P.sx(17.3), y1: P.sy(0), y2: P.sy(1.1), 'class': 'mark-now' }, svg);
+        el('line', { x1: P.sx(22.6), x2: P.sx(22.6), y1: P.sy(0), y2: P.sy(1.1), 'class': 'mark-now' }, svg);
+        txt(svg, P.sx(20), P.sy(1.07), 'true boundary, unknowable at 2 \u00b0C resolution', 'tick');
+        txt(svg, P.sx(20), P.sy(0.5), 'lower', 'lbl'); txt(svg, P.sx(17), P.sy(0.3), 'upper', 'tick'); txt(svg, P.sx(23), P.sy(0.3), 'upper', 'tick');
+      }
+      if (k === 'prob') {
+        var r = rng(3), bins = [], N = 200, i;
+        for (i = 10; i < 30; i++) bins.push(0);
+        for (i = 0; i < N; i++) { var t = 20.5 + 1.7 * gauss(r); if (t >= 10 && t < 30) bins[Math.floor(t) - 10]++; }
+        var mx = Math.max.apply(null, bins);
+        bins.forEach(function (n, j) { rect(svg, P.sx(10 + j) + 1, P.sy(n / mx), P.sx(11) - P.sx(10) - 2, P.sy(0) - P.sy(n / mx), null, { style: mixFill('--sec', 55) }); });
+        txt(svg, P.sx(26), P.sy(0.9), 'height: p\u1d62 (scaled)', 'tick');
+      }
+      box.innerHTML = '<h3>' + INFO[k][0] + '</h3><p class="small">' + INFO[k][1] + '</p>';
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { setPressed(btns, b); show(b.getAttribute('data-fr')); }); });
+    show('fuzzy');
+  })();
+
+  /* ---------- uncertainty taxonomy ---------- */
+  (function () {
+    var svg = $('#unc-fig'); if (!svg) return;
+    var mk = arrowDefs(svg, 'un-mk');
+    function node(x, y, w, a, b, cls) { rect(svg, x - w / 2, y, w, 52, 'blk ' + cls, { rx: 6 }); txt(svg, x, y + 22, a, 'lbl'); txt(svg, x, y + 40, b, 'tick'); }
+    node(270, 10, 200, 'Uncertainty', '', 'in');
+    node(120, 110, 210, 'Fuzziness', 'no sharp boundaries', 'conv');
+    node(410, 110, 210, 'Ambiguity', 'one-to-many relations', 'pool');
+    node(295, 220, 190, 'Nonspecificity', 'alternatives unspecified', 'pool');
+    node(470, 220, 130, 'Discord', 'conflict', 'dense');
+    arrow(svg, 230, 62, 140, 106, mk); arrow(svg, 310, 62, 400, 106, mk);
+    arrow(svg, 380, 162, 310, 216, mk); arrow(svg, 440, 162, 470, 216, mk);
+    txt(svg, 120, 186, 'vagueness, haziness,', 'tick'); txt(svg, 120, 202, 'unclearness', 'tick');
+    txt(svg, 295, 292, 'imprecision, variety', 'tick'); txt(svg, 470, 292, 'disagreement', 'tick');
+    txt(svg, 120, 236, '\u2192 fuzzy sets', 'lbl-sec'); txt(svg, 295, 312, '\u2192 intervals, sets', 'lbl-sec'); txt(svg, 470, 312, '\u2192 probability', 'lbl-sec');
+  })();
+
+  /* ---------- granular interfaces for explanation ---------- */
+  (function () {
+    var svg = $('#xai-fig'); if (!svg) return;
+    var mk = arrowDefs(svg, 'xa-mk');
+    rect(svg, 200, 90, 140, 110, 'blk in', { rx: 8 }); txt(svg, 270, 140, 'AI model', 'lbl'); txt(svg, 270, 160, '(numeric, opaque)', 'tick');
+    rect(svg, 90, 90, 80, 110, 'blk conv', { rx: 6 }); txt(svg, 130, 140, 'granular', 'tick'); txt(svg, 130, 156, 'input', 'tick');
+    rect(svg, 370, 90, 80, 110, 'blk conv', { rx: 6 }); txt(svg, 410, 140, 'granular', 'tick'); txt(svg, 410, 156, 'output', 'tick');
+    arrow(svg, 172, 145, 196, 145, mk); arrow(svg, 344, 145, 366, 145, mk);
+    el('circle', { cx: 40, cy: 145, r: 20, 'class': 'node' }, svg); txt(svg, 40, 186, 'user', 'lbl');
+    el('circle', { cx: 500, cy: 145, r: 20, 'class': 'node' }, svg); txt(svg, 500, 186, 'user', 'lbl');
+    arrow(svg, 62, 145, 86, 145, mk); arrow(svg, 454, 145, 476, 145, mk);
+    txt(svg, 130, 76, '\u201chigh vibration\u201d', 'tick'); txt(svg, 410, 76, '\u201cfails soon\u201d', 'tick');
+    txt(svg, 270, 250, 'explanations delivered at the user\u2019s level of abstraction', 'lbl-sec');
+  })();
+
+  /* ---------- crisp versus fuzzy ---------- */
+  (function () {
+    var root = $('#crisp-demo'); if (!root) return;
+    var svg = $('svg.fig', root), tI = $('#cd-t'), out = $('.readout', root);
+    var F = [['cold', function (x) { return x <= 10 ? 1 : x >= 20 ? 0 : (20 - x) / 10; }, '--p1'], ['comfortable', function (x) { return trap(x, 15, 19, 21, 25); }, '--p6'], ['warm', function (x) { return x <= 20 ? 0 : x >= 30 ? 1 : (x - 20) / 10; }, '--p4']];
+    function draw() {
+      var t = +tI.value; tI.nextElementSibling.textContent = t + ' \u00b0C';
+      var P = makePlot(svg, { w: 560, h: 300, l: 40, b: 66, x: [0, 35], y: [0, 1.15], xt: [0, 10, 20, 30], yt: [0, 0.5, 1] });
+      txt(svg, (40 + 550) / 2, 296, 'temperature (\u00b0C)', 'tick');
+      rect(svg, P.sx(18), P.sy(0) + 28, P.sx(22) - P.sx(18), 9, null, { style: 'fill: var(--ink-2)' });
+      txt(svg, P.sx(22) + 8, P.sy(0) + 37, 'crisp: comfortable = [18, 22] \u00b0C', 'tick', 'start');
+      txt(svg, P.sx(16), P.sy(0.92), 'cold', 'lbl'); txt(svg, P.sx(20), P.sy(1.08), 'comfortable', 'lbl'); txt(svg, P.sx(30), P.sy(0.92), 'warm', 'lbl');
+      F.forEach(function (f) { pathFn(P, f[1], 0, 35, 300, 'c-sec', svg, 'stroke: var(' + f[2] + ')'); });
+      el('line', { x1: P.sx(t), x2: P.sx(t), y1: P.sy(0), y2: P.sy(1.15), 'class': 'mark-now' }, svg);
+      F.forEach(function (f) { var v = f[1](t); if (v > 0) el('circle', { cx: P.sx(t), cy: P.sy(v), r: 5.5, style: 'fill: var(' + f[2] + ')' }, svg); });
+      out.innerHTML = 'Crisp: ' + (t >= 18 && t <= 22 ? '<b>comfortable</b>' : '<b>not comfortable</b>') + '. Fuzzy: ' + F.map(function (f) { return f[0] + ' <b>' + n2(f[1](t)) + '</b>'; }).join(', ') + '.';
+    }
+    tI.addEventListener('input', draw); draw();
+  })();
+
+  /* ---------- common membership functions ---------- */
+  (function () {
+    var root = $('#mf-demo'); if (!root) return;
+    var svg = $('svg.fig', root), ctl = $('.mf-ctls', root), btns = $$('[data-mf]', root).filter(function (b) { return b.tagName === 'BUTTON'; });
+    var SH = {
+      tri: { p: [['a', 2], ['m', 5], ['b', 8]], f: function (x, p) { return tri(x, p.a, p.m, p.b); } },
+      trap: { p: [['a', 1.5], ['m', 4], ['n', 6], ['b', 8.5]], f: function (x, p) { return trap(x, p.a, p.m, p.n, p.b); } },
+      gauss: { p: [['m', 5], ['\u03c3', 1.5]], f: function (x, p) { return Math.exp(-Math.pow(x - p.m, 2) / Math.pow(p['\u03c3'], 2)); } },
+      s: { p: [['a', 3], ['b', 7]], f: function (x, p) { return smf(x, p.a, p.b); } },
+      pw: { p: [['b\u2081', 0.2], ['b\u2082', 0.9], ['b\u2083', 0.6], ['b\u2084', 1]], f: function (x, p) {
+        var X = [1, 3, 5, 7, 9, 10], Y = [0, p['b\u2081'], p['b\u2082'], p['b\u2083'], p['b\u2084'], 0.3];
+        if (x <= 1) return 0; for (var i = 0; i < X.length - 1; i++) if (x <= X[i + 1]) return Y[i] + (Y[i + 1] - Y[i]) * (x - X[i]) / (X[i + 1] - X[i]); return 0.3; } }
+    }, cur = 'tri', vals = {};
+    function build() {
+      var sh = SH[cur]; vals = {};
+      ctl.innerHTML = sh.p.map(function (p, i) { var isB = cur === 'pw'; return '<div class="ctl" style="grid-template-columns: 50px 1fr 50px"><label for="mf-' + i + '">' + p[0] + '</label><input id="mf-' + i + '" type="range" min="' + (isB ? 0 : p[0] === '\u03c3' ? 0.3 : 0) + '" max="' + (isB ? 1 : p[0] === '\u03c3' ? 4 : 10) + '" step="' + (isB ? 0.05 : 0.1) + '" value="' + p[1] + '"><output></output></div>'; }).join('');
+      $$('input', ctl).forEach(function (inp, i) { vals[sh.p[i][0]] = +inp.value; inp.addEventListener('input', function () { vals[sh.p[i][0]] = +inp.value; draw(); }); });
+      $$('.mf-f', root).forEach(function (d) { d.hidden = d.getAttribute('data-mf') !== cur; });
+      draw();
+    }
+    function draw() {
+      $$('input', ctl).forEach(function (inp) { inp.nextElementSibling.textContent = (+inp.value).toFixed(cur === 'pw' ? 2 : 1); });
+      var P = makePlot(svg, { w: 560, h: 290, l: 40, b: 36, x: [0, 10], y: [0, 1.1], xt: [0, 2, 4, 6, 8, 10], yt: [0, 0.5, 1], xl: 'x' });
+      pathFn(P, function (x) { return SH[cur].f(x, vals); }, 0, 10, 400);
+      if (cur === 'pw') [1, 3, 5, 7, 9, 10].forEach(function (x) { el('circle', { cx: P.sx(x), cy: P.sy(SH.pw.f(x, vals)), r: 5, 'class': 'dot-pt' }, svg); });
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { cur = b.getAttribute('data-mf'); setPressed(btns, b); build(); }); });
+    build();
+  })();
+
+  /* ---------- is it a fuzzy number? ---------- */
+  (function () {
+    var root = $('#fn-demo'); if (!root) return;
+    var svg = $('svg.fig', root), out = $('.readout', root), btns = $$('[data-fn]', root);
+    var F = {
+      tri: function (x) { return tri(x, 15, 20, 26); },
+      trap: function (x) { return trap(x, 15, 18, 22, 25); },
+      sub: function (x) { return 0.7 * tri(x, 15, 20, 26); },
+      bi: function (x) { return Math.max(tri(x, 12, 16.5, 21), 0.85 * tri(x, 19, 23.5, 28)); }
+    };
+    function show(k) {
+      var f = F[k], P = makePlot(svg, { w: 540, h: 270, l: 36, b: 40, x: [10, 30], y: [0, 1.12], xt: [10, 15, 20, 25, 30], yt: [0, 0.5, 1], xl: 'minutes' });
+      var h = 0, xs = [], i, prev = 0, up = true, uni = true;
+      for (i = 0; i <= 800; i++) { var x = 10 + 20 * i / 800, v = f(x); if (v > h) h = v; if (v < prev - 1e-9) up = false; else if (v > prev + 1e-9 && !up) uni = false; prev = v; }
+      el('line', { x1: P.sx(10), x2: P.sx(30), y1: P.sy(h), y2: P.sy(h), 'class': 'ax-0' }, svg);
+      txt(svg, P.sx(29.8), P.sy(h) - 6, 'height = ' + n2(h), 'tick', 'end');
+      pathFn(P, f, 10, 30, 600);
+      var normal = h > 0.999;
+      out.innerHTML = (normal ? '\u2713' : '\u2717') + ' normal: height ' + n2(h) + (normal ? ' = 1' : ' \u2260 1') + '<br>' + (uni ? '\u2713 unimodal: one peak' : '\u2717 not unimodal: it dips between two peaks') +
+        '<br>' + (normal && uni ? '<span class="tag-good">A fuzzy number.</span>' : '<span class="tag-bad">Not a fuzzy number.</span>');
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { setPressed(btns, b); show(b.getAttribute('data-fn')); }); });
+    show('tri');
+  })();
+
+  /* ---------- height, support, core ---------- */
+  (function () {
+    var root = $('#desc-demo'); if (!root) return;
+    var svg = $('svg.fig', root), hI = $('#dd-h'), cI = $('#dd-c'), out = $('.readout', root);
+    function draw() {
+      var h = +hI.value, cw = +cI.value; hI.nextElementSibling.textContent = h.toFixed(2); cI.nextElementSibling.textContent = cw;
+      var a = 2, m = 5 - cw / 2, n = 5 + cw / 2, b = 8 + (cw > 2 ? 0 : 0);
+      var P = makePlot(svg, { w: 560, h: 300, l: 40, b: 74, x: [0, 10], y: [0, 1.1], xt: [0, 2, 4, 6, 8, 10], yt: [0, 0.5, 1] });
+      var f = function (x) { return h * trap(x, a, m, n, b); };
+      el('line', { x1: P.sx(0), x2: P.sx(10), y1: P.sy(h), y2: P.sy(h), 'class': 'ax-0' }, svg);
+      txt(svg, P.sx(9.9), P.sy(h) - 6, 'height ' + h.toFixed(2), 'tick', 'end');
+      pathFn(P, f, 0, 10, 400);
+      rect(svg, P.sx(a), P.sy(0) + 28, P.sx(b) - P.sx(a), 6, null, { style: 'fill: var(--sec)' }); txt(svg, P.sx(b) + 6, P.sy(0) + 35, 'support', 'tick', 'start');
+      if (h >= 1 && cw > 0) { rect(svg, P.sx(m), P.sy(0) + 44, P.sx(n) - P.sx(m), 6, null, { style: 'fill: var(--bad)' }); txt(svg, P.sx(n) + 6, P.sy(0) + 51, 'core', 'tick', 'start'); }
+      out.innerHTML = (h >= 1 ? '<b>Normal</b> (height 1).' : '<b>Subnormal</b> (height ' + h.toFixed(2) + '): divide by the height to normalise it.') +
+        '<br>Support (' + a + ', ' + b + '); core ' + (h >= 1 ? (cw > 0 ? '[' + m + ', ' + n + ']' : '{' + m + '}, a single point') : 'empty: nothing reaches 1') + '.';
+    }
+    [hI, cI].forEach(function (i) { i.addEventListener('input', draw); });
+    draw();
+  })();
+
+  /* ---------- α-cuts ---------- */
+  (function () {
+    var root = $('#acut-demo'); if (!root) return;
+    var svg = $('svg.fig', root), aI = $('#ac-a'), sI = $('#ac-stack');
+    function A(x) { return x < 5 ? Math.exp(-Math.pow(x - 5, 2) / 4) : Math.exp(-Math.pow(x - 5, 2) / 9); }
+    function cut(a) { var s = Math.sqrt(-Math.log(a)); return [5 - 2 * s, 5 + 3 * s]; }
+    function draw() {
+      var a = +aI.value; aI.nextElementSibling.textContent = a.toFixed(2);
+      var P = makePlot(svg, { w: 560, h: 300, l: 40, b: 40, x: [0, 14], y: [0, 1.1], xt: [0, 2, 4, 6, 8, 10, 12, 14], yt: [0, 0.5, 1], xl: 'x' });
+      if (sI.checked) for (var k = 1; k <= 10; k++) { var q = k / 10, c = cut(q); rect(svg, P.sx(c[0]), P.sy(q) - 3, P.sx(c[1]) - P.sx(c[0]), 6, null, { style: mixFill('--sec', 20 + 6 * k) }); }
+      pathFn(P, A, 0, 14, 300, sI.checked ? 'c-alt' : 'c-sec');
+      var c0 = cut(a);
+      el('line', { x1: P.sx(0), x2: P.sx(14), y1: P.sy(a), y2: P.sy(a), 'class': 'ax-0' }, svg);
+      rect(svg, P.sx(c0[0]), P.sy(0) - 5, P.sx(c0[1]) - P.sx(c0[0]), 10, null, { style: 'fill: var(--bad)' });
+      txt(svg, (P.sx(c0[0]) + P.sx(c0[1])) / 2, P.sy(0) - 12, 'A\u03b1 = [' + n2(c0[0]) + ', ' + n2(c0[1]) + ']', 'lbl-bad');
+    }
+    aI.addEventListener('input', draw); sI.addEventListener('change', draw); draw();
+  })();
+
+  /* ---------- cardinality, energy, entropy: two sets compared ---------- */
+  (function () {
+    var root = $('#card-demo'); if (!root) return;
+    var svg = $('svg.fig', root), out = $('.readout', root), btns = $$('[data-ms]', root), ms = 'card';
+    var S = [['A', [0.5, 0.6, 0.5, 0.4, 0.5, 0.5]], ['B', [0, 0, 1, 1, 1, 0]]];
+    var C = { card: function (u) { return u; }, energy: function (u) { return u * u; }, entropy: function (u) { return 2 * Math.min(u, 1 - u); } };
+    var WHY = {
+      card: 'Same cardinality: both sets hold three elements\u2019 worth of membership, spread very differently.',
+      energy: 'B has more energy: with e(u) = u\u00b2 a full member counts 1, while A\u2019s grades near 0.5 add only about 0.25 each.',
+      entropy: 'A is very fuzzy: every grade sits near 0.5, the most hesitant value. B is a crisp set, so its entropy is 0.'
+    };
+    function draw() {
+      clear(svg);
+      var Y0 = 200, H = 150, tot = [];
+      S.forEach(function (s, p) {
+        var x0 = 30 + p * 280, sum = 0;
+        el('path', { d: 'M' + x0 + ',' + Y0 + ' H' + (x0 + 240), 'class': 'ax' }, svg);
+        txt(svg, x0 + 120, 22, 'fuzzy set ' + s[0], 'lbl');
+        s[1].forEach(function (u, i) {
+          var x = x0 + 8 + i * 39, c = C[ms](u); sum += c;
+          rect(svg, x, Y0 - u * H, 28, Math.max(1, u * H), null, { style: mixFill('--sec', 35) });
+          if (ms !== 'card') rect(svg, x - 3, Y0 - c * H, 34, Math.max(1, c * H), null, { style: 'fill: none; stroke: var(--bad); stroke-width: 2.5' });
+          txt(svg, x + 14, Y0 + 16, 'x' + '\u2081\u2082\u2083\u2084\u2085\u2086'[i], 'tick');
+          txt(svg, x + 14, Y0 + 32, u.toFixed(1), 'tick');
+        });
+        tot.push(sum);
+        txt(svg, x0 + 120, 250, (ms === 'card' ? 'card' : ms === 'energy' ? 'E' : 'H') + '(' + s[0] + ') = ' + sum.toFixed(2), 'lbl-sec');
+      });
+      if (ms !== 'card') txt(svg, 550, 40, 'red outline: ' + (ms === 'energy' ? 'e(u) = u\u00b2' : 'h(u)'), 'lbl-bad', 'end');
+      out.innerHTML = '<b>' + (ms === 'card' ? 'Cardinality' : ms === 'energy' ? 'Energy' : 'Entropy') + ':</b> A = ' + tot[0].toFixed(2) + ', B = ' + tot[1].toFixed(2) + '. ' + WHY[ms];
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { ms = b.getAttribute('data-ms'); setPressed(btns, b); draw(); }); });
+    draw();
+  })();
+
+  /* ---------- specificity ---------- */
+  (function () {
+    var root = $('#spec-demo'); if (!root) return;
+    var svg = $('svg.fig', root), sI = $('#sp-w'), out = $('.readout', root);
+    function draw() {
+      var s = +sI.value; sI.nextElementSibling.textContent = s;
+      var P = makePlot(svg, { w: 540, h: 260, l: 36, b: 38, x: [0, 20], y: [0, 1.1], xt: [0, 5, 10, 15, 20], yt: [0, 0.5, 1], xl: 'x (range 0 to 20)' });
+      if (s === 0) { el('line', { x1: P.sx(10), x2: P.sx(10), y1: P.sy(0), y2: P.sy(1), 'class': 'c-sec' }, svg); }
+      else {
+        [0.25, 0.5, 0.75].forEach(function (a) { var h = s * (1 - a); rect(svg, P.sx(10 - h), P.sy(a) - 2, P.sx(10 + h) - P.sx(10 - h), 4, null, { style: mixFill('--sec', 35) }); });
+        pathFn(P, function (x) { return tri(x, 10 - s, 10, 10 + s); }, 0, 20, 400);
+      }
+      out.innerHTML = 'specificity of the fuzzy set: 1 \u2212 s / range = <b>' + (1 - s / 20).toFixed(3) + '</b><br><span class="muted">of its support, an interval of length 2s: ' + (1 - 2 * s / 20).toFixed(3) + '</span>';
+    }
+    sI.addEventListener('input', draw); draw();
+  })();
+
+  /* ---------- frame of cognition ---------- */
+  (function () {
+    var root = $('#frame-demo'); if (!root) return;
+    var svg = $('svg.fig', root), nI = $('#fr-n'), wI = $('#fr-w'), out = $('.readout', root), eps = 0.2, delta = 0.75;
+    function draw() {
+      var n = +nI.value, w = +wI.value; nI.nextElementSibling.textContent = n; wI.nextElementSibling.textContent = w.toFixed(2);
+      var c = [], sig = w * 10 / (n - 1) * 0.6, i;
+      for (i = 0; i < n; i++) c.push(10 * i / (n - 1));
+      function A(j, x) { return Math.exp(-Math.pow(x - c[j], 2) / (2 * sig * sig)); }
+      var P = makePlot(svg, { w: 560, h: 250, l: 36, b: 36, x: [0, 10], y: [0, 1.1], xt: [0, 5, 10], yt: [0, 0.5, 1], xl: 'x' });
+      var minCov = 1, gaps = [];
+      for (var x = 0; x <= 10.0001; x += 0.02) { var mx = 0; for (i = 0; i < n; i++) mx = Math.max(mx, A(i, x)); minCov = Math.min(minCov, mx); if (mx < eps) gaps.push(x); }
+      gaps.forEach(function (x) { rect(svg, P.sx(x) - 1, P.sy(1.1), 3, P.sy(0) - P.sy(1.1), null, { style: 'fill: color-mix(in srgb, var(--bad) 25%, transparent)' }); });
+      for (i = 0; i < n; i++) (function (j) { pathFn(P, function (x) { return A(j, x); }, 0, 10, 300, 'c-sec', svg, 'stroke: var(' + CL[j % CL.length] + ')'); })(i);
+      var ovl = Math.exp(-Math.pow((c[1] - c[0]) / 2, 2) / (2 * sig * sig));
+      el('line', { x1: P.sx(0), x2: P.sx(10), y1: P.sy(eps), y2: P.sy(eps), 'class': 'ax-0' }, svg); txt(svg, P.sx(9.95), P.sy(eps) - 4, '\u03b5', 'tick', 'end');
+      var ok = { cov: minCov >= eps, num: n <= 9, uni: true, ovl: ovl <= delta };
+      $$('.fr-list li', root).forEach(function (li) { var k = li.getAttribute('data-k'); li.classList.toggle('ok', ok[k]); li.classList.toggle('bad', !ok[k]); });
+      out.innerHTML = 'lowest coverage ' + n2(minCov) + (ok.cov ? '' : ' (gaps shaded)') + '; neighbour overlap ' + n2(ovl) + '; ' + n + ' sets. ' + (ok.cov && ok.num && ok.ovl ? '<span class="tag-good">A sound frame.</span>' : '<span class="tag-bad">Not a sound frame.</span>');
+    }
+    [nI, wI].forEach(function (i) { i.addEventListener('input', draw); }); draw();
+  })();
+
+  /* ---------- where granules come from: a spectrum ---------- */
+  (function () {
+    var svg = $('#src-spec'); if (!svg) return;
+    var mk = arrowDefs(svg, 'ss-mk');
+    el('path', { d: 'M40,50 H1120', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    el('path', { d: 'M1120,50 H40', 'class': 'pa-arrow', 'marker-end': mk }, svg);
+    [[200, 'expert elicitation', '--p6'], [580, 'justifiable granularity', '--p4'], [960, 'fuzzy clustering (FCM)', '--p10']].forEach(function (p) { el('circle', { cx: p[0], cy: 50, r: 11, style: 'fill: var(' + p[2] + ')' }, svg); txt(svg, p[0], 86, p[1], 'lbl'); });
+    txt(svg, 40, 24, 'human-centric', 'lbl-sec', 'start'); txt(svg, 1120, 24, 'data-driven', 'lbl-sec', 'end');
+  })();
+
+  /* ---------- horizontal method: expert votes ---------- */
+  (function () {
+    var root = $('#vote-demo'); if (!root) return;
+    var svg = $('svg.fig', root), seed = 2;
+    function draw() {
+      var r = rng(seed), th = [], i;
+      for (i = 0; i < 10; i++) th.push(95 + 25 * gauss(r));
+      var P = makePlot(svg, { w: 540, h: 270, l: 40, b: 40, x: [0, 220], y: [0, 1.1], xt: [0, 50, 100, 150, 200], yt: [0, 0.5, 1], xl: 'mass (kg)', yl: 'share of \u201cyes\u201d' });
+      var pts = [];
+      for (var x = 20; x <= 200; x += 20) {
+        var yes = th.filter(function (t) { return x >= t; }).length;
+        pts.push([x, yes / 10]);
+        for (i = 0; i < 10; i++) el('circle', { cx: P.sx(x) + (i % 5 - 2) * 4, cy: P.sy(0) - 10 - Math.floor(i / 5) * 8, r: 2.6, style: 'fill: ' + (x >= th[i] ? 'var(--sec)' : 'var(--rule)') }, svg);
+      }
+      el('path', { d: 'M' + pts.map(function (p) { return P.sx(p[0]).toFixed(1) + ',' + P.sy(p[1]).toFixed(1); }).join(' L'), 'class': 'c-sec' }, svg);
+      pts.forEach(function (p) { el('circle', { cx: P.sx(p[0]), cy: P.sy(p[1]), r: 5, 'class': 'dot-pt' }, svg); });
+      txt(svg, P.sx(200), P.sy(1.06), 'heavy(x) = yes / 10', 'lbl-sec', 'end');
+    }
+    $('[data-act=poll]', root).addEventListener('click', function () { seed++; draw(); });
+    draw();
+  })();
+
+  /* ---------- supervised versus unsupervised ---------- */
+  (function () {
+    var svg = $('#sup-fig'); if (!svg) return;
+    var r = rng(12), C = [[80, 110], [180, 180], [110, 220]];
+    [[0, 'supervised: labels given'], [270, 'unsupervised: find the groups']].forEach(function (p, k) {
+      var x0 = p[0]; rect(svg, x0 + 5, 20, 255, 250, 'cf-frame', { rx: 6 }); txt(svg, x0 + 132, 292, p[1], 'lbl');
+      var rr = rng(12);
+      C.forEach(function (c, j) { for (var i = 0; i < 14; i++) { var x = x0 + c[0] + 20 * gauss(rr), y = c[1] + 16 * gauss(rr); el('circle', { cx: x, cy: y, r: 4, style: k === 0 ? 'fill: var(' + (j === 0 ? '--p1' : '--p4') + ')' : 'fill: var(--ink-3)' }, svg); } });
+      if (k === 0) el('path', { d: 'M' + (x0 + 30) + ',200 L' + (x0 + 240) + ',90', 'class': 'mark-now' }, svg);
+      else C.forEach(function (c, j) { el('ellipse', { cx: x0 + c[0], cy: c[1], rx: 48, ry: 40, style: 'fill: none; stroke: var(' + CL[j] + '); stroke-width: 2.5; stroke-dasharray: 6 4' }, svg); });
+    });
+  })();
+
+  /* ---------- FCM in two dimensions ---------- */
+  (function () {
+    var root = $('#fcm-demo'); if (!root) return;
+    var svg = $('svg.fig', root), cI = $('#fc-c'), mI = $('#fc-m'), out = $('.readout', root), dBtns = $$('[data-ds]', root);
+    var ds = 'blobs', X = [], U = [], V = [], it = 0, Q = 0, seed = 1, dU = 0;
+    function makeData() {
+      var r = rng(7); X = [];
+      var C = ds === 'blobs' ? [[2, 2], [7, 3], [4.5, 7.5]] : [[2, 4], [8, 4]];
+      C.forEach(function (c) { for (var i = 0; i < 45; i++) X.push([c[0] + 0.9 * gauss(r), c[1] + 0.9 * gauss(r)]); });
+      if (ds === 'bridge') for (var i = 0; i < 12; i++) X.push([3.5 + 3 * i / 11, 4 + 0.25 * gauss(r)]);
+    }
+    function init() {
+      var c = +cI.value, r = rng(seed); U = [];
+      for (var i = 0; i < c; i++) { U.push([]); for (var k = 0; k < X.length; k++) U[i].push(r()); }
+      for (k = 0; k < X.length; k++) { var s = 0; for (i = 0; i < c; i++) s += U[i][k]; for (i = 0; i < c; i++) U[i][k] /= s; }
+      it = 0; dU = 0; protos(); objective();
+    }
+    function protos() {
+      var m = +mI.value; V = U.map(function (row) { var sw = 0, sx = 0, sy = 0; row.forEach(function (u, k) { var w = Math.pow(u, m); sw += w; sx += w * X[k][0]; sy += w * X[k][1]; }); return [sx / sw, sy / sw]; });
+    }
+    function objective() { var m = +mI.value; Q = 0; U.forEach(function (row, i) { row.forEach(function (u, k) { Q += Math.pow(u, m) * (Math.pow(X[k][0] - V[i][0], 2) + Math.pow(X[k][1] - V[i][1], 2)); }); }); }
+    function step() {
+      var m = +mI.value, c = V.length; protos(); dU = 0;
+      for (var k = 0; k < X.length; k++) {
+        var d = V.map(function (v) { return Math.hypot(X[k][0] - v[0], X[k][1] - v[1]) + 1e-9; });
+        for (var i = 0; i < c; i++) { var s = 0; for (var j = 0; j < c; j++) s += Math.pow(d[i] / d[j], 2 / (m - 1)); var nu = 1 / s; dU = Math.max(dU, Math.abs(nu - U[i][k])); U[i][k] = nu; }
+      }
+      protos(); objective(); it++;
+    }
+    function draw() {
+      cI.nextElementSibling.textContent = cI.value; mI.nextElementSibling.textContent = (+mI.value).toFixed(1);
+      var P = makePlot(svg, { w: 560, h: 400, l: 36, b: 36, x: [-0.5, 10.5], y: [-0.5, 10], xt: [0, 5, 10], yt: [0, 5, 10] });
+      X.forEach(function (x, k) {
+        var best = 0, bv = -1; U.forEach(function (row, i) { if (row[k] > bv) { bv = row[k]; best = i; } });
+        el('circle', { cx: P.sx(x[0]), cy: P.sy(x[1]), r: 5, style: 'fill: var(' + CL[best] + '); opacity: ' + (0.2 + 0.8 * Math.pow(Math.max(0, (bv - 1 / V.length) / (1 - 1 / V.length)), 0.7)).toFixed(2) }, svg);
+      });
+      V.forEach(function (v, i) { var x = P.sx(v[0]), y = P.sy(v[1]); el('path', { d: 'M' + (x - 9) + ',' + (y - 9) + ' L' + (x + 9) + ',' + (y + 9) + ' M' + (x - 9) + ',' + (y + 9) + ' L' + (x + 9) + ',' + (y - 9), style: 'stroke: var(' + CL[i] + '); stroke-width: 4' }, svg); txt(svg, x + 12, y - 8, 'v' + '\u2081\u2082\u2083\u2084\u2085\u2086'[i], 'lbl', 'start'); });
+      out.innerHTML = 'iteration <b>' + it + '</b>, objective Q = <b>' + Q.toFixed(1) + '</b>' + (it ? ', largest change in U: ' + dU.toFixed(4) : '') + (it && dU < 1e-4 ? ' <span class="tag-good">converged</span>' : '');
+    }
+    $('[data-act=step]', root).addEventListener('click', function () { step(); draw(); });
+    $('[data-act=run]', root).addEventListener('click', function () { for (var g = 0; g < 300; g++) { step(); if (dU < 1e-4) break; } draw(); });
+    $('[data-act=reset]', root).addEventListener('click', function () { seed++; init(); draw(); });
+    cI.addEventListener('input', function () { init(); draw(); });
+    mI.addEventListener('input', function () { for (var g = 0; g < 300; g++) { step(); if (dU < 1e-4) break; } draw(); });
+    dBtns.forEach(function (b) { b.addEventListener('click', function () { ds = b.getAttribute('data-ds'); setPressed(dBtns, b); if (ds === 'bridge') cI.value = 2; makeData(); init(); draw(); }); });
+    makeData(); init(); draw();
+  })();
+
+  /* ---------- the fuzzifier m in one dimension ---------- */
+  (function () {
+    var root = $('#fuzz-demo'); if (!root) return;
+    var svg = $('svg.fig', root), mI = $('#fz-m'), V = [-4, 0, 2.7];
+    function draw() {
+      var m = +mI.value; mI.nextElementSibling.textContent = m.toFixed(2);
+      var P = makePlot(svg, { w: 580, h: 300, l: 40, b: 38, x: [-8, 8], y: [0, 1.1], xt: [-8, -4, 0, 4, 8], yt: [0, 0.5, 1], xl: 'x' });
+      el('line', { x1: P.sx(-8), x2: P.sx(8), y1: P.sy(1 / 3), y2: P.sy(1 / 3), 'class': 'ax-0' }, svg); txt(svg, P.sx(7.9), P.sy(1 / 3) - 5, '1/c', 'tick', 'end');
+      V.forEach(function (v, i) {
+        pathFn(P, function (x) { return fcmU(x, V, m)[i]; }, -8, 8, 500, 'c-sec', svg, 'stroke: var(' + CL[i] + ')');
+        el('circle', { cx: P.sx(v), cy: P.sy(0), r: 5, style: 'fill: var(' + CL[i] + ')' }, svg); txt(svg, P.sx(v), P.sy(0) + 30, 'v' + '\u2081\u2082\u2083'[i] + ' = ' + v, 'tick');
+      });
+    }
+    mI.addEventListener('input', draw); draw();
+  })();
+
+  /* ---------- justifiable granularity, the book's example ---------- */
+  var JGD = [-5.2, -4.5, -2.0, -1.9, -0.5, 0.1, 0.7, 0.8, 1.7, 1.9, 2.2, 2.5, 3.1, 3.5, 4.4, 5.3];
+  function jgSide(x, r, side, xi) {
+    xi = xi === undefined ? 1 : xi;
+    var mn = Math.min.apply(null, x), mx = Math.max.apply(null, x);
+    var c = side > 0 ? x.filter(function (v) { return v > r; }).sort(function (a, b) { return a - b; }) : x.filter(function (v) { return v < r; }).sort(function (a, b) { return b - a; });
+    return c.map(function (v, k) { var cov = (k + 1) / c.length, sp = 1 - Math.abs(v - r) / (side > 0 ? mx - r : r - mn); return { v: v, cov: cov, sp: sp, V: cov * Math.pow(Math.max(0, sp), xi) }; });
+  }
+  (function () {
+    var root = $('#jg-demo'); if (!root) return;
+    var svg = $('svg.fig', root), bI = $('#jg-b'), aI = $('#jg-a'), out = $('.readout', root);
+    var r = JGD.reduce(function (s, v) { return s + v; }, 0) / JGD.length, Bs = jgSide(JGD, r, 1), As = jgSide(JGD, r, -1);
+    function best(L) { var b = L[0]; L.forEach(function (o) { if (o.V > b.V) b = o; }); return b; }
+    function draw() {
+      var b = Bs[+bI.value], a = As[+aI.value]; bI.nextElementSibling.textContent = n2(b.v); aI.nextElementSibling.textContent = n2(a.v);
+      var P = makePlot(svg, { w: 580, h: 330, l: 40, t: 70, b: 38, x: [-6, 6], y: [0, 1.05], xt: [-6, -4, -2, 0, 2, 4, 6], yt: [0, 0.5, 1], xl: 'x' });
+      rect(svg, P.sx(a.v), 20, P.sx(b.v) - P.sx(a.v), 22, null, { style: mixFill('--sec', 25) + '; stroke: var(--sec); stroke-width: 2' });
+      JGD.forEach(function (v) { el('circle', { cx: P.sx(v), cy: 31, r: 4.5, 'class': 'gc-pt' }, svg); });
+      el('line', { x1: P.sx(r), x2: P.sx(r), y1: 14, y2: P.sy(0), 'class': 'mark-now' }, svg); txt(svg, P.sx(r) + 4, 12, 'r = mean = ' + n2(r), 'tick', 'start');
+      [[Bs, 1], [As, -1]].forEach(function (S) {
+        var L = S[0], keys = [['cov', 'c-alt'], ['sp', 'c-bad'], ['V', 'c-sec']];
+        keys.forEach(function (kk) { var d = 'M' + P.sx(r) + ',' + P.sy(kk[0] === 'cov' ? 0 : kk[0] === 'sp' ? 1 : 0); L.forEach(function (o) { d += ' L' + P.sx(o.v).toFixed(1) + ',' + P.sy(o[kk[0]]).toFixed(1); }); el('path', { d: d, 'class': kk[1] }, svg); });
+        L.forEach(function (o) { el('circle', { cx: P.sx(o.v), cy: P.sy(o.V), r: 3.5, 'class': 'dot-val' }, svg); });
+        var bb = best(L); el('circle', { cx: P.sx(bb.v), cy: P.sy(bb.V), r: 8, style: 'fill: none; stroke: var(--sec); stroke-width: 2.5' }, svg);
+      });
+      el('circle', { cx: P.sx(b.v), cy: P.sy(b.V), r: 6, 'class': 'dot-pt' }, svg); el('circle', { cx: P.sx(a.v), cy: P.sy(a.V), r: 6, 'class': 'dot-pt' }, svg);
+      txt(svg, P.sx(5.9), P.sy(1.02), 'coverage', 'lbl-alt', 'end'); txt(svg, P.sx(5.9), P.sy(0.9), 'specificity', 'lbl-bad', 'end'); txt(svg, P.sx(5.9), P.sy(0.78), 'V = cov \u00d7 sp', 'lbl-sec', 'end');
+      var ba = best(As), bb2 = best(Bs);
+      out.innerHTML = 'b = ' + n2(b.v) + ': cov ' + n2(b.cov) + ' \u00d7 sp ' + n2(b.sp) + ' = <b>' + b.V.toFixed(3) + '</b><br>a = ' + n2(a.v) + ': cov ' + n2(a.cov) + ' \u00d7 sp ' + n2(a.sp) + ' = <b>' + a.V.toFixed(3) + '</b><br><span class="muted">optimum (circled): [' + n2(ba.v) + ', ' + n2(bb2.v) + ']</span>';
+    }
+    [aI, bI].forEach(function (i) { i.addEventListener('input', draw); }); draw();
+  })();
+
+  /* ---------- ξ: from nested intervals to a fuzzy set ---------- */
+  (function () {
+    var root = $('#xi-demo'); if (!root) return;
+    var svg = $('svg.fig', root), xI = $('#xi-x'), sI = $('#xi-stack');
+    var r0 = rng(17), D = [];
+    for (var i = 0; i < 80; i++) D.push(Math.max(0.2, Math.min(9.8, 4.5 + (i % 3 ? 1.1 : 2.2) * gauss(r0))));
+    var r = D.reduce(function (s, v) { return s + v; }, 0) / D.length;
+    function interval(xi) {
+      function bestOf(L) { var b = L[0]; L.forEach(function (o) { if (o.V > b.V) b = o; }); return b.v; }
+      return [bestOf(jgSide(D, r, -1, xi)), bestOf(jgSide(D, r, 1, xi))];
+    }
+    function draw() {
+      var xi = +xI.value; xI.nextElementSibling.textContent = xi.toFixed(1);
+      var P = makePlot(svg, { w: 580, h: 300, l: 40, t: 50, b: 38, x: [0, 10], y: [0, 1.05], xt: [0, 2, 4, 6, 8, 10], yt: [0, 0.5, 1], xl: 'x', yl: '\u03b1 = \u03be / 4' });
+      D.forEach(function (v, k) { el('circle', { cx: P.sx(v), cy: 22 + (k % 4) * 5, r: 2.6, 'class': 'gc-pt' }, svg); });
+      if (sI.checked) {
+        var prev = null, d = '';
+        for (var q = 0; q <= 40; q++) { var xx = q / 10, iv = interval(xx), al = xx / 4; rect(svg, P.sx(iv[0]), P.sy(al) - 2.5, P.sx(iv[1]) - P.sx(iv[0]), 5, null, { style: mixFill('--sec', 18 + q) }); }
+      }
+      var cur = interval(xi);
+      rect(svg, P.sx(cur[0]), P.sy(xi / 4) - 5, P.sx(cur[1]) - P.sx(cur[0]), 10, null, { style: 'fill: var(--bad)' });
+      txt(svg, (P.sx(cur[0]) + P.sx(cur[1])) / 2, P.sy(xi / 4) - 10, '[' + n2(cur[0]) + ', ' + n2(cur[1]) + ']', 'lbl-bad');
+    }
+    xI.addEventListener('input', draw); sI.addEventListener('change', draw); draw();
+  })();
+
+  /* ---------- three ways granules enter ML ---------- */
+  (function () {
+    var svg = $('#ml-ways'); if (!svg) return;
+    var mk = arrowDefs(svg, 'mw-mk');
+    rect(svg, 20, 30, 140, 60, 'blk in', { rx: 6 }); txt(svg, 90, 65, 'data x', 'lbl');
+    rect(svg, 230, 30, 200, 60, 'blk conv', { rx: 6 }); txt(svg, 330, 58, 'granular inputs', 'lbl'); txt(svg, 330, 76, 'fuzzy sets, rules', 'tick');
+    rect(svg, 500, 30, 180, 60, 'blk in', { rx: 6 }); txt(svg, 590, 65, 'model', 'lbl');
+    rect(svg, 750, 30, 200, 60, 'blk conv', { rx: 6 }); txt(svg, 850, 58, 'granular outputs', 'lbl'); txt(svg, 850, 76, 'intervals, fuzzy sets', 'tick');
+    rect(svg, 1010, 30, 130, 60, 'blk in', { rx: 6 }); txt(svg, 1075, 65, 'user', 'lbl');
+    [[160, 226], [430, 496], [680, 746], [950, 1006]].forEach(function (a) { arrow(svg, a[0] + 4, 60, a[1], 60, mk); });
+    rect(svg, 470, 108, 240, 36, 'blk pool', { rx: 6 }); txt(svg, 590, 131, 'loss with knowledge granules', 'tick');
+    arrow(svg, 590, 106, 590, 94, mk);
+  })();
+
+  /* ---------- partial membership: cold and warm ---------- */
+  (function () {
+    var root = $('#pm-demo'); if (!root) return;
+    var svg = $('svg.fig', root), tI = $('#pm-t'), tb = $('.pm-tbl tbody', root);
+    function cold(t) { return t <= 15 ? 1 : t >= 35 ? 0 : (35 - t) / 20; }
+    function ccold(t) { return t < 25 ? 1 : 0; }
+    function panel(g, top, bottom, title, fc, fw, t) {
+      var P = makePlot(g, { w: 560, h: 330, l: 40, t: top, b: bottom, x: [0, 40], y: [0, 1.15], xt: [0, 5, 10, 15, 20, 25, 30, 35, 40], yt: [0, 1] });
+      pathFn(P, fc, 0, 40, 800, 'c-sec', g, 'stroke: var(--p1)'); pathFn(P, fw, 0, 40, 800, 'c-sec', g, 'stroke: var(--p4)');
+      txt(g, 46, top - 8, title, 'lbl-sec', 'start');
+      txt(g, P.sx(1), P.sy(0.85), 'cold', 'lbl', 'start'); txt(g, P.sx(39), P.sy(0.85), 'warm', 'lbl', 'end');
+      [5, 24.5, 25.5].forEach(function (v) { el('line', { x1: P.sx(v), x2: P.sx(v), y1: P.sy(0), y2: P.sy(1.15), 'class': 'ax-0' }, g); });
+      el('line', { x1: P.sx(t), x2: P.sx(t), y1: P.sy(0), y2: P.sy(1.15), 'class': 'mark-now' }, g);
+      [[fc, '--p1'], [fw, '--p4']].forEach(function (q) { el('circle', { cx: P.sx(t), cy: P.sy(q[0](t)), r: 5.5, style: 'fill: var(' + q[1] + ')' }, g); });
+    }
+    function draw() {
+      var t = +tI.value; tI.nextElementSibling.textContent = t + ' \u00b0C';
+      clear(svg); svg.setAttribute('viewBox', '0 0 560 330');
+      panel(el('g', {}, svg), 30, 172, 'crisp: threshold at 25 \u00b0C', ccold, function (x) { return 1 - ccold(x); }, t);
+      panel(el('g', {}, svg), 210, 22, 'fuzzy: gradual', cold, function (x) { return 1 - cold(x); }, t);
+      tb.innerHTML = [5, 24.5, 25.5, t].map(function (v, i) { return '<tr' + (i === 3 ? ' class="hi"' : '') + '><td>' + v + (i === 3 ? ' (slider)' : '') + '</td><td>' + ccold(v) + '</td><td>' + (1 - ccold(v)) + '</td><td>' + n2(cold(v)) + '</td><td>' + n2(1 - cold(v)) + '</td></tr>'; }).join('');
+    }
+    tI.addEventListener('input', draw); draw();
+  })();
+
+  /* ---------- a discrete universe: Canadian provinces ---------- */
+  (function () {
+    var root = $('#prov-demo'); if (!root) return;
+    var svg = $('svg.fig', root), btns = $$('[data-pv]', root), mode = 'fuzzy';
+    var PV = [['BC', 'Victoria', 4.0], ['AB', 'Edmonton', -10.4], ['SK', 'Regina', -14.7], ['MB', 'Winnipeg', -16.4], ['ON', 'Toronto', -3.7], ['QC', 'Qu\u00e9bec', -12.8], ['NB', 'Fredericton', -9.4], ['NS', 'Halifax', -5.9], ['PE', 'Charlottetown', -7.7], ['NL', 'St. John\u2019s', -4.5]];
+    function ec(T) { return T <= -20 ? 1 : T >= -2 ? 0 : (-2 - T) / 18; }
+    function draw() {
+      var P = makePlot(svg, { w: 600, h: 320, l: 40, b: 56, x: [0, 10], y: [0, 1.1], yt: [0, 0.5, 1], yl: mode === 'fuzzy' ? 'extreme cold' : 'below \u221210 \u00b0C' });
+      PV.forEach(function (p, i) {
+        var v = mode === 'fuzzy' ? ec(p[2]) : (p[2] < -10 ? 1 : 0), x = P.sx(i + 0.5);
+        if (mode === 'fuzzy') { el('line', { x1: x, x2: x, y1: P.sy(0), y2: P.sy(v), style: 'stroke: var(--sec); stroke-width: 3' }, svg); el('circle', { cx: x, cy: P.sy(v), r: 8, 'class': 'dot-pt' }, svg); }
+        else rect(svg, x - 14, P.sy(v), 28, Math.max(1, P.sy(0) - P.sy(v)), null, { style: mixFill('--ink-3', 55) });
+        txt(svg, x, P.sy(v) - 12, v.toFixed(2), 'tick');
+        txt(svg, x, P.sy(0) + 18, p[0], 'lbl');
+        txt(svg, x, P.sy(0) + 36, (p[2] > 0 ? '+' : '\u2212') + Math.abs(p[2]).toFixed(1) + ' \u00b0C', 'tick');
+      });
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { mode = b.getAttribute('data-pv'); setPressed(btns, b); draw(); }); });
+    draw();
+  })();
+
+  /* ---------- hard and fuzzy partitions, six points ---------- */
+  (function () {
+    var root = $('#part-demo'); if (!root) return;
+    var svg = $('svg.fig', root), mat = $('.pt-mat', root), read = $('.pt-read', root), btns = $$('[data-pt]', root), mode = 'hard', drag = -1;
+    var V = [[7, 6.5], [2.5, 6], [5, 1.8]], X = [[1.5, 7.2], [7.8, 7.5], [4.5, 6.1], [6.2, 5.4], [8.3, 5.8], [5.4, 1.2]];
+    function sx(x) { return 30 + x * 48; } function sy(y) { return 310 - y * 32; }
+    function memb(p) {
+      var d = V.map(function (v) { return Math.hypot(p[0] - v[0], p[1] - v[1]) + 1e-9; });
+      if (mode === 'hard') { var k = d.indexOf(Math.min.apply(null, d)); return d.map(function (_, i) { return i === k ? 1 : 0; }); }
+      return d.map(function (di) { var s = 0; d.forEach(function (dj) { s += Math.pow(di / dj, 2); }); return 1 / s; });
+    }
+    function wedge(cx, cy, r, a0, a1) { var x0 = cx + r * Math.sin(a0), y0 = cy - r * Math.cos(a0), x1 = cx + r * Math.sin(a1), y1 = cy - r * Math.cos(a1); return 'M' + cx + ',' + cy + ' L' + x0 + ',' + y0 + ' A' + r + ',' + r + ' 0 ' + (a1 - a0 > Math.PI ? 1 : 0) + ' 1 ' + x1 + ',' + y1 + ' Z'; }
+    function draw() {
+      clear(svg); rect(svg, 1, 1, 538, 328, 'cf-frame', { rx: 6 });
+      var U = X.map(memb);
+      X.forEach(function (p, k) { U[k].forEach(function (u, i) { if (u > 0.01) el('line', { x1: sx(p[0]), y1: sy(p[1]), x2: sx(V[i][0]), y2: sy(V[i][1]), style: 'stroke: var(' + CL[i] + '); stroke-width: ' + (1 + 7 * u).toFixed(1) + '; opacity: ' + (0.25 + 0.6 * u).toFixed(2) }, svg); }); });
+      V.forEach(function (v, i) { var x = sx(v[0]), y = sy(v[1]); el('path', { d: 'M' + (x - 10) + ',' + (y - 10) + ' L' + (x + 10) + ',' + (y + 10) + ' M' + (x - 10) + ',' + (y + 10) + ' L' + (x + 10) + ',' + (y - 10), style: 'stroke: var(' + CL[i] + '); stroke-width: 4' }, svg); txt(svg, x + 14, y - 10, 'v' + '\u2081\u2082\u2083'[i], 'lbl', 'start'); });
+      X.forEach(function (p, k) {
+        var x = sx(p[0]), y = sy(p[1]), a = 0, g = el('g', { 'data-k': k, style: 'cursor: grab' }, svg);
+        if (mode === 'hard') el('circle', { cx: x, cy: y, r: 13, style: 'fill: var(' + CL[U[k].indexOf(1)] + '); stroke: var(--paper); stroke-width: 2' }, g);
+        else U[k].forEach(function (u, i) { if (u > 0.001) { var b = a + u * 2 * Math.PI; el('path', { d: u > 0.999 ? '' : wedge(x, y, 13, a, b), style: 'fill: var(' + CL[i] + '); stroke: var(--paper); stroke-width: 1' }, g); if (u > 0.999) el('circle', { cx: x, cy: y, r: 13, style: 'fill: var(' + CL[i] + ')' }, g); a = b; } });
+        el('circle', { cx: x, cy: y, r: 16, style: 'fill: transparent', 'data-k': k }, g);
+        txt(svg, x, y + 30, 'x' + '\u2081\u2082\u2083\u2084\u2085\u2086'[k], 'lbl');
+      });
+      mat.innerHTML = '<table class="tbl compact small"><thead><tr><th>U</th>' + X.map(function (_, k) { return '<th>x' + (k + 1) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        V.map(function (_, i) { return '<tr><td style="color: var(' + CL[i] + '); font-weight: 700">cluster ' + (i + 1) + '</td>' + U.map(function (u) { return '<td class="mono">' + (mode === 'hard' ? u[i] : u[i].toFixed(2)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>';
+      read.innerHTML = mode === 'hard' ? '<strong>k-means:</strong> each point belongs to its nearest prototype only, \\(u_{ik} \\in \\{0, 1\\}\\). x3 sits between clusters 1 and 2, but must pick one.' :
+        '<strong>Fuzzy c-means:</strong> \\(u_{ik} \\in [0, 1]\\), so x3 belongs ' + U[2].map(function (u, i) { return Math.round(100 * u) + '% to cluster ' + (i + 1); }).join(', ') + '. Each column still sums to 1. Pie slices and line widths show the memberships.';
+      if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([read]).catch(function () {});
+    }
+    function pt(e) { var m = svg.getScreenCTM().inverse(), q = svg.createSVGPoint(); q.x = e.clientX; q.y = e.clientY; return q.matrixTransform(m); }
+    svg.addEventListener('pointerdown', function (e) { var k = e.target.getAttribute('data-k') || (e.target.parentNode && e.target.parentNode.getAttribute && e.target.parentNode.getAttribute('data-k')); if (k === null || k === undefined) return; drag = +k; svg.setPointerCapture(e.pointerId); });
+    svg.addEventListener('pointermove', function (e) { if (drag < 0) return; var q = pt(e); X[drag] = [Math.max(0.3, Math.min(10.5, (q.x - 30) / 48)), Math.max(0.3, Math.min(9.4, (310 - q.y) / 32))]; draw(); });
+    svg.addEventListener('pointerup', function () { drag = -1; });
+    btns.forEach(function (b) { b.addEventListener('click', function () { mode = b.getAttribute('data-pt'); setPressed(btns, b); draw(); }); });
+    draw();
+  })();
+
+  /* ---------- projecting clusters onto the axes ---------- */
+  (function () {
+    var root = $('#proj-demo'); if (!root) return;
+    var svg = $('svg.fig', root), btns = $$('[data-pj]', root), read = $('.pj-read', root), lay = 'a';
+    var L = { a: [[2, 2], [5, 7.5], [8, 4.5]], b: [[2, 3], [5, 7.5], [8, 3.25]] };
+    var X0 = 120, X1 = 550, Y0 = 10, Y1 = 290;
+    function sx(x) { return X0 + x / 10 * (X1 - X0); } function sy(y) { return Y1 - y / 10 * (Y1 - Y0); }
+    function draw() {
+      clear(svg);
+      var V = L[lay], r = rng(9), mk = arrowDefs(svg, 'pj-mk');
+      rect(svg, X0, Y0, X1 - X0, Y1 - Y0, 'cf-frame');
+      V.forEach(function (v, i) { for (var k = 0; k < 30; k++) el('circle', { cx: sx(v[0] + 0.75 * gauss(r)), cy: sy(v[1] + 0.75 * gauss(r)), r: 3.5, style: 'fill: var(' + CL[i] + '); opacity: .55' }, svg); });
+      V.forEach(function (v, i) {
+        el('line', { x1: sx(v[0]), y1: sy(v[1]), x2: sx(v[0]), y2: 410, 'class': 'proj-line', style: 'stroke: var(' + CL[i] + ')' }, svg);
+        el('line', { x1: sx(v[0]), y1: sy(v[1]), x2: 10, y2: sy(v[1]), 'class': 'proj-line', style: 'stroke: var(' + CL[i] + ')' }, svg);
+        var x = sx(v[0]), y = sy(v[1]); el('path', { d: 'M' + (x - 9) + ',' + (y - 9) + ' L' + (x + 9) + ',' + (y + 9) + ' M' + (x - 9) + ',' + (y + 9) + ' L' + (x + 9) + ',' + (y - 9), style: 'stroke: var(' + CL[i] + '); stroke-width: 4' }, svg);
+      });
+      el('path', { d: 'M' + X0 + ',410 H' + X1, 'class': 'ax' }, svg); txt(svg, X1, 324, 'fuzzy sets on x', 'tick', 'end');
+      el('path', { d: 'M10,' + Y0 + ' V' + Y1, 'class': 'ax' }, svg); txt(svg, 12, Y0 + 8, 'on y', 'tick', 'start');
+      var vx = V.map(function (v) { return v[0]; }), vy = V.map(function (v) { return v[1]; });
+      V.forEach(function (_, i) {
+        var dx = '', dy = '';
+        for (var k = 0; k <= 300; k++) {
+          var t = 10 * k / 300, ux = fcmU(t, vx, 2)[i], uy = fcmU(t, vy, 2)[i];
+          dx += (k ? 'L' : 'M') + sx(t).toFixed(1) + ',' + (410 - 80 * ux).toFixed(1);
+          dy += (k ? 'L' : 'M') + (10 + 95 * uy).toFixed(1) + ',' + sy(t).toFixed(1);
+        }
+        el('path', { d: dx, 'class': 'c-sec', style: 'stroke: var(' + CL[i] + ')' }, svg);
+        el('path', { d: dy, 'class': 'c-sec', style: 'stroke: var(' + CL[i] + ')' }, svg);
+      });
+      read.innerHTML = lay === 'a' ? 'All three prototypes project to clearly different values on both axes: three distinguishable fuzzy sets per variable.' :
+        'On y, two prototypes project to 3.0 and 3.25: their fuzzy sets almost coincide, so y has only <strong>two</strong> meaningful granules, although there are three clusters.';
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { lay = b.getAttribute('data-pj'); setPressed(btns, b); draw(); }); });
+    draw();
+  })();
+
+  /* ---------- the paper: granules over the ballistic coefficient ---------- */
+  var BCV = [0.08, 0.2, 0.38, 0.65, 1.1], BCR = [0, 1.5], BCF = 0.05;
+  var BCA = BCV.map(function (_, i) { var s = 0, n = 600; for (var k = 0; k <= n; k++) s += fcmU(BCR[0] + (BCR[1] - BCR[0]) * k / n, BCV, 2)[i]; return s * (BCR[1] - BCR[0]) / n; });
+  function bcSp(i) { return Math.exp(-1.5 * BCA[i] / (BCR[1] - BCR[0])); }
+  (function () {
+    var svg = $('#bc-gran'); if (!svg) return;
+    var P = makePlot(svg, { w: 580, h: 300, l: 40, b: 40, x: [0, 1.5], y: [0, 1.1], xt: [0, 0.5, 1, 1.5], yt: [0, 0.5, 1], xl: 'ballistic coefficient (m\u00b2/kg)' });
+    rect(svg, P.sx(0), P.sy(1.1), P.sx(BCF) - P.sx(0), P.sy(0) - P.sy(1.1), 'gc-forbid');
+    BCV.forEach(function (v, i) { pathFn(P, function (x) { return fcmU(x, BCV, 2)[i]; }, 0, 1.5, 400, 'c-sec', svg, 'stroke: var(' + CL[i] + ')'); txt(svg, P.sx(v) + (i === 0 ? 10 : 0), P.sy(1) - (i % 2 ? 24 : 6), 'G' + '\u2081\u2082\u2083\u2084\u2085'[i] + ', sp ' + n2(bcSp(i)), 'tick', i === 0 ? 'start' : 'middle'); });
+    var ft = txt(svg, P.sx(BCF / 2) + 4, P.sy(0.55), 'physical floor', 'tick'); ft.setAttribute('transform', 'rotate(-90 ' + (P.sx(BCF / 2) + 4) + ' ' + P.sy(0.55) + ')');
+  })();
+
+  /* ---------- the paper: training architecture ---------- */
+  (function () {
+    var svg = $('#kiml-arch'); if (!svg) return;
+    var mk = arrowDefs(svg, 'ka-mk');
+    var Bx = [[10, 'orbital elements', '6 \u00d7 180 days', 'in'], [120, 'Dense', '100', 'conv'], [205, 'GRU', '100 units', 'conv'], [300, 'Dense + dropout', '100, p = 0.5', 'conv'], [420, 'BC \u0177', '', 'dense']];
+    Bx.forEach(function (b, i) { var w = i === 0 ? 96 : i === 3 ? 104 : 74; rect(svg, b[0], 30, w, 60, 'blk ' + b[3], { rx: 6 }); txt(svg, b[0] + w / 2, 56, b[1], 'tick'); txt(svg, b[0] + w / 2, 74, b[2], 'tick'); if (i < Bx.length - 1) arrow(svg, b[0] + w + 3, 60, Bx[i + 1][0] - 3, 60, mk); });
+    rect(svg, 30, 150, 480, 120, 'cf-frame', { rx: 8 });
+    txt(svg, 270, 172, 'composite loss', 'lbl-sec');
+    rect(svg, 50, 186, 200, 66, 'blk pool', { rx: 6 }); txt(svg, 150, 212, '\u03bb \u00b7 MSE(y, \u0177)', 'lbl'); txt(svg, 150, 232, 'data term', 'tick');
+    rect(svg, 290, 186, 200, 66, 'blk pool', { rx: 6 }); txt(svg, 390, 212, '(1 \u2212 \u03bb)(1 \u2212 cov \u00b7 sp)', 'lbl'); txt(svg, 390, 232, 'knowledge term: granule G of y', 'tick');
+    arrow(svg, 457, 94, 400, 182, mk);
+    el('path', { d: 'M270,276 C270,320 40,320 40,100', 'class': 'grad-arrow', 'marker-end': mk }, svg);
+    txt(svg, 150, 318, 'backpropagation', 'tick');
+    rect(svg, 380, 290, 140, 40, 'blk in', { rx: 6 }); txt(svg, 450, 314, 'FCM granules G\u2081\u2026G\u2085', 'tick');
+    arrow(svg, 450, 286, 420, 256, mk);
+  })();
+
+  /* ---------- the paper: knowledge term, interactively ---------- */
+  (function () {
+    var root = $('#kiml-demo'); if (!root) return;
+    var svg = $('svg.fig', root), yI = $('#ki-y'), pI = $('#ki-p'), lI = $('#ki-l'), out = $('.readout', root), ALPHA = 10;
+    function covOf(yhat, k) { if (yhat >= BCF) return fcmU(yhat, BCV, 2)[k]; return fcmU(BCF, BCV, 2)[k] * Math.exp(ALPHA * (yhat - BCF)); }
+    function draw() {
+      var y = +yI.value, p = +pI.value, lam = +lI.value;
+      yI.nextElementSibling.textContent = y.toFixed(2); pI.nextElementSibling.textContent = p.toFixed(2); lI.nextElementSibling.textContent = lam.toFixed(2);
+      var uy = fcmU(y, BCV, 2), k = uy.indexOf(Math.max.apply(null, uy));
+      var P = makePlot(svg, { w: 580, h: 320, l: 40, b: 40, x: [-0.3, 1.5], y: [0, 1.1], xt: [0, 0.5, 1, 1.5], yt: [0, 0.5, 1], xl: 'ballistic coefficient (m\u00b2/kg)' });
+      rect(svg, P.sx(-0.3), P.sy(1.1), P.sx(BCF) - P.sx(-0.3), P.sy(0) - P.sy(1.1), 'gc-forbid');
+      BCV.forEach(function (v, i) { if (i !== k) pathFn(P, function (x) { return fcmU(Math.max(x, 0), BCV, 2)[i]; }, BCF, 1.5, 300, 'c-alt', svg); });
+      pathFn(P, function (x) { return covOf(x, k); }, -0.3, 1.5, 500, 'c-sec', svg, 'stroke: var(' + CL[k] + '); stroke-width: 3.5');
+      el('line', { x1: P.sx(y), x2: P.sx(y), y1: P.sy(0), y2: P.sy(1.1), 'class': 'mark-now' }, svg); txt(svg, P.sx(y) + 4, P.sy(1.06), 'true y', 'tick', 'start');
+      var cov = covOf(p, k), sp = bcSp(k);
+      el('circle', { cx: P.sx(p), cy: P.sy(cov), r: 7, 'class': 'yc-dot' }, svg); txt(svg, P.sx(p) + 8, P.sy(cov) - 8, '\u0177', 'lbl-bad', 'start');
+      var data = (y - p) * (y - p), know = 1 - cov * sp, tot = lam * data + (1 - lam) * know;
+      out.innerHTML = 'true granule G' + (k + 1) + ', specificity ' + sp.toFixed(3) + '<br>coverage of \u0177: <b>' + cov.toFixed(3) + '</b>' + (p < BCF ? ' <span class="tag-bad">below the floor: penalised</span>' : '') +
+        '<br>data term ' + data.toFixed(4) + ', knowledge term ' + know.toFixed(3) + '<br>loss = ' + lam.toFixed(2) + ' \u00d7 ' + data.toFixed(4) + ' + ' + (1 - lam).toFixed(2) + ' \u00d7 ' + know.toFixed(3) + ' = <b>' + tot.toFixed(4) + '</b>';
+    }
+    [yI, pI, lI].forEach(function (i) { i.addEventListener('input', draw); }); draw();
+  })();
+
+  /* ---------- start ---------- */
+  var m = location.hash.match(/^#(\d+)$/);
+  var start = m ? Math.max(0, Math.min(N - 1, +m[1] - 1)) : 0;
+  slides[0].classList.remove('active');
+  cur = start;
+  slides[cur].classList.add('active');
+  updateFooter();
+  autoDoc();
+  fit();
+})();
+</script>
+</body>
+</html>
